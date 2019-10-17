@@ -1,0 +1,9 @@
+ports:
+- port: 3000
+
+tasks:
+- init: |
+    cd webui
+    yarn
+    yarn build:dev
+  command: yarn run:dev

@@ -1,0 +1,38 @@
+{
+  "name": "extension-registry-webui",
+  "version": "0.1.0",
+  "description": "User interface for the extension registry",
+  "repository": "https://github.com/theia-ide/extension-registry",
+  "author": "TypeFox",
+  "license": "EPL2",
+  "scripts": {
+    "clean": "rimraf lib",
+    "build": "tsc -p ./tsconfig.json && yarn run lint",
+    "lint": "tslint -c ./configs/tslint.json --project ./tsconfig.json",
+    "watch": "tsc -w -p ./tsconfig.json",
+    "prepare": "yarn run clean && yarn run build",
+    "build:dev": "webpack --config ./configs/webpack.config.js",
+    "watch:dev": "webpack --watch --config ./configs/webpack.config.js",
+    "run:dev": "npx http-server -p 3000 dev"
+  },
+  "files": [
+    "lib",
+    "src"
+  ],
+  "main": "lib/index",
+  "types": "lib/index",
+  "devDependencies": {
+    "@types/react": "^16.9.9",
+    "@types/react-dom": "^16.9.2",
+    "css-loader": "^3.2.0",
+    "react": "^16.10.2",
+    "react-dom": "^16.10.2",
+    "source-map-loader": "^0.2.4",
+    "style-loader": "^1.0.0",
+    "ts-loader": "^6.2.0",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.4",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
+  }
+}
