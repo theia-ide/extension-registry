@@ -6,11 +6,15 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import * as React from 'react';
+import * as React from "react";
+import { Typography } from "@material-ui/core";
+import { RouteComponentProps } from "react-router-dom";
 
-export class Foo extends React.Component {
+export class Login extends React.Component<RouteComponentProps> {
 
     render() {
-        return 'Hello World!';
+        return <React.Fragment>
+            <Typography variant='h3'>Login</Typography>
+        </React.Fragment>;
     }
 }

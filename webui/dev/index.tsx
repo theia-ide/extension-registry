@@ -1,6 +1,7 @@
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import {Foo} from '../src/foo';
+import { Main } from '../src/main';
+import { BrowserRouter } from 'react-router-dom';
 
 const node = document.getElementById('main');
-ReactDOM.render(<Foo/>, node);
+ReactDOM.render(<BrowserRouter><Main /></BrowserRouter>, node);
