@@ -10,7 +10,7 @@
       "check-space"
     ],
     "curly": false,
-    "eofline": true,
+    "eofline": false,
     "file-header": {
       "options": [
         "[\n\r]+ \\* Copyright \\([cC]\\) \\d{4}(-\\d{4})? .*[\n\r]+"

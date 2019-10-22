@@ -8,9 +8,15 @@ module.exports = {
     entry: [
         './dev/index.tsx'
     ],
+    devServer: {
+        contentBase: './dev',
+        port: 3000,
+        historyApiFallback: true
+    },
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, '../dev')
+        path: path.resolve(__dirname, '../dev'),
+        publicPath: '/'
     },
 
     resolve: {
