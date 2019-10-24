@@ -1,0 +1,28 @@
+buildscript {
+    dependencies {
+        classpath "io.quarkus:quarkus-gradle-plugin:0.26.1"
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+apply plugin: 'io.quarkus'
+
+def versions = [
+    java: '12',
+    quarkus: '0.26.1'
+]
+
+sourceCompatibility = versions.java
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.quarkus:quarkus-resteasy-jsonb:${versions.quarkus}"
+    implementation "io.quarkus:quarkus-hibernate-orm:${versions.quarkus}"
+    implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
+}

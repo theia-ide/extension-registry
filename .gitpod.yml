@@ -1,9 +1,15 @@
+image: gitpod/workspace-postgres:latest
+
 ports:
 - port: 3000
 
 tasks:
-- init: >
-    cd webui &&
-    yarn &&
+- init: |
+    cd /workspace/extension-registry/webui
+    yarn
     yarn build:dev
-  command: cd webui && yarn run:dev
+    cd /workspace/extension-registry/server
+    ./gradlew build -x buildNative -x testNative
+  command: |
+    cd /workspace/extension-registry/webui
+    yarn run:dev
