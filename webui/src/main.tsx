@@ -7,14 +7,15 @@
  ********************************************************************************/
 
 import * as React from 'react';
-import { Container, AppBar, Toolbar, Typography, IconButton, InputBase } from '@material-ui/core';
+import { Container, AppBar, Toolbar, Typography, IconButton, CssBaseline, Box, Theme } from '@material-ui/core';
 import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import ExitToAppIcon from '@material-ui/icons/ExitToAppOutlined';
-import SearchIcon from '@material-ui/icons/Search';
 import { Route, Link, Switch } from 'react-router-dom';
-import { ExtensionList } from './pages/extension-list';
+import { ExtensionList } from './pages/extension-list/extension-list';
 import { UserProfile } from './pages/user-profile';
-import { ExtensionDetailPages, ExtensionDetail } from './pages/extension-detail';
+import { ExtensionDetailPages, ExtensionDetail } from './pages/extension-detail/extension-detail';
+import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
+import * as TheiaLogo from './img/theia-logo.svg';
 
 export namespace ExtensionRegistryPages {
     export const EXTENSION_LIST = '/extension-list';
@@ -26,32 +27,65 @@ export namespace ExtensionRegistryPages {
     export const USER_REGISTRY = '/user-registry';
 }
 
-export class Main extends React.Component {
+const mainStyles = (theme: Theme) => createStyles({
+    link: {
+        textDecoration: 'none',
+        color: theme.palette.text.primary
+    },
+    toolbar: {
+        justifyContent: 'space-between'
+    }
+});
 
+interface ExtensionRegistryMainProps extends WithStyles<typeof mainStyles> { }
+
+class MainComponent extends React.Component<ExtensionRegistryMainProps> {
     render() {
         return <React.Fragment>
-            <AppBar position='sticky'>
-                <Toolbar>
-                    <Link to={ExtensionRegistryPages.EXTENSION_LIST}><Typography variant='h6' noWrap>Theia Extension Registry</Typography></Link>
-                    <Link to={ExtensionRegistryPages.USER_PROFILE}><IconButton><AccountBoxIcon /></IconButton></Link>
-                    <IconButton><ExitToAppIcon /></IconButton>
-                    <SearchIcon />
-                    <InputBase placeholder='Search…' />
-                </Toolbar>
-            </AppBar>
-            <Container maxWidth='md'>
-                <Switch>
-                    <Route exact path='/' component={ExtensionList} />
-                    <Route path={ExtensionRegistryPages.EXTENSION_LIST} component={ExtensionList} />
-                    <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
-                    <Route path={ExtensionDetailPages.EXTENSION_DETAIL} component={ExtensionDetail} />
-                </Switch>
-            </Container>
-            <footer>
-                <Container maxWidth='md'>
-                    <Typography>footer stuff</Typography>
-                </Container>
-            </footer>
+            <CssBaseline />
+            <Box display='flex' flexDirection='column' minHeight='100vh'>
+                <AppBar position='sticky'>
+                    <Toolbar classes={{root: this.props.classes.toolbar}}>
+                        <Box>
+                            <Link to={ExtensionRegistryPages.EXTENSION_LIST} className={this.props.classes.link}>
+                                <Box display='flex'>
+                                    <Box width={120} display='flex' alignItems='center' marginRight={1}>
+                                        <img src={TheiaLogo} width='100%' />
+                                    </Box>
+                                    <Typography variant='h6' noWrap>Extension Registry</Typography>
+                                </Box>
+                            </Link>
+                        </Box>
+                        <Box>
+                            <Link to={ExtensionRegistryPages.USER_PROFILE}>
+                                <IconButton>
+                                    <AccountBoxIcon />
+                                </IconButton>
+                            </Link>
+                            <IconButton>
+                                <ExitToAppIcon />
+                            </IconButton>
+                        </Box>
+                    </Toolbar>
+                </AppBar>
+                <Box flex='1'>
+                    <Container maxWidth='lg'>
+                        <Switch>
+                            <Route exact path='/' component={ExtensionList} />
+                            <Route path={ExtensionRegistryPages.EXTENSION_LIST} component={ExtensionList} />
+                            <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
+                            <Route path={ExtensionDetailPages.EXTENSION_DETAIL} component={ExtensionDetail} />
+                        </Switch>
+                    </Container>
+                </Box>
+                <footer>
+                    <Container maxWidth='lg'>
+                        <Typography>footer stuff</Typography>
+                    </Container>
+                </footer>
+            </Box>
         </React.Fragment>;
     }
 }
+
+export const Main = withStyles(mainStyles)(MainComponent);

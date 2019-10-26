@@ -8,15 +8,13 @@
 
 import * as React from "react";
 import { Typography } from "@material-ui/core";
-import { RouteComponentProps } from "react-router-dom";
 import { ExtensionDetailParams } from "./extension-detail";
 
-export class ExtensionDetailOverview extends React.Component<RouteComponentProps> {
+export class ExtensionDetailOverview extends React.Component<ExtensionDetailParams> {
 
     render() {
-        const detailParams = this.props.match.params as ExtensionDetailParams;
         return <React.Fragment>
-            <Typography variant='h3'>ExtensionDetailOverview for {detailParams.extid}</Typography>
+            <Typography variant='h3'>ExtensionDetailOverview for {this.props.extid}</Typography>
         </React.Fragment>;
     }
 }

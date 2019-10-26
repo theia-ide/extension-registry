@@ -42,10 +42,14 @@ module.exports = {
                 test: /\.css$/,
                 exclude: /\.useable\.css$/,
                 use: ['style-loader', 'css-loader']
+            },
+            {
+                test: /\.(png|svg|jpg|gif)$/,
+                use: ['file-loader']
             }
         ]
     },
-    node : { fs: 'empty', net: 'empty' },
+    node: { fs: 'empty', net: 'empty' },
 
     plugins: [
         new webpack.WatchIgnorePlugin([
