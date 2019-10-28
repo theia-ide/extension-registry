@@ -7,34 +7,36 @@
  ********************************************************************************/
 
 import * as React from "react";
-import { Grid } from "@material-ui/core";
+import { Grid, Container } from "@material-ui/core";
 import { ExtensionListItem } from "./extension-list-item";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 import { ExtensionListHeader } from "./extension-list-header";
-import { Extension } from "../../extension-registry-api";
+import { Extension } from "../../extension-registry-types";
 
 export class ExtensionList extends React.Component<ExtensionList.Props, ExtensionList.State> {
 
     protected service: ExtensionRegistryService = ExtensionRegistryService.instance;
 
-    constructor(props: ExtensionList.Props){
+    constructor(props: ExtensionList.Props) {
         super(props);
         this.state = {
             extensions: []
-        }
+        };
     }
 
-    componentDidMount(){
-        this.service.getExtensions().then(extensions => this.setState({extensions}));
+    componentDidMount() {
+        this.service.getExtensions().then(extensions => this.setState({ extensions }));
     }
 
     render() {
-        const extensionList = this.state.extensions.map(ext => <ExtensionListItem extension={ext} key={ext.name} />);
+        const extensionList = this.state.extensions.map((ext, idx) => <ExtensionListItem idx={idx} extension={ext} key={ext.name} />);
         return <React.Fragment>
-            <ExtensionListHeader />
-            <Grid container spacing={2}>
-                {extensionList}
-            </Grid>
+            <Container>
+                <ExtensionListHeader />
+                <Grid container spacing={2}>
+                    {extensionList}
+                </Grid>
+            </Container>
         </React.Fragment>;
     }
 }

@@ -9,9 +9,9 @@
 import React = require("react");
 import { Link } from "react-router-dom";
 import { ExtensionDetailPages } from "../extension-detail/extension-detail";
-import { Paper, Typography, Box, Grid } from "@material-ui/core";
+import { Paper, Typography, Box, Grid, Fade } from "@material-ui/core";
 import { withStyles, createStyles, WithStyles, Theme } from '@material-ui/core/styles';
-import { Extension } from "../../extension-registry-api";
+import { Extension } from "../../extension-registry-types";
 
 
 const itemStyles = (theme: Theme) => createStyles({
@@ -24,31 +24,34 @@ const itemStyles = (theme: Theme) => createStyles({
 });
 
 interface ExtensionListItemProps extends WithStyles<typeof itemStyles> {
-    extension: Extension
+    extension: Extension,
+    idx: number
 }
 
 class ExtensionListItemComp extends React.Component<ExtensionListItemProps> {
     render() {
         const { classes, extension } = this.props;
         return <React.Fragment>
-            <Grid item xs={12} sm={3} md={2}>
-                <Link to={ExtensionDetailPages.EXTENSION_DETAIL_ROOT + '/' + extension.name} className={classes.link}>
-                    <Paper className={classes.paper}>
-                        <Box display='flex' justifyContent='center'>
-                            <img src='test.png' />
-                        </Box>
-                        <Box display='flex' justifyContent='center'><Typography variant='h6'>{extension.name}</Typography></Box>
-                        <Box display='flex' justifyContent='space-between'>
-                            <Typography component='div' variant='caption' noWrap={true} align='left'>
-                                {extension.author}
-                            </Typography>
-                            <Typography component='div' variant='caption' noWrap={true} align='right'>
-                                {extension.version}
-                            </Typography>
-                        </Box>
-                    </Paper>
-                </Link>
-            </Grid>
+            <Fade in={true} timeout={{enter: this.props.idx * 200}}>
+                <Grid item xs={12} sm={3} md={2}>
+                    <Link to={ExtensionDetailPages.EXTENSION_DETAIL_ROOT + '/' + extension.name} className={classes.link}>
+                        <Paper className={classes.paper}>
+                            <Box display='flex' justifyContent='center'>
+                                <img src='/test.png' />
+                            </Box>
+                            <Box display='flex' justifyContent='center'><Typography variant='h6'>{extension.name}</Typography></Box>
+                            <Box display='flex' justifyContent='space-between'>
+                                <Typography component='div' variant='caption' noWrap={true} align='left'>
+                                    {extension.author}
+                                </Typography>
+                                <Typography component='div' variant='caption' noWrap={true} align='right'>
+                                    {extension.version}
+                                </Typography>
+                            </Box>
+                        </Paper>
+                    </Link>
+                </Grid>
+            </Fade>
         </React.Fragment>;
     }
 }

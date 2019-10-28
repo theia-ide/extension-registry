@@ -6,7 +6,8 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import { ExtensionFilter, Extension, ExtensionRegistryAPI } from "./extension-registry-api";
+import { ExtensionRegistryAPI } from "./extension-registry-api";
+import { ExtensionFilter, Extension } from "./extension-registry-types";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;

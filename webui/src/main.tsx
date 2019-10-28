@@ -45,7 +45,7 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
             <CssBaseline />
             <Box display='flex' flexDirection='column' minHeight='100vh'>
                 <AppBar position='sticky'>
-                    <Toolbar classes={{root: this.props.classes.toolbar}}>
+                    <Toolbar classes={{ root: this.props.classes.toolbar }}>
                         <Box>
                             <Link to={ExtensionRegistryPages.EXTENSION_LIST} className={this.props.classes.link}>
                                 <Box display='flex'>
@@ -69,17 +69,15 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                     </Toolbar>
                 </AppBar>
                 <Box flex='1'>
-                    <Container maxWidth='lg'>
-                        <Switch>
-                            <Route exact path='/' component={ExtensionList} />
-                            <Route path={ExtensionRegistryPages.EXTENSION_LIST} component={ExtensionList} />
-                            <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
-                            <Route path={ExtensionDetailPages.EXTENSION_DETAIL} component={ExtensionDetail} />
-                        </Switch>
-                    </Container>
+                    <Switch>
+                        <Route exact path='/' component={ExtensionList} />
+                        <Route path={ExtensionRegistryPages.EXTENSION_LIST} component={ExtensionList} />
+                        <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
+                        <Route path={ExtensionDetailPages.EXTENSION_DETAIL} component={ExtensionDetail} />
+                    </Switch>
                 </Box>
                 <footer>
-                    <Container maxWidth='lg'>
+                    <Container>
                         <Typography>footer stuff</Typography>
                     </Container>
                 </footer>

@@ -7,14 +7,22 @@
  ********************************************************************************/
 
 import * as React from "react";
-import { Typography } from "@material-ui/core";
-import { ExtensionDetailParams } from "./extension-detail";
+import Markdown from 'markdown-to-jsx';
 
-export class ExtensionDetailOverview extends React.Component<ExtensionDetailParams> {
+
+export class ExtensionDetailOverview extends React.Component<ExtensionDetailOverview.Props> {
 
     render() {
         return <React.Fragment>
-            <Typography variant='h3'>ExtensionDetailOverview for {this.props.extid}</Typography>
+                <Markdown>
+                    {this.props.longDescription}
+                </Markdown>
         </React.Fragment>;
+    }
+}
+
+export namespace ExtensionDetailOverview {
+    export interface Props {
+        longDescription: string
     }
 }
