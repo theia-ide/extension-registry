@@ -1,7 +1,9 @@
-image: gitpod/workspace-postgres:latest
+image:
+  file: .gitpod.dockerfile
 
 ports:
 - port: 3000
+- port: 8080
 
 tasks:
 - init: |
