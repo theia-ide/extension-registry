@@ -14,7 +14,7 @@ import io.vertx.ext.web.RoutingContext;
 public class WebUIRouter {
 
     @Route(path = "/*", methods = HttpMethod.GET)
-    public void staticResource(RoutingContext context) {
+    public void route(RoutingContext context) {
         var segments = context.request().path().split("/");
         if (segments.length <= 1 || segments[1].startsWith("api")) {
             // Root path or API access
