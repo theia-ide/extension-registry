@@ -7,16 +7,66 @@
  ********************************************************************************/
 
 import * as React from "react";
-import { Typography } from "@material-ui/core";
-import { RouteComponentProps } from "react-router-dom";
-import { ExtensionDetailParams } from "./extension-detail";
+import { Theme, createStyles, WithStyles, withStyles, Box, Typography, Button, Divider } from "@material-ui/core";
+import { ExtensionRating } from "../../extension-registry-types";
+import { TextDivider } from "../../custom-mui-components/text-divider";
+import { ExportRatingStars } from "./extension-rating-stars";
 
-export class ExtensionDetailRating extends React.Component<RouteComponentProps> {
+const ratingStyles = (theme: Theme) => createStyles({
+    boldText: {
+        fontWeight: 'bold'
+    }
+});
+
+class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRatingComponent.Props> {
 
     render() {
-        const detailParams = this.props.match.params as ExtensionDetailParams;
         return <React.Fragment>
-            <Typography variant='h3'>ExtensionDetailRating for {detailParams.extid}</Typography>
+            <Box display='flex' justifyContent='space-between' my={2}>
+                <Box>
+                    <Typography variant='h5'>
+                        User Reviews
+                    </Typography>
+                </Box>
+                <Box>
+                    <Button variant='contained' color='secondary'>
+                        Write a Review
+                    </Button>
+                </Box>
+            </Box>
+            <Divider />
+            <Box>
+                {this.props.ratings.map((r: ExtensionRating) => {
+                    return <React.Fragment key={r.user.userName + r.title + r.date}>
+                        <Box my={2}>
+                            <Box display='flex'>
+                                <Typography variant='body2'>{r.date}</Typography>
+                                <TextDivider />
+                                <Typography variant='body2'>{r.user.userName}</Typography>
+                            </Box>
+                            <Box display='flex'>
+                                <Typography className={this.props.classes.boldText}>{r.title}</Typography>
+                                <Box ml={4} display='flex' alignItems='center'>
+                                    <ExportRatingStars number={r.rating} />
+                                </Box>
+                            </Box>
+                            <Box>
+                                <Typography variant='body1'>{r.comment}</Typography>
+                            </Box>
+                        </Box>
+                        <Divider />
+                    </React.Fragment>;
+                })}
+            </Box>
         </React.Fragment>;
     }
 }
+
+export namespace ExtensionDetailRatingComponent {
+    export interface Props extends WithStyles<typeof ratingStyles> {
+        ratings: ExtensionRating[]
+    }
+}
+
+export const ExtensionDetailRating = withStyles(ratingStyles)(ExtensionDetailRatingComponent);
+

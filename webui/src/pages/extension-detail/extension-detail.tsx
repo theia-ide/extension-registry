@@ -15,6 +15,7 @@ import { ExtensionRegistryService } from "../../extension-registry-service";
 import { Extension } from "../../extension-registry-types";
 import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExtensionDetailTabs } from "./extension-detail-tabs";
+import { ExportRatingStars } from "./extension-rating-stars";
 
 export namespace ExtensionDetailPages {
     export const EXTENSION_DETAIL_ROOT = '/extension-detail';
@@ -56,6 +57,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
             return '';
         }
         const { extension } = this.state;
+        const rating = extension.ratings.map(r => r.rating as number).reduce((prev, curr) => prev+curr) / extension.ratings.length;
         return <React.Fragment>
             <Box className={this.props.classes.head}>
                 <Container>
@@ -68,7 +70,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                             <Box display='flex' className={this.props.classes.row}>
                                 <Box>{extension.author}</Box>
                                 <TextDivider />
-                                <Box>{extension.rating}</Box>
+                                <Box><ExportRatingStars number={rating} /></Box>
                                 <TextDivider />
                                 <Box>{extension.license}</Box>
                             </Box>
@@ -76,7 +78,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                             <Box className={this.props.classes.row}>
                                 <Button variant='contained' color='secondary'>
                                     Install
-                        </Button>
+                                </Button>
                             </Box>
                         </Box>
                     </Box>
@@ -92,8 +94,9 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                             <Route path={ExtensionDetailPages.EXTENSION_DETAIL + ExtensionDetailPages.EXTENSION_DETAIL_OVERVIEW}>
                                 <ExtensionDetailOverview longDescription={this.state.extension.longDescription} />
                             </Route>
-                            <Route path={ExtensionDetailPages.EXTENSION_DETAIL + ExtensionDetailPages.EXTENSION_DETAIL_RATING}
-                                render={props => <ExtensionDetailRating {...props} />} />
+                            <Route path={ExtensionDetailPages.EXTENSION_DETAIL + ExtensionDetailPages.EXTENSION_DETAIL_RATING}>
+                                <ExtensionDetailRating ratings={this.state.extension.ratings}/>
+                            </Route>
                         </Switch>
                     </Box>
                 </Box>
@@ -104,7 +107,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
 }
 
 export namespace ExtensionDetailComponent {
-    export interface Props extends WithStyles<typeof detailStyles>, RouteComponentProps { }
+    export interface Props extends WithStyles<typeof detailStyles>, RouteComponentProps {}
     export interface State {
         extension?: Extension
     }

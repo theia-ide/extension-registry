@@ -22,7 +22,21 @@ export interface Extension {
     longDescription: string;
     categories: string[];
     uri: string;
-    rating: number,
-    comments: string[];
+    ratings: ExtensionRating[];
     icon: string;
+}
+
+export interface ExtensionRating {
+    rating: 1 | 2 | 3 | 4 | 5;
+    title: string;
+    comment: string;
+    user: ExtensionRegistryUser;
+    date: string;
+}
+
+export interface ExtensionRegistryUser {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    email: string;
 }

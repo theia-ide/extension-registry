@@ -12,6 +12,7 @@ import { ExtensionDetailPages } from "../extension-detail/extension-detail";
 import { Paper, Typography, Box, Grid, Fade } from "@material-ui/core";
 import { withStyles, createStyles, WithStyles, Theme } from '@material-ui/core/styles';
 import { Extension } from "../../extension-registry-types";
+import { ExportRatingStars } from "../extension-detail/extension-rating-stars";
 
 
 const itemStyles = (theme: Theme) => createStyles({
@@ -25,6 +26,7 @@ const itemStyles = (theme: Theme) => createStyles({
 
 interface ExtensionListItemProps extends WithStyles<typeof itemStyles> {
     extension: Extension,
+    rating: number;
     idx: number
 }
 
@@ -47,6 +49,9 @@ class ExtensionListItemComp extends React.Component<ExtensionListItemProps> {
                                 <Typography component='div' variant='caption' noWrap={true} align='right'>
                                     {extension.version}
                                 </Typography>
+                            </Box>
+                            <Box>
+                                <ExportRatingStars number={this.props.rating} />
                             </Box>
                         </Paper>
                     </Link>

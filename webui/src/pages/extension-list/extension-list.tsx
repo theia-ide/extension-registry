@@ -29,7 +29,10 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
     }
 
     render() {
-        const extensionList = this.state.extensions.map((ext, idx) => <ExtensionListItem idx={idx} extension={ext} key={ext.name} />);
+        const extensionList = this.state.extensions.map((ext, idx) => {
+            const rating = ext.ratings.map(r => r.rating as number).reduce((prev, curr) => prev+curr) / ext.ratings.length;
+            return <ExtensionListItem idx={idx} extension={ext} key={ext.name} rating={rating} />
+        });
         return <React.Fragment>
             <Container>
                 <ExtensionListHeader />

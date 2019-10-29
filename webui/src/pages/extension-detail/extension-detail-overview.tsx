@@ -8,15 +8,18 @@
 
 import * as React from "react";
 import Markdown from 'markdown-to-jsx';
+import { Box } from "@material-ui/core";
 
 
 export class ExtensionDetailOverview extends React.Component<ExtensionDetailOverview.Props> {
 
     render() {
         return <React.Fragment>
+            <Box>
                 <Markdown>
                     {this.props.longDescription}
                 </Markdown>
+            </Box>
         </React.Fragment>;
     }
 }
