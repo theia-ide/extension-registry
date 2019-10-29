@@ -27,4 +27,5 @@ dependencies {
     implementation "io.quarkus:quarkus-resteasy-jsonb:${versions.quarkus}"
     implementation "io.quarkus:quarkus-hibernate-orm:${versions.quarkus}"
     implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
+    implementation "io.quarkus:quarkus-vertx-web:${versions.quarkus}"
 }

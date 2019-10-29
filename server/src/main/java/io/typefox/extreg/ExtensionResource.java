@@ -17,7 +17,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/extension")
+@Path("/api/extension")
 @Produces(MediaType.APPLICATION_JSON)
 public class ExtensionResource {
 
