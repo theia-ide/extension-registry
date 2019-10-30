@@ -7,7 +7,7 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
-import java.sql.Blob;
+import java.sql.Clob;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,7 +17,7 @@ import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
 // @Entity
-public class ExtensionBinary {
+public class ExtensionReadme {
 
     @Id
     @GeneratedValue
@@ -28,6 +28,6 @@ public class ExtensionBinary {
     public ExtensionVersion extension;
 
     @Lob
-    public Blob content;
+    public Clob content;
 
 }

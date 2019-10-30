@@ -7,27 +7,27 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
-import java.sql.Blob;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
 
 // @Entity
-public class ExtensionBinary {
+public class ExtensionReview {
 
     @Id
     @GeneratedValue
     public long id;
 
-    @OneToOne
+    @ManyToOne
     @MapsId
-    public ExtensionVersion extension;
+    public Extension extension;
 
-    @Lob
-    public Blob content;
+    public String title;
+
+    public String comment;
+
+    public int rating;
 
 }
