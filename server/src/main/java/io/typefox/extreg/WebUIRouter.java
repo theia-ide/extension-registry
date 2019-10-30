@@ -15,9 +15,15 @@ public class WebUIRouter {
 
     @Route(path = "/*", methods = HttpMethod.GET)
     public void route(RoutingContext context) {
-        var segments = context.request().path().split("/");
-        if (segments.length <= 1 || segments[1].startsWith("api")) {
-            // Root path or API access
+        var path = context.request().path();
+        if (path.startsWith("/api")) {
+            // API access
+            context.next();
+            return;
+        }
+        var segments = path.split("/");
+        if (segments.length <= 1) {
+            // Root path
             context.next();
             return;
         }

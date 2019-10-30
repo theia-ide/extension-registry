@@ -12,7 +12,8 @@ apply plugin: 'io.quarkus'
 
 def versions = [
     java: '11',
-    quarkus: '0.26.1'
+    quarkus: '0.26.1',
+    guava: '28.1-jre'
 ]
 
 sourceCompatibility = versions.java
@@ -28,4 +29,5 @@ dependencies {
     implementation "io.quarkus:quarkus-hibernate-orm:${versions.quarkus}"
     implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
     implementation "io.quarkus:quarkus-vertx-web:${versions.quarkus}"
+    implementation "com.google.guava:guava:${versions.guava}"
 }
