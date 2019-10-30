@@ -7,10 +7,11 @@
  ********************************************************************************/
 
 import * as React from "react";
-import { Theme, createStyles, WithStyles, withStyles, Box, Typography, Button, Divider } from "@material-ui/core";
-import { ExtensionRating } from "../../extension-registry-types";
+import { Theme, createStyles, WithStyles, withStyles, Box, Typography, Divider } from "@material-ui/core";
+import { ExtensionRating, Extension, ExtensionRegistryUser } from "../../extension-registry-types";
 import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExportRatingStars } from "./extension-rating-stars";
+import { ExtensionReviewDialog } from "./extension-review-dialog";
 
 const ratingStyles = (theme: Theme) => createStyles({
     boldText: {
@@ -28,11 +29,11 @@ class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRati
                         User Reviews
                     </Typography>
                 </Box>
-                <Box>
-                    <Button variant='contained' color='secondary'>
-                        Write a Review
-                    </Button>
-                </Box>
+                {
+                    this.props.user ? <Box>
+                        <ExtensionReviewDialog extensionName={this.props.extension.name} user={this.props.user} />
+                    </Box> : ''
+                }
             </Box>
             <Divider />
             <Box>
@@ -64,7 +65,9 @@ class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRati
 
 export namespace ExtensionDetailRatingComponent {
     export interface Props extends WithStyles<typeof ratingStyles> {
-        ratings: ExtensionRating[]
+        ratings: ExtensionRating[],
+        extension: Extension,
+        user?: ExtensionRegistryUser
     }
 }
 

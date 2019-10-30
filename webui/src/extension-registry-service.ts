@@ -7,7 +7,7 @@
  ********************************************************************************/
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
-import { ExtensionFilter, Extension } from "./extension-registry-types";
+import { ExtensionFilter, Extension, ExtensionRating, ExtensionRegistryUser } from "./extension-registry-types";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;
@@ -29,5 +29,13 @@ export class ExtensionRegistryService {
 
     async getExtensionById(id: string): Promise<Extension | undefined> {
         return this.api.getExtension(id);
+    }
+
+    async postReview(rating: ExtensionRating): Promise<void> {
+        await this.api.postReview(rating);
+    }
+
+    async getUser(): Promise<ExtensionRegistryUser> {
+        return await this.api.getUser();
     }
 }
