@@ -2,7 +2,6 @@ image:
   file: .gitpod.dockerfile
 
 ports:
-- port: 3000
 - port: 8080
 - port: 5000-5999
   onOpen: ignore
@@ -15,5 +14,5 @@ tasks:
     cd /workspace/extension-registry/server
     ./gradlew build -x buildNative -x testNative
   command: |
-    cd /workspace/extension-registry/webui
-    yarn run:dev
+    cd /workspace/extension-registry/server
+    ./gradlew quarkusDev

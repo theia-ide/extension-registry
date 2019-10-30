@@ -1,13 +1,12 @@
-var webpack = require('webpack');
-var path = require('path');
+const webpack = require('webpack');
+const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
+
+const outputPath = path.resolve(__dirname, '../../server/src/main/resources/META-INF/resources')
 
 module.exports = {
     mode: 'development',
     devtool: 'source-map',
-
-    entry: [
-        './dev/index.tsx'
-    ],
     devServer: {
         contentBase: './dev',
         port: 3000,
@@ -15,9 +14,13 @@ module.exports = {
             index: '/'
         }
     },
+
+    entry: [
+        './dev/index.tsx'
+    ],
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, '../dev'),
+        path: outputPath,
         publicPath: '/'
     },
 
@@ -28,12 +31,7 @@ module.exports = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: [{
-                    loader: 'ts-loader',
-                    options: {
-                        configFile: path.resolve(__dirname, 'examples.tsconfig.json')
-                    }
-                }]
+                use: ['ts-loader']
             },
             {
                 test: /\.js$/,
@@ -58,6 +56,9 @@ module.exports = {
             /\.js$/,
             /\.d\.ts$/
         ]),
-        new webpack.ProgressPlugin()
+        new webpack.ProgressPlugin(),
+        new CopyPlugin([
+            { from: 'dev', to: outputPath }
+        ]),
     ]
 };

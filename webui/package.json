@@ -4,17 +4,7 @@
     "description": "User interface for the extension registry",
     "repository": "https://github.com/theia-ide/extension-registry",
     "author": "TypeFox",
-    "license": "EPL2",
-    "scripts": {
-        "clean": "rimraf lib",
-        "build": "tsc -p ./tsconfig.json && yarn run lint",
-        "lint": "tslint -c ./configs/tslint.json --project ./tsconfig.json",
-        "watch": "tsc -w -p ./tsconfig.json",
-        "prepare": "yarn run clean && yarn run build",
-        "build:dev": "webpack --config ./configs/webpack.config.js",
-        "watch:dev": "webpack --watch --config ./configs/webpack.config.js",
-        "run:dev": "webpack-dev-server --open --config ./configs/webpack.config.js"
-    },
+    "license": "EPL-2.0",
     "files": [
         "lib",
         "src"
@@ -25,26 +15,34 @@
         "@material-ui/core": "latest",
         "@material-ui/icons": "latest",
         "@material-ui/styles": "latest",
+        "markdown-to-jsx": "^6.10.3",
         "react": "^16.10.2",
         "react-dom": "^16.10.2",
-        "react-router-dom": "latest",
-        "markdown-to-jsx": "^6.10.3"
-
+        "react-router-dom": "^5.1.2"
     },
     "devDependencies": {
+        "@types/markdown-to-jsx": "^6.9.0",
         "@types/react": "^16.9.9",
         "@types/react-dom": "^16.9.2",
         "@types/react-router-dom": "*",
-        "@types/markdown-to-jsx": "^6.9.0",
+        "copy-webpack-plugin": "^5.0.4",
         "css-loader": "^3.2.0",
+        "file-loader": "^4.2.0",
         "source-map-loader": "^0.2.4",
         "style-loader": "^1.0.0",
-        "file-loader": "^4.2.0",
         "ts-loader": "^6.2.0",
         "tslint": "^5.20.0",
         "typescript": "^3.6.4",
         "webpack": "^4.41.2",
-        "webpack-dev-server": "^3.8.2",
         "webpack-cli": "^3.3.9"
+    },
+    "scripts": {
+        "clean": "rimraf lib",
+        "build": "tsc -p ./tsconfig.json && yarn run lint",
+        "lint": "tslint -c ./configs/tslint.json --project ./tsconfig.json",
+        "watch": "tsc -w -p ./tsconfig.json",
+        "prepare": "yarn run clean && yarn run build",
+        "build:dev": "webpack --config ./configs/webpack.config.js",
+        "watch:dev": "webpack --watch --config ./configs/webpack.config.js"
     }
 }

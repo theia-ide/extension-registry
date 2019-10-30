@@ -21,7 +21,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.upload.ExtensionProcessor;
@@ -32,9 +32,6 @@ public class ExtensionResource {
     @Inject
     private EntityManager entityManager;
 
-    @Inject
-    private Session session;
-
     @PUT
     @Transactional
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -43,7 +40,7 @@ public class ExtensionResource {
         var processor = new ExtensionProcessor(content);
         var extension = processor.getMetadata();
         entityManager.persist(extension);
-        var lobCreator = Hibernate.getLobCreator(session);
+        var lobCreator = Hibernate.getLobCreator((SessionImplementor) entityManager);
         var binary = processor.getBinary(extension, lobCreator);
         entityManager.persist(binary);
         return extension;
