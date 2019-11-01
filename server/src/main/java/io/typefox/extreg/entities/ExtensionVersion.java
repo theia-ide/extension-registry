@@ -57,10 +57,10 @@ public class ExtensionVersion {
 
     public String qna;
 
-    // @ManyToMany
-    // public List<Extension> dependencies;
+    @ManyToMany
+    public List<Extension> dependencies;
 
-    // @ManyToMany
-    // public List<Extension> bundledExtensions;
+    @ManyToMany
+    public List<Extension> bundledExtensions;
 
 }

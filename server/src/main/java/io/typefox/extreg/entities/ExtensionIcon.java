@@ -16,7 +16,7 @@ import javax.persistence.Lob;
 import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
-// @Entity
+@Entity
 public class ExtensionIcon {
 
     @Id

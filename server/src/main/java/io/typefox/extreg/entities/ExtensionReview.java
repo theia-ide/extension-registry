@@ -13,7 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 
-// @Entity
+@Entity
 public class ExtensionReview {
 
     @Id
