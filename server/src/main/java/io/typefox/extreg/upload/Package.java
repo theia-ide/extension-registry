@@ -39,9 +39,9 @@ public class Package {
 
     public String homepage;
 
-    public String repository;
+    public PackageRepository repository;
 
-    public String bugs;
+    public PackageBugs bugs;
 
     public String markdown;
 
