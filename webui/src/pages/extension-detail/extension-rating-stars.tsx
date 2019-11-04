@@ -18,11 +18,11 @@ interface ExportRatingStarsProps {
 export class ExportRatingStars extends React.Component<ExportRatingStarsProps> {
     render() {
         return <React.Fragment>
-        {this.getStar(1)}{this.getStar(2)}{this.getStar(3)}{this.getStar(4)}{this.getStar(5)}
-        </React.Fragment>
+            {this.getStar(1)}{this.getStar(2)}{this.getStar(3)}{this.getStar(4)}{this.getStar(5)}
+        </React.Fragment>;
     }
 
-    protected getStar(i: number){
+    protected getStar(i: number) {
         return i <= this.props.number ? <StarIcon /> : i > this.props.number && i - this.props.number < 1 ? <StarHalfIcon /> : <StarBorderIcon />;
     }
 }

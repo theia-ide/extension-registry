@@ -121,7 +121,7 @@ const user: ExtensionRegistryUser = {
     lastName: 'User',
     userName: 'userfriendly',
     email: 'userfriendly@test.ie'
-}
+};
 
 const comment = `Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
          labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et
@@ -161,7 +161,7 @@ const ratings: ExtensionRating[] = [
         user,
         date
     }
-]
+];
 
 const test = {
     author: 'Thomas Test',
@@ -169,7 +169,6 @@ const test = {
     version: '1.2.3',
     date: '12.12.2012',
     uri: '/some/path/to/the/extension.vsix',
-    categories: [],
     longDescription: testMD,
     icon: '/test.png',
     ratings
@@ -179,52 +178,72 @@ const extArr: Extension[] = [
     {
         name: 'Test Ext',
         description: 'This is a test extension thingy',
+        categories: ['Other'],
         ...test
     },
     {
         name: 'Test Ext2',
         description: 'This is a 2nd test extension thingy',
+        categories: ['Themes'],
         ...test
     },
     {
         name: 'Test Ext3',
         description: 'This is a 3rd test extension thingy',
+        categories: ['Themes', 'Snippets'],
         ...test
     },
     {
         name: 'Test Ext4',
         description: 'This is a 4th test extension thingy',
+        categories: ['Themes', 'Extension Packs'],
         ...test
     },
     {
         name: 'Test Ext5',
         description: 'This is a 5th test extension thingy',
+        categories: ['Other'],
         ...test
     },
     {
         name: 'Test Ext6',
         description: 'This is a 6th test extension thingy',
+        categories: ['Programming Languages'],
         ...test
     },
     {
         name: 'Test Ext7',
         description: 'This is a 7th test extension thingy',
+        categories: ['Programming Languages'],
         ...test
     },
     {
         name: 'Test Ext8',
         description: 'This is a 8th test extension thingy',
+        categories: ['Other'],
         ...test
     },
     {
         name: 'Test Ext9',
         description: 'This is a 9th test extension thingy',
+        categories: ['Programming Languages'],
         ...test
     }
 ];
 
 export class ExtensionRegistryAPI {
     async getExtensions(filter?: ExtensionFilter): Promise<Extension[]> {
+        if (filter) {
+            return extArr.filter(ext => {
+                const hasCat = !!filter.category ? !!ext.categories.find(cat => cat === filter.category) : true;
+                const containsText = !!filter.fullText ?
+                    (ext.name.toLowerCase().includes(filter.fullText.toLowerCase()) ||
+                        ext.description.toLowerCase().includes(filter.fullText.toLowerCase()) ||
+                        ext.longDescription.toLowerCase().includes(filter.fullText.toLowerCase())) : true;
+                const matchesFilter = hasCat && containsText;
+                return matchesFilter;
+            })
+        }
         return extArr;
     }
 

@@ -7,7 +7,7 @@
  ********************************************************************************/
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
-import { ExtensionFilter, Extension, ExtensionRating, ExtensionRegistryUser } from "./extension-registry-types";
+import { ExtensionFilter, Extension, ExtensionRating, ExtensionRegistryUser, ExtensionCategory } from "./extension-registry-types";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;
@@ -36,6 +36,22 @@ export class ExtensionRegistryService {
     }
 
     async getUser(): Promise<ExtensionRegistryUser> {
-        return await this.api.getUser();
+        return this.api.getUser();
+    }
+
+    getCategories(): ExtensionCategory[] {
+        return [
+            'Programming Languages',
+            'Snippets',
+            'Linters',
+            'Themes',
+            'Debuggers',
+            'Formatters',
+            'Keymaps',
+            'SCM Providers',
+            'Other',
+            'Extension Packs',
+            'Language Packs'
+        ];
     }
 }

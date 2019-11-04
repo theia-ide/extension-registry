@@ -7,12 +7,19 @@
  ********************************************************************************/
 
 import React = require("react");
-import { Typography, Box, WithStyles, createStyles, Theme, withStyles, Paper, InputBase, IconButton } from "@material-ui/core";
+import { Typography, Box, WithStyles, createStyles, Theme, withStyles, Paper, IconButton, InputBase, Select, MenuItem } from "@material-ui/core";
 import SearchIcon from '@material-ui/icons/Search';
+import { ExtensionRegistryService } from "../../extension-registry-service";
+import { ExtensionCategory } from "../../extension-registry-types";
 
 const headerStyles = (theme: Theme) => createStyles({
-    paper: {
-        width: '50%',
+    search: {
+        flex: 2,
+        display: 'flex',
+        marginRight: theme.spacing(1)
+    },
+    category: {
+        flex: 1,
         display: 'flex'
     },
     inputBase: {
@@ -28,28 +35,89 @@ const headerStyles = (theme: Theme) => createStyles({
         marginBottom: theme.spacing(2),
         fontWeight: theme.typography.fontWeightLight,
         letterSpacing: 4
+    },
+    placeholder: {
+        opacity: 0.4
     }
 });
 
-interface ExtensionListHeaderItemProps extends WithStyles<typeof headerStyles> { }
+class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Props, ExtensionListHeaderComp.State> {
 
-class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderItemProps> {
+    protected service = ExtensionRegistryService.instance;
+    protected categories: ExtensionCategory[];
+
+    constructor(props: ExtensionListHeaderComp.Props) {
+        super(props);
+
+        this.categories = this.service.getCategories();
+
+        this.state = {
+            category: ''
+        }
+    }
+
+    protected handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const category = event.target.value as ExtensionCategory;
+        this.setState({ category });
+        this.props.onCategoryChanged(category);
+    }
+
+    protected handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.props.onSearchChanged(event.target.value)
+    }
+
+    protected renderValue = (value: string) => {
+        if (value === '') {
+            return <Box component='span' className={this.props.classes.placeholder}>All Categories</Box>
+        } else {
+            return value;
+        }
+    }
 
     render() {
         const { classes } = this.props;
         return <React.Fragment>
             <Box display='flex' flexDirection='column' alignItems='center' py={6}>
-                <Typography variant='h4' classes={{root: classes.typo}}>
+                <Typography variant='h4' classes={{ root: classes.typo }}>
                     Extensions for the Eclipse theia IDE
                 </Typography>
-                <Paper className={classes.paper}>
-                    <InputBase className={classes.inputBase}></InputBase>
-                    <IconButton color='primary' classes={{root: classes.iconButton}}>
-                        <SearchIcon />
-                    </IconButton>
-                </Paper>
+                <Box display='flex' width='70%'>
+                    <Paper className={classes.search}>
+                        <InputBase
+                            onChange={this.handleSearchChange}
+                            className={classes.inputBase}
+                            placeholder='Search in Name and Description'>
+                        </InputBase>
+                        <IconButton color='primary' classes={{ root: classes.iconButton }}>
+                            <SearchIcon />
+                        </IconButton>
+                    </Paper>
+                    <Paper className={classes.category}>
+                        <Select
+                            value={this.state.category}
+                            onChange={this.handleCategoryChange}
+                            renderValue={this.renderValue}
+                            displayEmpty
+                            input={<InputBase className={classes.inputBase}></InputBase>}>
+                            <MenuItem value=''>All Categories</MenuItem>
+                            {this.categories.map(c => {
+                                return <MenuItem value={c} key={c}>{c}</MenuItem>
+                            })}
+                        </Select>
+                    </Paper>
+                </Box>
             </Box>
         </React.Fragment>;
+    }
+}
+
+namespace ExtensionListHeaderComp {
+    export interface Props extends WithStyles<typeof headerStyles> {
+        onSearchChanged: (s: string) => void,
+        onCategoryChanged: (c: ExtensionCategory) => void
+    }
+    export interface State {
+        category: ExtensionCategory
     }
 }
 

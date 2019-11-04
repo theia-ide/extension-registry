@@ -8,8 +8,7 @@
 
 export interface ExtensionFilter {
     fullText?: string;
-    category?: string;
-    author?: string;
+    category?: ExtensionCategory;
 }
 
 export interface Extension {
@@ -20,14 +19,15 @@ export interface Extension {
     version: string;
     description: string;
     longDescription: string;
-    categories: string[];
+    categories: ExtensionCategory[];
     uri: string;
     ratings: ExtensionRating[];
     icon: string;
 }
 
+export type StarNumber = 1 | 2 | 3 | 4 | 5;
 export interface ExtensionRating {
-    rating: 1 | 2 | 3 | 4 | 5;
+    rating: StarNumber;
     title: string;
     comment: string;
     user: ExtensionRegistryUser;
@@ -40,3 +40,17 @@ export interface ExtensionRegistryUser {
     userName: string;
     email: string;
 }
+
+export type ExtensionCategory =
+    '' |
+    'Programming Languages' |
+    'Snippets' |
+    'Linters' |
+    'Themes' |
+    'Debuggers' |
+    'Formatters' |
+    'Keymaps' |
+    'SCM Providers' |
+    'Other' |
+    'Extension Packs' |
+    'Language Packs'

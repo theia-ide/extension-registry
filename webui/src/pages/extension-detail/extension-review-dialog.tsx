@@ -7,10 +7,10 @@
  ********************************************************************************/
 
 import * as React from "react";
-import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Theme } from "@material-ui/core";
+import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions, Theme, Box } from "@material-ui/core";
 import { withStyles, createStyles, WithStyles } from "@material-ui/styles";
 import { ExtensionRegistryService } from "../../extension-registry-service";
-import { ExtensionRatingStarSetter } from "./ExtensionRatingStarSetter";
+import { ExtensionRatingStarSetter } from "./extension-rating-star-setter";
 import { ExtensionRegistryUser } from "../../extension-registry-types";
 
 const revivewDialogStyles = (theme: Theme) => createStyles({
@@ -19,23 +19,27 @@ const revivewDialogStyles = (theme: Theme) => createStyles({
 
 class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDialogComponent.Props, ExtensionReviewDialogComponent.State> {
 
-    protected service = ExtensionRegistryService.instance;
+    protected service: ExtensionRegistryService;
+    protected starSetter: ExtensionRatingStarSetter | null;
 
     constructor(props: ExtensionReviewDialogComponent.Props) {
         super(props);
+
+        this.service = ExtensionRegistryService.instance;
 
         this.state = {
             open: false,
             title: '',
             comment: ''
-        }
+        };
     }
 
     protected handleOpenButton = () => this.setState({ open: true });
     protected handleCancel = () => this.setState({open: false});
     protected handleSave = async () => {
+        const rating = this.starSetter ? this.starSetter.state.number : 1;
         await this.service.postReview({
-            rating: 4,
+            rating,
             title: this.state.title,
             comment: this.state.comment,
             date: Date.now().toString(),
@@ -57,14 +61,17 @@ class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDial
                     <DialogContentText>
                         Your review will be posted publicly as {this.props.user.userName}
                     </DialogContentText>
-                    <ExtensionRatingStarSetter />
-                    <TextField fullWidth label='Review Title' onChange={this.handleTitleChange}/>
+                    <ExtensionRatingStarSetter ref={ref => this.starSetter = ref} />
+                    <Box my={2}>
+                        <TextField fullWidth label='Review Title' onChange={this.handleTitleChange} />
+                    </Box>
                     <TextField
-                        autoFocus
                         margin="dense"
                         label="Your Review..."
                         fullWidth
                         multiline
+                        variant="outlined"
+                        rows={4}
                         onChange={this.handleCommentChange}
                     />
                 </DialogContent>
@@ -72,12 +79,12 @@ class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDial
                     <Button onClick={this.handleCancel} color="secondary">
                         Cancel
                     </Button>
-                    <Button onClick={this.handleSave} color="primary">
+                    <Button onClick={this.handleSave} variant="contained" color="secondary">
                         Post Review
                     </Button>
                 </DialogActions>
             </Dialog>
-        </React.Fragment>
+        </React.Fragment>;
     }
 }
 

@@ -11,7 +11,7 @@ import { Container, AppBar, Toolbar, Typography, IconButton, CssBaseline, Box, T
 import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import ExitToAppIcon from '@material-ui/icons/ExitToAppOutlined';
 import { Route, Link, Switch } from 'react-router-dom';
-import { ExtensionList } from './pages/extension-list/extension-list';
+import { ExtensionListContainer } from './pages/extension-list/extension-list-container';
 import { UserProfile } from './pages/user-profile';
 import { ExtensionDetailPages, ExtensionDetail } from './pages/extension-detail/extension-detail';
 import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
@@ -70,8 +70,8 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                 </AppBar>
                 <Box flex='1'>
                     <Switch>
-                        <Route exact path='/' component={ExtensionList} />
-                        <Route path={ExtensionRegistryPages.EXTENSION_LIST} component={ExtensionList} />
+                        <Route exact path='/' component={ExtensionListContainer} />
+                        <Route path={ExtensionRegistryPages.EXTENSION_LIST} component={ExtensionListContainer} />
                         <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
                         <Route path={ExtensionDetailPages.EXTENSION_DETAIL} component={ExtensionDetail} />
                     </Switch>
