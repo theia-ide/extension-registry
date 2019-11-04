@@ -10,6 +10,8 @@ package io.typefox.extreg.json;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 public class ExtensionInfo {
 
     public static ExtensionInfo error(String message) {
@@ -18,6 +20,7 @@ public class ExtensionInfo {
         return info;
     }
 
+    @Nullable
     public String error;
 
     public String name;
@@ -32,34 +35,49 @@ public class ExtensionInfo {
 
     public LocalDateTime timestamp;
 
+    @Nullable
     public String displayName;
 
+    @Nullable
     public String description;
 
+    @Nullable
     public List<String> categories;
 
+    @Nullable
     public List<String> keywords;
 
+    @Nullable
     public String license;
 
+    @Nullable
     public String homepage;
 
+    @Nullable
     public String repository;
 
+    @Nullable
     public String bugs;
 
+    @Nullable
     public String markdown;
 
+    @Nullable
     public String galleryColor;
 
+    @Nullable
     public String galleryTheme;
 
-    public List<Badge> badges;
-
+    @Nullable
     public String qna;
 
-    public List<String> dependencies;
+    @Nullable
+    public List<Badge> badges;
 
-    public List<String> bundledExtensions;
+    @Nullable
+    public List<ExtensionReference> dependencies;
+
+    @Nullable
+    public List<ExtensionReference> bundledExtensions;
 
 }

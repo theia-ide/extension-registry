@@ -13,7 +13,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
-import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
 @Entity
@@ -21,13 +20,37 @@ public class ExtensionReadme {
 
     @Id
     @GeneratedValue
-    public long id;
+    private long id;
 
     @OneToOne
-    @MapsId
-    public ExtensionVersion extension;
+    private ExtensionVersion extension;
 
     @Lob
-    public Clob content;
+    private Clob content;
+
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public ExtensionVersion getExtension() {
+		return extension;
+	}
+
+	public void setExtension(ExtensionVersion extension) {
+		this.extension = extension;
+	}
+
+	public Clob getContent() {
+		return content;
+	}
+
+	public void setContent(Clob content) {
+		this.content = content;
+	}
 
 }

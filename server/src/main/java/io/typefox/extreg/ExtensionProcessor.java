@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -69,35 +70,37 @@ public class ExtensionProcessor {
 
     public List<String> getExtensionDependencies() {
         loadPackageJson();
-        return getStringList(packageJson.path("extensionDependencies"));
+        var result = getStringList(packageJson.path("extensionDependencies"));
+        return result != null ? result : Collections.emptyList();
     }
 
     public List<String> getBundledExtensions() {
         loadPackageJson();
-        return getStringList(packageJson.path("extensionPack"));
+        var result = getStringList(packageJson.path("extensionPack"));
+        return result != null ? result : Collections.emptyList();
     }
 
     public ExtensionVersion getMetadata() {
         loadPackageJson();
         var extension = new ExtensionVersion();
-        extension.timestamp = LocalDateTime.now(ZoneId.of("UTC"));
-        extension.version = packageJson.path("version").textValue();
-        extension.preview = packageJson.path("preview").booleanValue();
-        extension.displayName = packageJson.path("displayName").textValue();
-        extension.description = packageJson.path("description").textValue();
-        extension.categories = getStringList(packageJson.path("categories"));
-        extension.keywords = getStringList(packageJson.path("keywords"));
-        extension.license = packageJson.path("license").textValue();
-        extension.homepage = getUrl(packageJson.path("homepage"));
-        extension.repository = getUrl(packageJson.path("repository"));
-        extension.bugs = getUrl(packageJson.path("bugs"));
-        extension.markdown = packageJson.path("markdown").textValue();
+        extension.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
+        extension.setVersion(packageJson.path("version").textValue());
+        extension.setPreview(packageJson.path("preview").booleanValue());
+        extension.setDisplayName(packageJson.path("displayName").textValue());
+        extension.setDescription(packageJson.path("description").textValue());
+        extension.setCategories(getStringList(packageJson.path("categories")));
+        extension.setKeywords(getStringList(packageJson.path("keywords")));
+        extension.setLicense(packageJson.path("license").textValue());
+        extension.setHomepage(getUrl(packageJson.path("homepage")));
+        extension.setRepository(getUrl(packageJson.path("repository")));
+        extension.setBugs(getUrl(packageJson.path("bugs")));
+        extension.setMarkdown(packageJson.path("markdown").textValue());
         var galleryBanner = packageJson.path("galleryBanner");
         if (galleryBanner.isObject()) {
-            extension.galleryColor = galleryBanner.path("color").textValue();
-            extension.galleryTheme = galleryBanner.path("theme").textValue();
+            extension.setGalleryColor(galleryBanner.path("color").textValue());
+            extension.setGalleryTheme(galleryBanner.path("theme").textValue());
         }
-        extension.qna = packageJson.path("qna").textValue();
+        extension.setQna(packageJson.path("qna").textValue());
         return extension;
     }
 
@@ -123,8 +126,8 @@ public class ExtensionProcessor {
 
     public ExtensionBinary getBinary(ExtensionVersion extension, LobCreator lobCreator) {
         var binary = new ExtensionBinary();
-        binary.extension = extension;
-        binary.content = lobCreator.createBlob(content);
+        binary.setExtension(extension);
+        binary.setContent(lobCreator.createBlob(content));
         return binary;
     }
 
@@ -135,8 +138,8 @@ public class ExtensionProcessor {
         if (bytes == null)
             return null;
         var readme = new ExtensionReadme();
-        readme.extension = extension;
-        readme.content = lobCreator.createClob(new String(bytes, Charset.forName("UTF-8")));
+        readme.setExtension(extension);
+        readme.setContent(lobCreator.createClob(new String(bytes, Charset.forName("UTF-8"))));
         return readme;
     }
 
@@ -149,8 +152,8 @@ public class ExtensionProcessor {
         if (bytes == null)
             return null;
         var icon = new ExtensionIcon();
-        icon.extension = extension;
-        icon.content = lobCreator.createBlob(bytes);
+        icon.setExtension(extension);
+        icon.setContent(lobCreator.createBlob(bytes));
         return icon;
     }
 

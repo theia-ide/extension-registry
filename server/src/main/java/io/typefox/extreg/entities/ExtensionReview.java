@@ -11,23 +11,62 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
 
 @Entity
 public class ExtensionReview {
 
     @Id
     @GeneratedValue
-    public long id;
+    private long id;
 
     @ManyToOne
-    @MapsId
-    public Extension extension;
+    private Extension extension;
 
-    public String title;
+    private String title;
 
-    public String comment;
+    private String comment;
 
-    public int rating;
+    private int rating;
+
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public Extension getExtension() {
+		return extension;
+	}
+
+	public void setExtension(Extension extension) {
+		this.extension = extension;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
+	public int getRating() {
+		return rating;
+	}
+
+	public void setRating(int rating) {
+		this.rating = rating;
+	}
 
 }

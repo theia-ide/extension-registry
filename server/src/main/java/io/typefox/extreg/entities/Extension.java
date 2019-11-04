@@ -11,7 +11,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
 @Entity
@@ -19,16 +18,47 @@ public class Extension {
 
     @Id
     @GeneratedValue
-    public long id;
+    private long id;
 
-    public String name;
+    private String name;
 
     @ManyToOne
-    @MapsId
-    public Publisher publisher;
+    private Publisher publisher;
 
     @OneToOne
-    @MapsId
-    public ExtensionVersion latest;
+    private ExtensionVersion latest;
+
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Publisher getPublisher() {
+		return publisher;
+	}
+
+	public void setPublisher(Publisher publisher) {
+		this.publisher = publisher;
+	}
+
+	public ExtensionVersion getLatest() {
+		return latest;
+	}
+
+	public void setLatest(ExtensionVersion latest) {
+		this.latest = latest;
+	}
 
 }
