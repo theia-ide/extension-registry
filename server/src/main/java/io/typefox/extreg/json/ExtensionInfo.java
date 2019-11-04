@@ -5,29 +5,26 @@
  * terms of the Eclipse Public License v. 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
-package io.typefox.extreg.entities;
+package io.typefox.extreg.json;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
+public class ExtensionInfo {
 
-@Entity
-public class ExtensionVersion {
+    public static ExtensionInfo error(String message) {
+        var info = new ExtensionInfo();
+        info.error = message;
+        return info;
+    }
 
-    @Id
-    @GeneratedValue
-    public long id;
+    public String error;
 
-    @ManyToOne
-    @MapsId
-    public Extension extension;
+    public String name;
+
+    public String publisher;
+
+    public List<String> allVersions;
 
     public String version;
 
@@ -39,10 +36,8 @@ public class ExtensionVersion {
 
     public String description;
 
-    @ElementCollection
     public List<String> categories;
 
-    @ElementCollection
     public List<String> keywords;
 
     public String license;
@@ -59,12 +54,12 @@ public class ExtensionVersion {
 
     public String galleryTheme;
 
+    public List<Badge> badges;
+
     public String qna;
 
-    @ManyToMany
-    public List<Extension> dependencies;
+    public List<String> dependencies;
 
-    @ManyToMany
-    public List<Extension> bundledExtensions;
+    public List<String> bundledExtensions;
 
 }

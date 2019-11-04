@@ -13,8 +13,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
-import javax.ws.rs.WebApplicationException;
-
 import com.google.common.io.ByteStreams;
 
 public final class ArchiveUtil {
@@ -31,13 +29,13 @@ public final class ArchiveUtil {
                 String name = entry.getName().replace('\\', '/');
                 if (name.equals(entryName)) {
                     if (entry.getSize() > MAX_ENTRY_SIZE)
-                        throw new WebApplicationException("The file " + entryName + " exceeds the size limit of 32 MB.");
+                        throw new ErrorResultException("The file " + entryName + " exceeds the size limit of 32 MB.");
                     return ByteStreams.toByteArray(zipStream);
                 }
             }
             return null;
         } catch (ZipException exc) {
-            throw new WebApplicationException("Could not read zip file: " + exc.getMessage());
+            throw new ErrorResultException("Could not read zip file: " + exc.getMessage(), exc);
         } catch (IOException exc) {
             throw new RuntimeException(exc);
         }

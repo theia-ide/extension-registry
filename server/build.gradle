@@ -24,11 +24,10 @@ repositories {
 
 dependencies {
     implementation enforcedPlatform("io.quarkus:quarkus-bom:${versions.quarkus}")
-    implementation "io.quarkus:quarkus-resteasy:${versions.quarkus}"
-    implementation "io.quarkus:quarkus-resteasy-jsonb:${versions.quarkus}"
+    implementation "io.quarkus:quarkus-resteasy-jackson:${versions.quarkus}"
     implementation "io.quarkus:quarkus-hibernate-orm:${versions.quarkus}"
     implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
     implementation "io.quarkus:quarkus-vertx-web:${versions.quarkus}"
     implementation "com.google.guava:guava:${versions.guava}"
-    testImplementation "io.quarkus:quarkus-junit5"
+    testImplementation "io.quarkus:quarkus-junit5:${versions.quarkus}"
 }

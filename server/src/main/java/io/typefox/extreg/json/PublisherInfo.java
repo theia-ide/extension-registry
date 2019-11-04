@@ -5,12 +5,14 @@
  * terms of the Eclipse Public License v. 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
-package io.typefox.extreg.upload;
+package io.typefox.extreg.json;
 
-public class PackageRepository {
+import java.util.List;
 
-    public String type;
+public class PublisherInfo {
 
-    public String url;
+    public String name;
+
+    public List<String> extensions;
 
 }

@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v. 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
-package io.typefox.extreg.upload;
+package io.typefox.extreg.json;
 
 /**
  * A badge to be shown in the sidebar of the extension page in the marketplace.
