@@ -30,4 +30,5 @@ dependencies {
     implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
     implementation "io.quarkus:quarkus-vertx-web:${versions.quarkus}"
     implementation "com.google.guava:guava:${versions.guava}"
+    testImplementation "io.quarkus:quarkus-junit5"
 }

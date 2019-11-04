@@ -14,7 +14,7 @@ import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.PUT;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -24,6 +24,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import io.typefox.extreg.entities.Extension;
+import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.upload.ExtensionProcessor;
 
 @Path("/api/extension")
@@ -32,18 +33,19 @@ public class ExtensionResource {
     @Inject
     private EntityManager entityManager;
 
-    @PUT
+    @POST
     @Transactional
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    public Extension uploadExtension(byte[] content) {
+    public ExtensionVersion uploadExtension(byte[] content) {
         var processor = new ExtensionProcessor(content);
-        var extension = processor.getMetadata();
-        entityManager.persist(extension);
+        // TODO create extension if it does not exist yet, associate the version with it
+        var version = processor.getMetadata();
+        entityManager.persist(version);
         var lobCreator = Hibernate.getLobCreator((SessionImplementor) entityManager);
-        var binary = processor.getBinary(extension, lobCreator);
+        var binary = processor.getBinary(version, lobCreator);
         entityManager.persist(binary);
-        return extension;
+        return version;
     }
 
     @GET

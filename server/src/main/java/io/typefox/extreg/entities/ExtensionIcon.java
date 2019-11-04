@@ -17,7 +17,7 @@ import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
 @Entity
-public class ExtensionBinary {
+public class ExtensionIcon {
 
     @Id
     @GeneratedValue

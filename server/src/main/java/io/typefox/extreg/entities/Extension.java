@@ -10,10 +10,11 @@ package io.typefox.extreg.entities;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
+import javax.persistence.OneToOne;
 
 @Entity
-@Table(name = "extensions")
 public class Extension {
 
     @Id
@@ -22,8 +23,12 @@ public class Extension {
 
     public String name;
 
-    public String version;
+    @ManyToOne
+    @MapsId
+    public Publisher publisher;
 
-    public String publisher;
+    @OneToOne
+    @MapsId
+    public ExtensionVersion latest;
 
 }

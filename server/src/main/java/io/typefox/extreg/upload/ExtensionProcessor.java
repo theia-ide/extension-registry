@@ -7,64 +7,79 @@
  ********************************************************************************/
 package io.typefox.extreg.upload;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipInputStream;
 
+import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-
-import com.google.common.io.ByteStreams;
 
 import org.hibernate.engine.jdbc.LobCreator;
 
-import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionBinary;
+import io.typefox.extreg.entities.ExtensionIcon;
+import io.typefox.extreg.entities.ExtensionReadme;
+import io.typefox.extreg.entities.ExtensionVersion;
+import io.typefox.extreg.util.ArchiveUtil;
 
 public class ExtensionProcessor {
 
     private static final String PACKAGE_JSON = "extension/package.json";
+    private static final String README = "extension/README";
+    private static final String README_MD = "extension/README.md";
 
     private final byte[] content;
-    private String packageJson;
+    private Package packageJson;
 
     public ExtensionProcessor(byte[] content) {
         this.content = content;
-        try {
-            var zipStream = new ZipInputStream(new ByteArrayInputStream(content));
-            ZipEntry entry;
-            while ((entry = zipStream.getNextEntry()) != null) {
-                switch (entry.getName()) {
-                    case PACKAGE_JSON:
-                        packageJson = new String(ByteStreams.toByteArray(zipStream), Charset.forName("UTF-8"));
-                        break;
-                }
-            }
-            zipStream.close();
-        } catch (ZipException exc) {
-            throw new WebApplicationException("Could not read zip file: " + exc.getMessage(), Response.Status.BAD_REQUEST);
-        } catch (IOException exc) {
-            throw new RuntimeException(exc);
+    }
+
+    private void loadPackageJson() {
+        if (packageJson == null) {
+            var bytes = ArchiveUtil.readEntry(content, PACKAGE_JSON);
+            if (bytes == null)
+                throw new WebApplicationException("Entry not found: " + PACKAGE_JSON);
+            var jsonb = JsonbBuilder.create();
+            packageJson = jsonb.fromJson(new String(bytes, Charset.forName("UTF-8")), Package.class);
         }
     }
 
-    public Extension getMetadata() {
-        if (packageJson == null) {
-            throw new WebApplicationException("Entry not found: " + PACKAGE_JSON, Response.Status.BAD_REQUEST);
-        }
-        var extension = new Extension();
-        // TODO: parse package.json and copy content to extension
+    public ExtensionVersion getMetadata() {
+        loadPackageJson();
+        var extension = new ExtensionVersion();
+        // TODO copy metadata
         return extension;
     }
 
-    public ExtensionBinary getBinary(Extension extension, LobCreator lobCreator) {
+    public ExtensionBinary getBinary(ExtensionVersion extension, LobCreator lobCreator) {
         var binary = new ExtensionBinary();
         binary.extension = extension;
         binary.content = lobCreator.createBlob(content);
         return binary;
+    }
+
+    public ExtensionReadme getReadme(ExtensionVersion extension, LobCreator lobCreator) {
+        var bytes = ArchiveUtil.readEntry(content, README_MD);
+        if (bytes == null)
+            bytes = ArchiveUtil.readEntry(content, README);
+        if (bytes == null)
+            return null;
+        var readme = new ExtensionReadme();
+        readme.extension = extension;
+        readme.content = lobCreator.createClob(new String(bytes, Charset.forName("UTF-8")));
+        return readme;
+    }
+
+    public ExtensionIcon getIcon(ExtensionVersion extension, LobCreator lobCreator) {
+        loadPackageJson();
+        if (packageJson.icon == null || packageJson.icon.isEmpty())
+            return null;
+        var bytes = ArchiveUtil.readEntry(content, "extension/" + packageJson.icon);
+        if (bytes == null)
+            return null;
+        var icon = new ExtensionIcon();
+        icon.extension = extension;
+        icon.content = lobCreator.createBlob(bytes);
+        return icon;
     }
 
 }
