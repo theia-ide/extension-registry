@@ -8,6 +8,7 @@
 package io.typefox.extreg;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -18,6 +19,7 @@ import java.util.List;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
 
 import org.hibernate.engine.jdbc.LobCreator;
 
@@ -37,8 +39,12 @@ public class ExtensionProcessor {
     private final byte[] content;
     private JsonNode packageJson;
 
-    public ExtensionProcessor(byte[] content) {
-        this.content = content;
+    public ExtensionProcessor(InputStream stream) {
+        try {
+			this.content = ByteStreams.toByteArray(stream);
+		} catch (IOException exc) {
+			throw new RuntimeException(exc);
+		}
     }
 
     private void loadPackageJson() {

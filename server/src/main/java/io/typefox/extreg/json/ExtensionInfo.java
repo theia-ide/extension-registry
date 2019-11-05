@@ -12,6 +12,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;;
+
+@JsonInclude(Include.NON_NULL)
 public class ExtensionInfo {
 
     public static ExtensionInfo error(String message) {
@@ -31,9 +35,10 @@ public class ExtensionInfo {
 
     public String version;
 
-    public boolean preview;
-
     public LocalDateTime timestamp;
+
+    @Nullable
+    public Boolean preview;
 
     @Nullable
     public String displayName;

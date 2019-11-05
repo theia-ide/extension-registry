@@ -7,9 +7,13 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;;
+
 /**
  * A badge to be shown in the sidebar of the extension page in the marketplace.
  */
+@JsonInclude(Include.NON_NULL)
 public class Badge {
 
     public String url;

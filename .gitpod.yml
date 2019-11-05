@@ -12,7 +12,12 @@ tasks:
     yarn
     yarn build:dev
     cd /workspace/extension-registry/server
-    ./gradlew build -x buildNative -x testNative
+    ./gradlew build downloadTestExtensions -x buildNative -x testNative
   command: |
     cd /workspace/extension-registry/server
     ./gradlew quarkusDev
+- command: |
+    cd /workspace/extension-registry/server
+    gp await-port 8080
+    find build/test-extensions -name '*.vsix' -exec \
+      curl --header 'Content-Type:application/octet-stream' --data-binary '@{}' http://localhost:8080/api/-/publish \;

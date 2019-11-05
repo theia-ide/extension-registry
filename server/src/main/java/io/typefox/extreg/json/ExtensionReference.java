@@ -9,6 +9,10 @@ package io.typefox.extreg.json;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;;
+
+@JsonInclude(Include.NON_NULL)
 public class ExtensionReference {
 
     public String publisher;

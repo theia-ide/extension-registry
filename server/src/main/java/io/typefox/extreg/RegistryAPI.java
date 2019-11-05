@@ -7,12 +7,15 @@
  ********************************************************************************/
 package io.typefox.extreg;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -25,7 +28,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.hibernate.Hibernate;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.Session;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionVersion;
@@ -35,6 +39,7 @@ import io.typefox.extreg.json.ExtensionReference;
 import io.typefox.extreg.json.PublisherInfo;
 import io.typefox.extreg.json.SearchResult;
 import io.typefox.extreg.util.ErrorResultException;
+import io.typefox.extreg.util.SemanticVersion;
 
 @Path("/api")
 public class RegistryAPI {
@@ -104,17 +109,33 @@ public class RegistryAPI {
     @Transactional
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
-    public ExtensionInfo publish(byte[] content) {
+    public ExtensionInfo publish(InputStream content) {
         try {
             var processor = new ExtensionProcessor(content);
-            var publisher = findPublisher(processor.getPublisherName());
-            var extension = findExtension(processor.getExtensionName(), publisher);
+            var publisher = findPublisherOptional(processor.getPublisherName());
+            if (publisher.isEmpty()) {
+                var pub = new Publisher();
+                pub.setName(processor.getPublisherName());
+                entityManager.persist(pub);
+                publisher = Optional.of(pub);
+            }
+            var extension = findExtensionOptional(processor.getExtensionName(), publisher.get());
             var extVersion = processor.getMetadata();
-            checkUniqueVersion(extVersion.getVersion(), extension);
-            processor.getExtensionDependencies().forEach(dep -> addDependency(dep, extVersion));
-            processor.getBundledExtensions().forEach(dep -> addBundledExtension(dep, extVersion));
+            if (extension.isEmpty()) {
+                var ext = new Extension();
+                ext.setName(processor.getExtensionName());
+                ext.setPublisher(publisher.get());
+                ext.setLatest(extVersion);
+                entityManager.persist(ext);
+                extension = Optional.of(ext);
+            } else {
+                checkUniqueVersion(extVersion.getVersion(), extension.get());
+                if (isLatestVersion(extVersion.getVersion(), extension.get()))
+                    extension.get().setLatest(extVersion);
+            }
+            extVersion.setExtension(extension.get());
 
-            var lobCreator = Hibernate.getLobCreator((SessionImplementor) entityManager);
+            var lobCreator = Hibernate.getLobCreator((Session) entityManager.getDelegate());
             entityManager.persist(extVersion);
             var binary = processor.getBinary(extVersion, lobCreator);
             entityManager.persist(binary);
@@ -124,6 +145,8 @@ public class RegistryAPI {
             var icon = processor.getIcon(extVersion, lobCreator);
             if (icon != null)
                 entityManager.persist(icon);
+            processor.getExtensionDependencies().forEach(dep -> addDependency(dep, extVersion));
+            processor.getBundledExtensions().forEach(dep -> addBundledExtension(dep, extVersion));
 
             var json = new ExtensionInfo();
             copyMetadata(json, extVersion);
@@ -140,25 +163,50 @@ public class RegistryAPI {
         return query.getSingleResult();
     }
 
+    private Optional<Publisher> findPublisherOptional(String name) {
+        var qs = "SELECT pub FROM Publisher pub WHERE (pub.name = :name)";
+        var query = entityManager.createQuery(qs, Publisher.class);
+        query.setParameter("name", name);
+        return getOptionalResult(query);
+    }
+
     private Extension findExtension(String name, Publisher publisher) {
         var qs = "SELECT ext FROM Extension ext WHERE (ext.publisher = :publisher and ext.name = :name)";
         var query = entityManager.createQuery(qs, Extension.class);
-        query.setParameter("publisher", publisher.getId());
+        query.setParameter("publisher", publisher);
         query.setParameter("name", name);
         return query.getSingleResult();
+    }
+
+    private Optional<Extension> findExtensionOptional(String name, Publisher publisher) {
+        var qs = "SELECT ext FROM Extension ext WHERE (ext.publisher = :publisher and ext.name = :name)";
+        var query = entityManager.createQuery(qs, Extension.class);
+        query.setParameter("publisher", publisher);
+        query.setParameter("name", name);
+        return getOptionalResult(query);
+    }
+
+    private <T> Optional<T> getOptionalResult(TypedQuery<T> query) {
+        var list = query.getResultList();
+        if (list.isEmpty())
+            return Optional.empty();
+        else if (list.size() == 1)
+            return Optional.of(list.get(0));
+        else
+            throw new NonUniqueResultException(list.size());
     }
 
     private List<String> findExtensionNames(Publisher publisher) {
         var qs = "SELECT ext.name FROM Extension ext WHERE (ext.publisher = :publisher)";
         var query = entityManager.createQuery(qs, String.class);
-        query.setParameter("publisher", publisher.getId());
+        query.setParameter("publisher", publisher);
         return query.getResultList();
     }
 
     private ExtensionVersion findVersion(String version, Extension extension) {
         var qs = "SELECT exv FROM ExtensionVersion exv WHERE (exv.extension = :extension and exv.version = :version)";
         var query = entityManager.createQuery(qs, ExtensionVersion.class);
-        query.setParameter("extension", extension.getId());
+        query.setParameter("extension", extension);
         query.setParameter("version", version);
         return query.getSingleResult();
     }
@@ -166,17 +214,28 @@ public class RegistryAPI {
     private List<String> findAllVersions(Extension extension) {
         var qs = "SELECT exv.version FROM ExtensionVersion exv WHERE (exv.extension = :extension)";
         var query = entityManager.createQuery(qs, String.class);
-        query.setParameter("extension", extension.getId());
+        query.setParameter("extension", extension);
         return query.getResultList();
     }
 
     private void checkUniqueVersion(String version, Extension extension) {
         var qs = "SELECT count(*) FROM ExtensionVersion exv WHERE (exv.extension = :extension and exv.version = :version)";
         var query = entityManager.createQuery(qs, Long.class);
-        query.setParameter("extension", extension.getId());
+        query.setParameter("extension", extension);
         query.setParameter("version", version);
         if (query.getSingleResult() > 0)
             throw new ErrorResultException("Extension " + extension.getName() + " version " + version + " is already published.");
+    }
+
+    private boolean isLatestVersion(String version, Extension extension) {
+        var allVersions = findAllVersions(extension);
+        var newSemver = new SemanticVersion(version);
+        for (String publishedVersion : allVersions) {
+            var oldSemver = new SemanticVersion(publishedVersion);
+            if (newSemver.compareTo(oldSemver) < 0)
+                return false;
+        }
+        return true;
     }
 
     private void copyMetadata(ExtensionInfo json, ExtensionVersion extVersion) {
