@@ -9,7 +9,6 @@ package io.typefox.extreg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -20,8 +19,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
-
-import org.hibernate.engine.jdbc.LobCreator;
 
 import io.typefox.extreg.entities.ExtensionBinary;
 import io.typefox.extreg.entities.ExtensionIcon;
@@ -130,14 +127,14 @@ public class ExtensionProcessor {
         return null;
     }
 
-    public ExtensionBinary getBinary(ExtensionVersion extension, LobCreator lobCreator) {
+    public ExtensionBinary getBinary(ExtensionVersion extension) {
         var binary = new ExtensionBinary();
         binary.setExtension(extension);
-        binary.setContent(lobCreator.createBlob(content));
+        binary.setContent(content);
         return binary;
     }
 
-    public ExtensionReadme getReadme(ExtensionVersion extension, LobCreator lobCreator) {
+    public ExtensionReadme getReadme(ExtensionVersion extension) {
         var bytes = ArchiveUtil.readEntry(content, README_MD);
         if (bytes == null)
             bytes = ArchiveUtil.readEntry(content, README);
@@ -145,11 +142,11 @@ public class ExtensionProcessor {
             return null;
         var readme = new ExtensionReadme();
         readme.setExtension(extension);
-        readme.setContent(lobCreator.createClob(new String(bytes, Charset.forName("UTF-8"))));
+        readme.setContent(bytes);
         return readme;
     }
 
-    public ExtensionIcon getIcon(ExtensionVersion extension, LobCreator lobCreator) {
+    public ExtensionIcon getIcon(ExtensionVersion extension) {
         loadPackageJson();
         var iconPath = packageJson.get("icon");
         if (iconPath == null || !iconPath.isTextual())
@@ -159,7 +156,7 @@ public class ExtensionProcessor {
             return null;
         var icon = new ExtensionIcon();
         icon.setExtension(extension);
-        icon.setContent(lobCreator.createBlob(bytes));
+        icon.setContent(bytes);
         return icon;
     }
 

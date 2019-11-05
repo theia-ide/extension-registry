@@ -7,12 +7,9 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
-import java.sql.Clob;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 
 @Entity
@@ -25,8 +22,7 @@ public class ExtensionReadme {
     @OneToOne
     private ExtensionVersion extension;
 
-    @Lob
-    private Clob content;
+    private byte[] content;
 
 
 	public long getId() {
@@ -45,11 +41,11 @@ public class ExtensionReadme {
 		this.extension = extension;
 	}
 
-	public Clob getContent() {
+	public byte[] getContent() {
 		return content;
 	}
 
-	public void setContent(Clob content) {
+	public void setContent(byte[] content) {
 		this.content = content;
 	}
 

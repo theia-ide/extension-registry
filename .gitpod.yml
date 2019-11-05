@@ -19,5 +19,4 @@ tasks:
 - command: |
     cd /workspace/extension-registry/server
     gp await-port 8080
-    find build/test-extensions -name '*.vsix' -exec \
-      curl --header 'Content-Type:application/octet-stream' --data-binary '@{}' http://localhost:8080/api/-/publish \;
+    find build/test-extensions -name '*.vsix' -exec ./publish.sh '{}' \;
