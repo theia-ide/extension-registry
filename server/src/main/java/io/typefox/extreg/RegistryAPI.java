@@ -195,7 +195,7 @@ public class RegistryAPI {
             var array = new ArrayList<Review>();
             for (ExtensionReview extReview : reviews) {
                 var json = new Review();
-                json.user = extReview.getUser();
+                json.user = extReview.getUsername();
                 json.title = extReview.getTitle();
                 json.comment = extReview.getComment();
                 json.rating = extReview.getRating();
@@ -218,7 +218,7 @@ public class RegistryAPI {
             var extension = entities.findExtension(publisherName, extensionName);
             var extReview = new ExtensionReview();
             extReview.setExtension(extension);
-            extReview.setUser(review.user);
+            extReview.setUsername(review.user);
             extReview.setTitle(review.title);
             extReview.setComment(review.comment);
             extReview.setRating(review.rating);

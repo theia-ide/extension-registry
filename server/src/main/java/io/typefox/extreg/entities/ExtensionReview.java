@@ -22,7 +22,7 @@ public class ExtensionReview {
     @ManyToOne
     private Extension extension;
 
-    private String user;
+    private String username;
 
     private String title;
 
@@ -47,12 +47,12 @@ public class ExtensionReview {
 		this.extension = extension;
 	}
 
-	public String getUser() {
-		return user;
+	public String getUsername() {
+		return username;
 	}
 
-	public void setUser(String user) {
-		this.user = user;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 
 	public String getTitle() {
