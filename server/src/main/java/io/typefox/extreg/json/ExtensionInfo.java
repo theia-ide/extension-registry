@@ -37,6 +37,14 @@ public class ExtensionInfo {
 
     public LocalDateTime timestamp;
 
+    public String extensionFileName;
+
+    @Nullable
+    public String iconFileName;
+
+    @Nullable
+    public String readmeFileName;
+
     @Nullable
     public Boolean preview;
 

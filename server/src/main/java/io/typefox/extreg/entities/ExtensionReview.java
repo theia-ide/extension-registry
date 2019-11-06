@@ -22,6 +22,8 @@ public class ExtensionReview {
     @ManyToOne
     private Extension extension;
 
+    private String user;
+
     private String title;
 
     private String comment;
@@ -43,6 +45,14 @@ public class ExtensionReview {
 
 	public void setExtension(Extension extension) {
 		this.extension = extension;
+	}
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
 	}
 
 	public String getTitle() {

@@ -27,7 +27,7 @@ public final class ArchiveUtil {
             ZipEntry entry;
             while ((entry = zipStream.getNextEntry()) != null) {
                 String name = entry.getName().replace('\\', '/');
-                if (name.equals(entryName)) {
+                if (name.equalsIgnoreCase(entryName)) {
                     if (entry.getSize() > MAX_ENTRY_SIZE)
                         throw new ErrorResultException("The file " + entryName + " exceeds the size limit of 32 MB.");
                     return ByteStreams.toByteArray(zipStream);

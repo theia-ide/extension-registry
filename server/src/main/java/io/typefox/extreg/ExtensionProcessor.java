@@ -135,14 +135,18 @@ public class ExtensionProcessor {
     }
 
     public ExtensionReadme getReadme(ExtensionVersion extension) {
+        var fileName = "README.md";
         var bytes = ArchiveUtil.readEntry(content, README_MD);
-        if (bytes == null)
+        if (bytes == null) {
+            fileName = "README";
             bytes = ArchiveUtil.readEntry(content, README);
+        }
         if (bytes == null)
             return null;
         var readme = new ExtensionReadme();
         readme.setExtension(extension);
         readme.setContent(bytes);
+        extension.setReadmeFileName(fileName);
         return readme;
     }
 
@@ -151,12 +155,18 @@ public class ExtensionProcessor {
         var iconPath = packageJson.get("icon");
         if (iconPath == null || !iconPath.isTextual())
             return null;
-        var bytes = ArchiveUtil.readEntry(content, "extension/" + iconPath.asText());
+        var iconPathStr = iconPath.asText().replace('\\', '/');
+        var bytes = ArchiveUtil.readEntry(content, "extension/" + iconPathStr);
         if (bytes == null)
             return null;
         var icon = new ExtensionIcon();
         icon.setExtension(extension);
         icon.setContent(bytes);
+        var fileNameIndex = iconPathStr.lastIndexOf('/');
+        if (fileNameIndex >= 0)
+            extension.setIconFileName(iconPathStr.substring(fileNameIndex + 1));
+        else
+            extension.setIconFileName(iconPathStr);
         return icon;
     }
 

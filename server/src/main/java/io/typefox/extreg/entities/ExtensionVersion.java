@@ -33,6 +33,12 @@ public class ExtensionVersion {
 
     private LocalDateTime timestamp;
 
+    private String extensionFileName;
+
+    private String iconFileName;
+
+    private String readmeFileName;
+
     private String displayName;
 
     private String description;
@@ -104,6 +110,30 @@ public class ExtensionVersion {
 
 	public void setTimestamp(LocalDateTime timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public String getExtensionFileName() {
+		return extensionFileName;
+	}
+
+	public void setExtensionFileName(String extensionFileName) {
+		this.extensionFileName = extensionFileName;
+	}
+
+	public String getIconFileName() {
+		return iconFileName;
+	}
+
+	public void setIconFileName(String iconFileName) {
+		this.iconFileName = iconFileName;
+	}
+
+	public String getReadmeFileName() {
+		return readmeFileName;
+	}
+
+	public void setReadmeFileName(String readmeFileName) {
+		this.readmeFileName = readmeFileName;
 	}
 
 	public String getDisplayName() {

@@ -21,6 +21,7 @@ import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionBinary;
 import io.typefox.extreg.entities.ExtensionIcon;
 import io.typefox.extreg.entities.ExtensionReadme;
+import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.entities.Publisher;
 import io.typefox.extreg.util.ErrorResultException;
@@ -77,7 +78,7 @@ public class EntityService {
             throw new NonUniqueResultException(list.size());
     }
 
-    public List<String> findExtensionNames(Publisher publisher) {
+    public List<String> getAllExtensionNames(Publisher publisher) {
         var qs = "SELECT ext.name FROM Extension ext WHERE (ext.publisher = :publisher)";
         var query = entityManager.createQuery(qs, String.class);
         query.setParameter("publisher", publisher);
@@ -97,7 +98,7 @@ public class EntityService {
         return findVersion(version, extension);
     }
 
-    public List<String> findAllVersions(Extension extension) {
+    public List<String> getAllVersionStrings(Extension extension) {
         var qs = "SELECT exv.version FROM ExtensionVersion exv WHERE (exv.extension = :extension)";
         var query = entityManager.createQuery(qs, String.class);
         query.setParameter("extension", extension);
@@ -111,21 +112,11 @@ public class EntityService {
         return query.getSingleResult();
     }
 
-    public ExtensionBinary findBinary(String publisherName, String extensionName, String version) {
-        var extVersion = findVersion(publisherName, extensionName, version);
-        return findBinary(extVersion);
-    }
-
     public ExtensionIcon findIcon(ExtensionVersion extVersion) {
         var qs = "SELECT ico FROM ExtensionIcon ico WHERE (ico.extension = :extension)";
         var query = entityManager.createQuery(qs, ExtensionIcon.class);
         query.setParameter("extension", extVersion);
         return query.getSingleResult();
-    }
-
-    public ExtensionIcon findIcon(String publisherName, String extensionName, String version) {
-        var extVersion = findVersion(publisherName, extensionName, version);
-        return findIcon(extVersion);
     }
 
     public ExtensionReadme findReadme(ExtensionVersion extVersion) {
@@ -135,9 +126,16 @@ public class EntityService {
         return query.getSingleResult();
     }
 
-    public ExtensionReadme findReadme(String publisherName, String extensionName, String version) {
-        var extVersion = findVersion(publisherName, extensionName, version);
-        return findReadme(extVersion);
+    public List<ExtensionReview> findAllReviews(Extension extension) {
+        var qs = "SELECT rev FROM ExtensionReview rev WHERE (rev.extension = :extension)";
+        var query = entityManager.createQuery(qs, ExtensionReview.class);
+        query.setParameter("extension", extension);
+        return query.getResultList();
+    }
+
+    public List<ExtensionReview> findAllReviews(String publisherName, String extensionName) {
+        var extension = findExtension(publisherName, extensionName);
+        return findAllReviews(extension);
     }
 
     public void checkUniqueVersion(String version, Extension extension) {
@@ -150,7 +148,7 @@ public class EntityService {
     }
 
     public boolean isLatestVersion(String version, Extension extension) {
-        var allVersions = findAllVersions(extension);
+        var allVersions = getAllVersionStrings(extension);
         var newSemver = new SemanticVersion(version);
         for (String publishedVersion : allVersions) {
             var oldSemver = new SemanticVersion(publishedVersion);

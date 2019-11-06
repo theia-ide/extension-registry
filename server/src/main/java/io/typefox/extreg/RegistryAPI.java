@@ -8,8 +8,9 @@
 package io.typefox.extreg;
 
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -25,13 +26,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.typefox.extreg.entities.Extension;
+import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.entities.Publisher;
 import io.typefox.extreg.json.ExtensionInfo;
 import io.typefox.extreg.json.ExtensionReference;
 import io.typefox.extreg.json.PublisherInfo;
+import io.typefox.extreg.json.Review;
 import io.typefox.extreg.json.SearchResult;
 import io.typefox.extreg.util.ErrorResultException;
 
@@ -52,7 +56,7 @@ public class RegistryAPI {
             var publisher = entities.findPublisher(publisherName);
             var json = new PublisherInfo();
             json.name = publisher.getName();
-            json.extensions = entities.findExtensionNames(publisher);
+            json.extensions = entities.getAllExtensionNames(publisher);
             return json;
         } catch (NoResultException exc) {
             throw new NotFoundException(exc);
@@ -91,42 +95,26 @@ public class RegistryAPI {
     }
 
     @GET
-    @Path("/{publisher}/{extension}/{version}/download")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public byte[] downloadExtension(@PathParam("publisher") String publisherName,
+    @Path("/{publisher}/{extension}/{version}/{download}")
+    public Response downloadExtension(@PathParam("publisher") String publisherName,
                                     @PathParam("extension") String extensionName,
-                                    @PathParam("version") String version) {
+                                    @PathParam("version") String version,
+                                    @PathParam("download") String download) {
         try {
-            var binary = entities.findBinary(publisherName, extensionName, version);
-            return binary.getContent();
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
-        }
-    }
-
-    @GET
-    @Path("/{publisher}/{extension}/{version}/icon")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public byte[] getIcon(@PathParam("publisher") String publisherName,
-                          @PathParam("extension") String extensionName,
-                          @PathParam("version") String version) {
-        try {
-            var icon = entities.findIcon(publisherName, extensionName, version);
-            return icon.getContent();
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
-        }
-    }
-
-    @GET
-    @Path("/{publisher}/{extension}/{version}/readme")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getReadme(@PathParam("publisher") String publisherName,
-                          @PathParam("extension") String extensionName,
-                          @PathParam("version") String version) {
-        try {
-            var readme = entities.findReadme(publisherName, extensionName, version);
-            return new String(readme.getContent(), Charset.forName("UTF-8"));
+            var extVersion = entities.findVersion(publisherName, extensionName, version);
+            if (download.equals(extVersion.getExtensionFileName())) {
+                var content = entities.findBinary(extVersion).getContent();
+                return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM).build();
+            }
+            if (download.equals(extVersion.getReadmeFileName())) {
+                var content = entities.findReadme(extVersion).getContent();
+                return Response.ok(content, MediaType.TEXT_PLAIN).build();
+            }
+            if (download.equals(extVersion.getIconFileName())) {
+                var content = entities.findIcon(extVersion).getContent();
+                return Response.ok(content, URLConnection.guessContentTypeFromName(download)).build();
+            }
+            throw new NotFoundException();
         } catch (NoResultException exc) {
             throw new NotFoundException(exc);
         }
@@ -171,6 +159,11 @@ public class RegistryAPI {
                     extension.get().setLatest(extVersion);
             }
             extVersion.setExtension(extension.get());
+            extVersion.setExtensionFileName(
+                    publisher.get().getName()
+                    + "." + extension.get().getName()
+                    + "-" + extVersion.getVersion()
+                    + ".vsix");
 
             entityManager.persist(extVersion);
             var binary = processor.getBinary(extVersion);
@@ -192,14 +185,60 @@ public class RegistryAPI {
         }
     }
 
+    @GET
+    @Path("/{publisher}/{extension}/reviews")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Review> getReviews(@PathParam("publisher") String publisherName,
+                                   @PathParam("extension") String extensionName) {
+        try {
+            var reviews = entities.findAllReviews(publisherName, extensionName);
+            var array = new ArrayList<Review>();
+            for (ExtensionReview extReview : reviews) {
+                var json = new Review();
+                json.user = extReview.getUser();
+                json.title = extReview.getTitle();
+                json.comment = extReview.getComment();
+                json.rating = extReview.getRating();
+                array.add(json);
+            }
+            return array;
+        } catch (NoResultException exc) {
+            throw new NotFoundException(exc);
+        }
+    }
+
+    @POST
+    @Path("/{publisher}/{extension}/review")
+    @Transactional
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void review(Review review,
+                       @PathParam("publisher") String publisherName,
+                       @PathParam("extension") String extensionName) {
+        try {
+            var extension = entities.findExtension(publisherName, extensionName);
+            var extReview = new ExtensionReview();
+            extReview.setExtension(extension);
+            extReview.setUser(review.user);
+            extReview.setTitle(review.title);
+            extReview.setComment(review.comment);
+            extReview.setRating(review.rating);
+            entityManager.persist(extReview);
+        } catch (NoResultException exc) {
+            throw new NotFoundException(exc);
+        }
+    }
+
     private void copyMetadata(ExtensionInfo json, ExtensionVersion extVersion) {
         var extension = extVersion.getExtension();
         json.publisher = extension.getPublisher().getName();
         json.name = extension.getName();
-        json.allVersions = entities.findAllVersions(extension);
+        json.allVersions = entities.getAllVersionStrings(extension);
         json.version = extVersion.getVersion();
         json.preview = extVersion.isPreview();
         json.timestamp = extVersion.getTimestamp();
+        json.extensionFileName = extVersion.getExtensionFileName();
+        json.iconFileName = extVersion.getIconFileName();
+        json.readmeFileName = extVersion.getReadmeFileName();
         json.displayName = extVersion.getDisplayName();
         json.description = extVersion.getDescription();
         json.categories = extVersion.getCategories();
