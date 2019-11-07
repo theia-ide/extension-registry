@@ -13,9 +13,10 @@ import ExitToAppIcon from '@material-ui/icons/ExitToAppOutlined';
 import { Route, Link, Switch } from 'react-router-dom';
 import { ExtensionListContainer } from './pages/extension-list/extension-list-container';
 import { UserProfile } from './pages/user-profile';
-import { ExtensionDetailPages, ExtensionDetail } from './pages/extension-detail/extension-detail';
+import { ExtensionDetailRoutes, ExtensionDetail } from './pages/extension-detail/extension-detail';
 import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
 import * as TheiaLogo from './img/theia-logo.svg';
+import { ExtensionRegistryService } from './extension-registry-service';
 
 export namespace ExtensionRegistryPages {
     export const EXTENSION_LIST = '/extension-list';
@@ -37,9 +38,21 @@ const mainStyles = (theme: Theme) => createStyles({
     }
 });
 
-interface ExtensionRegistryMainProps extends WithStyles<typeof mainStyles> { }
+interface ExtensionRegistryMainProps extends WithStyles<typeof mainStyles> {
+    apiUrl: string
+}
 
 class MainComponent extends React.Component<ExtensionRegistryMainProps> {
+
+    protected service: ExtensionRegistryService;
+
+    constructor(props: ExtensionRegistryMainProps){
+        super(props);
+
+        this.service = ExtensionRegistryService.instance;
+        this.service.apiUrl = props.apiUrl;
+    }
+
     render() {
         return <React.Fragment>
             <CssBaseline />
@@ -70,10 +83,12 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                 </AppBar>
                 <Box flex='1'>
                     <Switch>
-                        <Route exact path='/' component={ExtensionListContainer} />
-                        <Route path={ExtensionRegistryPages.EXTENSION_LIST} component={ExtensionListContainer} />
+                        <Route exact path={['/', ExtensionRegistryPages.EXTENSION_LIST]}>
+                            <ExtensionListContainer service={this.service} />
+                        </Route>
                         <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
-                        <Route path={ExtensionDetailPages.EXTENSION_DETAIL} component={ExtensionDetail} />
+                        <Route path={ExtensionDetailRoutes.ROOT + ExtensionDetailRoutes.TAB + ExtensionDetailRoutes.PARAMS}
+                            render={routeProps => <ExtensionDetail {...routeProps} service={this.service} />} />
                     </Switch>
                 </Box>
                 <footer>

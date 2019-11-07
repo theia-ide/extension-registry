@@ -8,31 +8,38 @@
 
 import * as React from "react";
 import { Tabs, Tab } from "@material-ui/core";
-import { ExtensionDetailPages } from "./extension-detail";
+import { ExtensionDetailRoutes } from "./extension-detail";
 import { RouteComponentProps } from "react-router-dom";
+import { createURL } from "../../utils";
+import { ExtensionRaw } from "../../extension-registry-types";
 
 export class ExtensionDetailTabs extends React.Component<ExtensionDetailTabs.Props, ExtensionDetailTabs.State> {
+
+    protected extensionResolvedRoute: string;
 
     constructor(props: ExtensionDetailTabs.Props) {
         super(props);
 
-        this.state = { tab: ExtensionDetailPages.EXTENSION_DETAIL_OVERVIEW };
-    }
+        const params = this.props.match.params as ExtensionDetailTabs.Params;
+        this.extensionResolvedRoute = createURL([params.publisher, params.name, params.version || ''])
 
-    componentDidMount() {
-        this.props.history.push(ExtensionDetailPages.EXTENSION_DETAIL_ROOT + '/' + this.props.extid + ExtensionDetailPages.EXTENSION_DETAIL_OVERVIEW);
+        this.state = { tab: params.tab };
     }
 
     protected handleChange = (event: React.ChangeEvent, newTab: string) => {
-        this.props.history.push(ExtensionDetailPages.EXTENSION_DETAIL_ROOT + '/' + this.props.extid + newTab);
-        this.setState({tab: newTab});
+        this.props.history.push(this.createRoute(newTab));
+        this.setState({ tab: newTab });
+    }
+
+    protected createRoute(tab: string) {
+        return ExtensionDetailRoutes.ROOT + '/' + tab + '/' + this.extensionResolvedRoute
     }
 
     render() {
         return <React.Fragment>
             <Tabs value={this.state.tab} onChange={this.handleChange}>
-                <Tab value={ExtensionDetailPages.EXTENSION_DETAIL_OVERVIEW} label='Overview' />
-                <Tab value={ExtensionDetailPages.EXTENSION_DETAIL_RATING} label='Rating &amp; Review' />
+                <Tab value={ExtensionDetailRoutes.OVERVIEW} label='Overview' />
+                <Tab value={ExtensionDetailRoutes.RATING} label='Rating &amp; Review' />
             </Tabs>
         </React.Fragment>;
     }
@@ -40,9 +47,13 @@ export class ExtensionDetailTabs extends React.Component<ExtensionDetailTabs.Pro
 
 export namespace ExtensionDetailTabs {
     export interface Props extends RouteComponentProps {
-        extid: string
+
     }
     export interface State {
         tab: string
+    }
+
+    export interface Params extends ExtensionRaw {
+        tab: string;
     }
 }

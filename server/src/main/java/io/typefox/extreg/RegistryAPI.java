@@ -95,29 +95,47 @@ public class RegistryAPI {
     }
 
     @GET
-    @Path("/{publisher}/{extension}/{version}/{download}")
+    @Path("/{publisher}/{extension}/{version}/file/{download}")
     public Response downloadExtension(@PathParam("publisher") String publisherName,
                                     @PathParam("extension") String extensionName,
                                     @PathParam("version") String version,
                                     @PathParam("download") String download) {
         try {
             var extVersion = entities.findVersion(publisherName, extensionName, version);
-            if (download.equals(extVersion.getExtensionFileName())) {
-                var content = entities.findBinary(extVersion).getContent();
-                return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM).build();
-            }
-            if (download.equals(extVersion.getReadmeFileName())) {
-                var content = entities.findReadme(extVersion).getContent();
-                return Response.ok(content, MediaType.TEXT_PLAIN).build();
-            }
-            if (download.equals(extVersion.getIconFileName())) {
-                var content = entities.findIcon(extVersion).getContent();
-                return Response.ok(content, URLConnection.guessContentTypeFromName(download)).build();
-            }
-            throw new NotFoundException();
+            return getFile(extVersion, download);
         } catch (NoResultException exc) {
             throw new NotFoundException(exc);
         }
+    }
+
+    @GET
+    @Path("/{publisher}/{extension}/file/{download}")
+    public Response downloadExtension(@PathParam("publisher") String publisherName,
+                                    @PathParam("extension") String extensionName,
+                                    @PathParam("download") String download) {
+        try {
+            var extension = entities.findExtension(publisherName, extensionName);
+            var extVersion = extension.getLatest();
+            return getFile(extVersion, download);
+        } catch (NoResultException exc) {
+            throw new NotFoundException(exc);
+        }
+    }
+
+    private Response getFile(ExtensionVersion extVersion, String download) {
+        if (download.equals(extVersion.getExtensionFileName())) {
+            var content = entities.findBinary(extVersion).getContent();
+            return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM).build();
+        }
+        if (download.equals(extVersion.getReadmeFileName())) {
+            var content = entities.findReadme(extVersion).getContent();
+            return Response.ok(content, MediaType.TEXT_PLAIN).build();
+        }
+        if (download.equals(extVersion.getIconFileName())) {
+            var content = entities.findIcon(extVersion).getContent();
+            return Response.ok(content, URLConnection.guessContentTypeFromName(download)).build();
+        }
+        throw new NotFoundException();
     }
 
     @GET

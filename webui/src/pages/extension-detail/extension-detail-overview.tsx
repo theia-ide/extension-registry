@@ -9,15 +9,35 @@
 import * as React from "react";
 import Markdown from 'markdown-to-jsx';
 import { Box } from "@material-ui/core";
+import { ExtensionRaw } from "../../extension-registry-types";
+import { ExtensionRegistryService } from "../../extension-registry-service";
 
 
-export class ExtensionDetailOverview extends React.Component<ExtensionDetailOverview.Props> {
+export class ExtensionDetailOverview extends React.Component<ExtensionDetailOverview.Props, ExtensionDetailOverview.State> {
+
+    constructor(props: ExtensionDetailOverview.Props) {
+        super(props);
+
+        this.state = {};
+    }
+
+    componentDidMount() {
+        this.init();
+    }
+
+    protected async init() {
+        const readMe = await this.props.service.getExtensionReadMe(this.props.extension);
+        this.setState({ readMe });
+    }
 
     render() {
+        if(!this.state.readMe) {
+            return '';
+        }
         return <React.Fragment>
             <Box>
                 <Markdown>
-                    {this.props.longDescription}
+                    {this.state.readMe}
                 </Markdown>
             </Box>
         </React.Fragment>;
@@ -26,6 +46,10 @@ export class ExtensionDetailOverview extends React.Component<ExtensionDetailOver
 
 export namespace ExtensionDetailOverview {
     export interface Props {
-        longDescription: string
+        extension: ExtensionRaw,
+        service: ExtensionRegistryService
+    }
+    export interface State {
+        readMe?: string
     }
 }

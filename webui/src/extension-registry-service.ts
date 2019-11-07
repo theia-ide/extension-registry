@@ -7,11 +7,12 @@
  ********************************************************************************/
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
-import { ExtensionFilter, Extension, ExtensionRating, ExtensionRegistryUser, ExtensionCategory } from "./extension-registry-types";
+import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw } from "./extension-registry-types";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;
     private api: ExtensionRegistryAPI;
+    private _apiUrl: string;
     private constructor() {
         this.api = new ExtensionRegistryAPI();
     }
@@ -23,15 +24,31 @@ export class ExtensionRegistryService {
         return ExtensionRegistryService._instance;
     }
 
+    set apiUrl(url: string) {
+        this._apiUrl = url;
+    }
+
+    get apiUrl(): string {
+        return this._apiUrl;
+    }
+
     async getExtensions(filter?: ExtensionFilter): Promise<Extension[]> {
         return this.api.getExtensions(filter);
     }
 
-    async getExtensionById(id: string): Promise<Extension | undefined> {
-        return this.api.getExtension(id);
+    async getExtensionDetail(extension: ExtensionRaw): Promise<Extension> {
+        return this.api.getExtension(extension, this._apiUrl);
     }
 
-    async postReview(rating: ExtensionRating): Promise<void> {
+    async getExtensionReadMe(extension: ExtensionRaw): Promise<string> {
+        return this.api.getExtensionReadMe(extension, this._apiUrl);
+    }
+
+    async getExtensionReviews(extension: ExtensionRaw): Promise<ExtensionReview[]> {
+        return this.api.getExtensionReviews(extension, this._apiUrl);
+    }
+
+    async postReview(rating: ExtensionReview): Promise<void> {
         await this.api.postReview(rating);
     }
 

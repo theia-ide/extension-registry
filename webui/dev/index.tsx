@@ -13,4 +13,8 @@ const theme = createMuiTheme({
 });
 
 const node = document.getElementById('main');
-ReactDOM.render(<BrowserRouter><ThemeProvider theme={theme}><Main /></ThemeProvider></BrowserRouter>, node);
+ReactDOM.render(<BrowserRouter>
+<ThemeProvider theme={theme}>
+<Main apiUrl={window.location.protocol + "//" + window.location.hostname + "/api"} />
+</ThemeProvider>
+</BrowserRouter>, node);

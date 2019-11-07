@@ -11,11 +11,12 @@ import { Container } from "@material-ui/core";
 import { ExtensionListHeader } from "./extension-list-header";
 import { ExtensionCategory } from "../../extension-registry-types";
 import { ExtensionList } from "./extension-list";
+import { ExtensionRegistryService } from "../../extension-registry-service";
 
 
 export class ExtensionListContainer extends React.Component<ExtensionListContainer.Props, ExtensionListContainer.State> {
 
-    constructor(props: ExtensionList.Props) {
+    constructor(props: ExtensionListContainer.Props) {
         super(props);
         this.state = {
             searchTerm: '',
@@ -34,14 +35,16 @@ export class ExtensionListContainer extends React.Component<ExtensionListContain
         return <React.Fragment>
             <Container>
                 <ExtensionListHeader onSearchChanged={this.onSearchChanged} onCategoryChanged={this.onCategoryChanged} />
-                <ExtensionList filter={{fullText: this.state.searchTerm, category: this.state.category}} />
+                <ExtensionList service={this.props.service} filter={{fullText: this.state.searchTerm, category: this.state.category}} />
             </Container>
         </React.Fragment>;
     }
 }
 
 export namespace ExtensionListContainer {
-    export interface Props { }
+    export interface Props {
+        service: ExtensionRegistryService
+    }
     export interface State {
         searchTerm: string,
         category: ExtensionCategory

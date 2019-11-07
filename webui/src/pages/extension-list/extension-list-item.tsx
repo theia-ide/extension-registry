@@ -8,11 +8,12 @@
 
 import React = require("react");
 import { Link } from "react-router-dom";
-import { ExtensionDetailPages } from "../extension-detail/extension-detail";
+import { ExtensionDetailRoutes } from "../extension-detail/extension-detail";
 import { Paper, Typography, Box, Grid, Fade } from "@material-ui/core";
 import { withStyles, createStyles, WithStyles, Theme } from '@material-ui/core/styles';
-import { Extension } from "../../extension-registry-types";
+import { ExtensionRaw } from "../../extension-registry-types";
 import { ExportRatingStars } from "../extension-detail/extension-rating-stars";
+import { ExtensionRegistryService } from "../../extension-registry-service";
 
 
 const itemStyles = (theme: Theme) => createStyles({
@@ -25,33 +26,38 @@ const itemStyles = (theme: Theme) => createStyles({
 });
 
 interface ExtensionListItemProps extends WithStyles<typeof itemStyles> {
-    extension: Extension,
-    rating: number;
-    idx: number
+    service: ExtensionRegistryService;
+    extension: ExtensionRaw;
+    idx: number;
 }
 
 class ExtensionListItemComp extends React.Component<ExtensionListItemProps> {
     render() {
         const { classes, extension } = this.props;
+        const versionURLPart = extension.version ? '/' + extension.version : '';
+        const route = ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.OVERVIEW + '/' + extension.publisher + '/' + extension.name + versionURLPart;
+        const imgURL = extension.iconFileName ?
+            ExtensionRaw.getExtensionApiUrl(this.props.service.apiUrl, extension) + '/file/' + extension.iconFileName :
+            '';
         return <React.Fragment>
-            <Fade in={true} timeout={{enter: this.props.idx * 200}}>
+            <Fade in={true} timeout={{ enter: this.props.idx * 200 }}>
                 <Grid item xs={12} sm={3} md={2}>
-                    <Link to={ExtensionDetailPages.EXTENSION_DETAIL_ROOT + '/' + extension.name} className={classes.link}>
+                    <Link to={route} className={classes.link}>
                         <Paper className={classes.paper}>
                             <Box display='flex' justifyContent='center'>
-                                <img src='/test.png' />
+                                <img src={imgURL} />
                             </Box>
                             <Box display='flex' justifyContent='center'><Typography variant='h6'>{extension.name}</Typography></Box>
                             <Box display='flex' justifyContent='space-between'>
                                 <Typography component='div' variant='caption' noWrap={true} align='left'>
-                                    {extension.author}
+                                    {extension.publisher}
                                 </Typography>
                                 <Typography component='div' variant='caption' noWrap={true} align='right'>
                                     {extension.version}
                                 </Typography>
                             </Box>
                             <Box>
-                                <ExportRatingStars number={this.props.rating} />
+                                <ExportRatingStars number={this.props.extension.averageRating || 0} />
                             </Box>
                         </Paper>
                     </Link>

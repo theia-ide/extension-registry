@@ -8,10 +8,11 @@
 
 import * as React from "react";
 import { Theme, createStyles, WithStyles, withStyles, Box, Typography, Divider } from "@material-ui/core";
-import { ExtensionRating, Extension, ExtensionRegistryUser } from "../../extension-registry-types";
+import { ExtensionReview, ExtensionRegistryUser, ExtensionRaw } from "../../extension-registry-types";
 import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExportRatingStars } from "./extension-rating-stars";
 import { ExtensionReviewDialog } from "./extension-review-dialog";
+import { ExtensionRegistryService } from "../../extension-registry-service";
 
 const ratingStyles = (theme: Theme) => createStyles({
     boldText: {
@@ -19,9 +20,27 @@ const ratingStyles = (theme: Theme) => createStyles({
     }
 });
 
-class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRatingComponent.Props> {
+class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRatingComponent.Props, ExtensionDetailRatingComponent.State> {
+
+    constructor(props: ExtensionDetailRatingComponent.Props) {
+        super(props);
+
+        this.state = {};
+    }
+
+    componentDidMount() {
+        this.init();
+    }
+
+    protected async init() {
+        const reviews = await this.props.service.getExtensionReviews(this.props.extension);
+        this.setState({ reviews });
+    }
 
     render() {
+        if(!this.state.reviews){
+            return '';
+        }
         return <React.Fragment>
             <Box display='flex' justifyContent='space-between' my={2}>
                 <Box>
@@ -37,7 +56,7 @@ class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRati
             </Box>
             <Divider />
             <Box>
-                {this.props.ratings.map((r: ExtensionRating) => {
+                {this.state.reviews.map((r: ExtensionReview) => {
                     return <React.Fragment key={r.user.userName + r.title + r.date}>
                         <Box my={2}>
                             <Box display='flex'>
@@ -65,9 +84,12 @@ class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRati
 
 export namespace ExtensionDetailRatingComponent {
     export interface Props extends WithStyles<typeof ratingStyles> {
-        ratings: ExtensionRating[],
-        extension: Extension,
+        extension: ExtensionRaw,
         user?: ExtensionRegistryUser
+        service: ExtensionRegistryService
+    }
+    export interface State {
+        reviews?: ExtensionReview[]
     }
 }
 

@@ -12,20 +12,17 @@ import { RouteComponentProps, Switch, Route } from "react-router-dom";
 import { ExtensionDetailOverview } from "../extension-detail/extension-detail-overview";
 import { ExtensionDetailRating } from "./extension-detail-rating";
 import { ExtensionRegistryService } from "../../extension-registry-service";
-import { Extension, ExtensionRegistryUser } from "../../extension-registry-types";
+import { Extension, ExtensionRegistryUser, ExtensionRaw } from "../../extension-registry-types";
 import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExtensionDetailTabs } from "./extension-detail-tabs";
 import { ExportRatingStars } from "./extension-rating-stars";
 
-export namespace ExtensionDetailPages {
-    export const EXTENSION_DETAIL_ROOT = '/extension-detail';
-    export const EXTENSION_DETAIL = EXTENSION_DETAIL_ROOT + '/:extid';
-    export const EXTENSION_DETAIL_OVERVIEW = '/overview';
-    export const EXTENSION_DETAIL_RATING = '/rating';
-}
-
-export interface ExtensionDetailParams {
-    extid: string;
+export namespace ExtensionDetailRoutes {
+    export const ROOT = '/extension-detail';
+    export const TAB = '/:tab';
+    export const PARAMS = '/:publisher/:name/:version?';
+    export const OVERVIEW = 'overview';
+    export const RATING = 'rating';
 }
 
 const detailStyles = (theme: Theme) => createStyles({
@@ -43,13 +40,13 @@ const detailStyles = (theme: Theme) => createStyles({
 
 export class ExtensionDetailComponent extends React.Component<ExtensionDetailComponent.Props, ExtensionDetailComponent.State> {
     protected service = ExtensionRegistryService.instance;
-    protected params: ExtensionDetailParams;
+    protected params: ExtensionRaw;
 
     constructor(props: ExtensionDetailComponent.Props) {
         super(props);
 
         this.state = {};
-        this.params = this.props.match.params as ExtensionDetailParams;
+        this.params = this.props.match.params as ExtensionRaw;
     }
 
     componentDidMount() {
@@ -57,7 +54,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
     }
 
     protected async init() {
-        const extension = await this.service.getExtensionById(this.params.extid);
+        const extension = await this.service.getExtensionDetail(this.params);
         const user = await this.service.getUser();
         this.setState({ extension, user });
     }
@@ -67,20 +64,21 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
             return '';
         }
         const { extension } = this.state;
-        const rating = extension.ratings.map(r => r.rating as number).reduce((prev, curr) => prev + curr) / extension.ratings.length;
+        const extensionURL = ExtensionRaw.getExtensionApiUrl(this.props.service.apiUrl, extension);
+
         return <React.Fragment>
             <Box className={this.props.classes.head}>
                 <Container>
                     <Box display='flex' py={4}>
                         <Box display='flex' justifyContent='center' alignItems='center' mr={4}>
-                            <img src={extension.icon} width='auto' height='120px' />
+                            <img src={extensionURL + '/file/' + extension.iconFileName} width='auto' height='120px' />
                         </Box>
                         <Box>
                             <Typography variant='h6' className={this.props.classes.row}>{extension.name}</Typography>
                             <Box display='flex' className={this.props.classes.row}>
-                                <Box className={this.props.classes.alignVertically}>{extension.author}</Box>
+                                <Box className={this.props.classes.alignVertically}>{extension.publisher}</Box>
                                 <TextDivider />
-                                <Box className={this.props.classes.alignVertically}><ExportRatingStars number={rating} /></Box>
+                                <Box className={this.props.classes.alignVertically}><ExportRatingStars number={extension.averageRating || 0} /></Box>
                                 <TextDivider />
                                 <Box className={this.props.classes.alignVertically}>{extension.license}</Box>
                             </Box>
@@ -97,15 +95,15 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
             <Container>
                 <Box>
                     <Box>
-                        <ExtensionDetailTabs extid={this.params.extid} history={this.props.history} location={this.props.location} match={this.props.match} />
+                        <ExtensionDetailTabs history={this.props.history} location={this.props.location} match={this.props.match} />
                     </Box>
                     <Box>
                         <Switch>
-                            <Route path={ExtensionDetailPages.EXTENSION_DETAIL + ExtensionDetailPages.EXTENSION_DETAIL_OVERVIEW}>
-                                <ExtensionDetailOverview longDescription={this.state.extension.longDescription} />
+                            <Route path={ExtensionDetailRoutes.ROOT + ExtensionDetailRoutes.OVERVIEW + ExtensionDetailRoutes.PARAMS}>
+                                <ExtensionDetailOverview extension={this.state.extension} service={this.props.service} />
                             </Route>
-                            <Route path={ExtensionDetailPages.EXTENSION_DETAIL + ExtensionDetailPages.EXTENSION_DETAIL_RATING}>
-                                <ExtensionDetailRating ratings={this.state.extension.ratings} extension={this.state.extension} user={this.state.user} />
+                            <Route path={ExtensionDetailRoutes.ROOT + ExtensionDetailRoutes.RATING + ExtensionDetailRoutes.PARAMS}>
+                                <ExtensionDetailRating extension={this.state.extension} service={this.props.service} user={this.state.user} />
                             </Route>
                         </Switch>
                     </Box>
@@ -117,7 +115,9 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
 }
 
 export namespace ExtensionDetailComponent {
-    export interface Props extends WithStyles<typeof detailStyles>, RouteComponentProps { }
+    export interface Props extends WithStyles<typeof detailStyles>, RouteComponentProps {
+        service: ExtensionRegistryService
+    }
     export interface State {
         extension?: Extension,
         user?: ExtensionRegistryUser

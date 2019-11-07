@@ -6,7 +6,8 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import { ExtensionFilter, Extension, ExtensionRegistryUser, ExtensionRating } from "./extension-registry-types";
+import { ExtensionFilter, Extension, ExtensionRegistryUser, ExtensionReview, ExtensionRaw } from "./extension-registry-types";
+import { createURL } from "./utils";
 
 const testMD = `
 # Theia CLI
@@ -132,7 +133,7 @@ const comment = `Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed di
 
 const date = '2019/08/15';
 
-const ratings: ExtensionRating[] = [
+const ratings: ExtensionReview[] = [
     {
         rating: 4,
         title: 'Good',
@@ -164,11 +165,13 @@ const ratings: ExtensionRating[] = [
 ];
 
 const test = {
-    author: 'Thomas Test',
+    publisher: 'ms-python',
     license: 'FREE',
-    version: '1.2.3',
+    allVersions: ['1.0.0', '1.2.1', '1.2.2'],
     date: '12.12.2012',
-    uri: '/some/path/to/the/extension.vsix',
+    timestamp: Date.now(),
+    extensionFileName: 'extension.vsix',
+    preview: false,
     longDescription: testMD,
     icon: '/test.png',
     ratings
@@ -176,7 +179,7 @@ const test = {
 
 const extArr: Extension[] = [
     {
-        name: 'Test Ext',
+        name: 'python',
         description: 'This is a test extension thingy',
         categories: ['Other'],
         ...test
@@ -231,15 +234,51 @@ const extArr: Extension[] = [
     }
 ];
 
+export interface ExtensionRegistryAPIRequest<T> {
+    endpoint: string,
+    operation: (json: any) => T
+}
+
+export interface ExtensionRegistryAPIRequestWithoutPayload<T> extends ExtensionRegistryAPIRequest<T> {
+    method: 'GET' | 'DELETE'
+}
+
+export interface ExtensionRegistryAPIRequestWithPayload<T> extends ExtensionRegistryAPIRequest<T> {
+    method: 'POST' | 'PUT',
+    payload: any
+}
+
 export class ExtensionRegistryAPI {
+
+    async fetch<T>(req: ExtensionRegistryAPIRequestWithPayload<T> | ExtensionRegistryAPIRequestWithoutPayload<T>): Promise<T> {
+        let payload: string;
+
+        if (req.method === 'POST' || req.method === 'PUT') {
+            payload = JSON.stringify(req.payload);
+        }
+
+        const response = await new Promise<string>((resolve, reject) => {
+            const request = new XMLHttpRequest();
+            request.open(req.method, req.endpoint);
+            request.addEventListener('load', () => {
+                resolve(request.responseText);
+            });
+            request.addEventListener('error', (event) => {
+                reject(event);
+            });
+            request.send(payload);
+        });
+
+        return req.operation(response);
+    }
+
     async getExtensions(filter?: ExtensionFilter): Promise<Extension[]> {
         if (filter) {
             return extArr.filter(ext => {
-                const hasCat = !!filter.category ? !!ext.categories.find(cat => cat === filter.category) : true;
+                const hasCat = !!filter.category ? ext.categories && !!ext.categories.find(cat => cat === filter.category) : true;
                 const containsText = !!filter.fullText ?
                     (ext.name.toLowerCase().includes(filter.fullText.toLowerCase()) ||
-                        ext.description.toLowerCase().includes(filter.fullText.toLowerCase()) ||
-                        ext.longDescription.toLowerCase().includes(filter.fullText.toLowerCase())) : true;
+                        ext.description && ext.description.toLowerCase().includes(filter.fullText.toLowerCase())) : true;
                 const matchesFilter = hasCat && containsText;
                 return matchesFilter;
             })
@@ -247,12 +286,35 @@ export class ExtensionRegistryAPI {
         return extArr;
     }
 
-    async getExtension(id: string): Promise<Extension | undefined> {
-        const ext = extArr.find(e => e.name === id);
+    async getExtension(extension: ExtensionRaw, url: string): Promise<Extension> {
+        const ext = await this.fetch<Extension>({
+            method: 'GET',
+            endpoint: ExtensionRaw.getExtensionApiUrl(url, extension),
+            operation: response => JSON.parse(response)
+        });
         return ext;
     }
 
-    async postReview(rating: ExtensionRating) {
+    async getExtensionReadMe(extension: ExtensionRaw, url: string): Promise<string> {
+        const readme = await this.fetch<string>({
+            method: 'GET',
+            endpoint: createURL([ExtensionRaw.getExtensionApiUrl(url, extension), 'file', 'ReadMe.md']),
+            operation: json => json
+        });
+        return readme;
+    }
+
+    async getExtensionReviews(extension: ExtensionRaw, url: string): Promise<ExtensionReview[]> {
+        const reviews = await this.fetch<string>({
+            method: 'GET',
+            endpoint: createURL([ExtensionRaw.getExtensionApiUrl(url, extension), 'reviews']),
+            operation: json => json
+        });
+        console.log("REVIEWS", reviews);
+        return [];
+    }
+
+    async postReview(rating: ExtensionReview) {
         console.log(rating);
     }
 
