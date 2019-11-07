@@ -5,6 +5,8 @@ ports:
 - port: 8080
 - port: 5000-5999
   onOpen: ignore
+- port: 9000-9999
+  onOpen: ignore
 
 tasks:
 - init: |
@@ -13,11 +15,13 @@ tasks:
     yarn build:dev
     cd /workspace/extension-registry/server
     ./gradlew build downloadTestExtensions -x buildNative -x testNative
+  name: Server
   command: |
     cd /workspace/extension-registry/server
     export QUARKUS_HTTP_HOST=`gp url 8080`
     ./gradlew quarkusDev
-- command: |
+- name: Publisher
+  command: |
     cd /workspace/extension-registry/server
     gp await-port 8080
     find build/test-extensions -name '*.vsix' -exec ./publish.sh '{}' \;

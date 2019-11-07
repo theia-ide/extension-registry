@@ -13,13 +13,18 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+
 @Entity
+@Indexed
 public class Extension {
 
     @Id
     @GeneratedValue
     private long id;
 
+    @FullTextField(analyzer = "name")
     private String name;
 
     @ManyToOne

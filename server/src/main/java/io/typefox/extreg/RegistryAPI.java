@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -34,7 +33,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.google.common.base.Strings;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.search.mapper.orm.Search;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionReview;
@@ -46,6 +48,7 @@ import io.typefox.extreg.json.PublisherJson;
 import io.typefox.extreg.json.ReviewJson;
 import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.ReviewResultJson;
+import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
 import io.typefox.extreg.util.ErrorResultException;
 
@@ -70,7 +73,7 @@ public class RegistryAPI {
             var json = new PublisherJson();
             json.name = publisher.getName();
             json.extensions = new HashMap<>();
-            for (String extName : entities.getAllExtensionNames(publisher)) {
+            for (var extName : entities.getAllExtensionNames(publisher)) {
                 json.extensions.put(extName, createApiUrl(publisher.getName(), extName));
             }
             return json;
@@ -157,20 +160,41 @@ public class RegistryAPI {
     @GET
     @Path("/-/search")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public SearchResultJson search(@QueryParam("query") String query,
                                    @QueryParam("category") String category,
                                    @QueryParam("size") @DefaultValue("20") int size,
                                    @QueryParam("offset") @DefaultValue("0") int offset) {
+        var extensions = Search.session(entityManager)
+                .search(Extension.class)
+                .predicate(f -> Strings.isNullOrEmpty(query)
+                                ? f.matchAll()
+                                : f.simpleQueryString().field("name").matching(query))
+                .fetchHits(offset, size);
         var json = new SearchResultJson();
-        // TODO
+        json.offset = offset;
+        json.extensions = new ArrayList<>();
+        for (var extension : extensions) {
+            var extVer = extension.getLatest();
+            var entry = new SearchEntryJson();
+            entry.name = extension.getName();
+            entry.publisher = extension.getPublisher().getName();
+            entry.extensionUrl = createApiUrl(entry.publisher, entry.name);
+            entry.iconUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getIconFileName());
+            entry.version = extVer.getVersion();
+            entry.timestamp = extVer.getTimestamp();
+            entry.averageRating = extension.getAverageRating();
+            entry.displayName = extVer.getDisplayName();
+            json.extensions.add(entry);
+        }
         return json;
     }
 
     @POST
     @Path("/-/publish")
-    @Transactional
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public ExtensionJson publish(InputStream content) {
         try {
             var processor = new ExtensionProcessor(content);
@@ -234,7 +258,7 @@ public class RegistryAPI {
             var list = new ReviewListJson();
             list.postUrl = createApiUrl(extension.getPublisher().getName(), extension.getName(), "review");
             list.reviews = new ArrayList<>();
-            for (ExtensionReview extReview : reviews) {
+            for (var extReview : reviews) {
                 var json = new ReviewJson();
                 json.user = extReview.getUsername();
                 json.timestamp = extReview.getTimestamp();
@@ -251,8 +275,8 @@ public class RegistryAPI {
 
     @POST
     @Path("/{publisher}/{extension}/review")
-    @Transactional
     @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
     public ReviewResultJson review(ReviewJson review,
                                    @PathParam("publisher") String publisherName,
                                    @PathParam("extension") String extensionName) {
@@ -285,7 +309,7 @@ public class RegistryAPI {
         json.publisherUrl = createApiUrl(json.publisher);
         json.reviewsUrl = createApiUrl(json.publisher, json.name, "reviews");
         json.allVersions = new HashMap<>();
-        for (String versionStr : entities.getAllVersionStrings(extension)) {
+        for (var versionStr : entities.getAllVersionStrings(extension)) {
             String url = createApiUrl(json.publisher, json.name, versionStr);
             json.allVersions.put(versionStr, url);
         }
@@ -315,7 +339,7 @@ public class RegistryAPI {
         json.qna = extVersion.getQna();
         if (extVersion.getDependencies() != null) {
             json.dependencies = new ArrayList<>();
-            for (Extension depExtension : extVersion.getDependencies()) {
+            for (var depExtension : extVersion.getDependencies()) {
                 var ref = new ExtensionReferenceJson();
                 ref.publisher = depExtension.getPublisher().getName();
                 ref.extension = depExtension.getName();
@@ -325,7 +349,7 @@ public class RegistryAPI {
         }
         if (extVersion.getBundledExtensions() != null) {
             json.bundledExtensions = new ArrayList<>();
-            for (Extension bndExtension : extVersion.getBundledExtensions()) {
+            for (var bndExtension : extVersion.getBundledExtensions()) {
                 var ref = new ExtensionReferenceJson();
                 ref.publisher = bndExtension.getPublisher().getName();
                 ref.extension = bndExtension.getName();
@@ -374,7 +398,7 @@ public class RegistryAPI {
     private double computeAverageRating(Extension extension) {
         var reviews = entities.findAllReviews(extension);
         long sum = 0;
-        for (ExtensionReview review : reviews) {
+        for (var review : reviews) {
             sum += review.getRating();
         }
         return (double) sum / reviews.size();
@@ -384,7 +408,9 @@ public class RegistryAPI {
         try {
             var result = new StringBuilder(httpHost);
             result.append("/api");
-            for (String segment : segments) {
+            for (var segment : segments) {
+                if (segment == null)
+                    return null;
 				result.append('/').append(URLEncoder.encode(segment, "UTF-8"));
             }
             return result.toString();

@@ -145,7 +145,7 @@ public class EntityService {
     public boolean isLatestVersion(String version, Extension extension) {
         var allVersions = getAllVersionStrings(extension);
         var newSemver = new SemanticVersion(version);
-        for (String publishedVersion : allVersions) {
+        for (var publishedVersion : allVersions) {
             var oldSemver = new SemanticVersion(publishedVersion);
             if (newSemver.compareTo(oldSemver) < 0)
                 return false;

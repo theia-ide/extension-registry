@@ -107,7 +107,7 @@ public class ExtensionProcessor {
     private List<String> getStringList(JsonNode node) {
         if (node.isArray()) {
             var list = new ArrayList<String>();
-            for (JsonNode element : node) {
+            for (var element : node) {
                 if (element.isTextual())
                     list.add(element.textValue());
             }

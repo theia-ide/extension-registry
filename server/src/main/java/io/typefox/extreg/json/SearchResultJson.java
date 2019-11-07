@@ -11,8 +11,8 @@ import java.util.List;
 
 public class SearchResultJson {
 
-    int offset;
+    public int offset;
 
-    List<SearchEntryJson> extensions;
+    public List<SearchEntryJson> extensions;
 
 }

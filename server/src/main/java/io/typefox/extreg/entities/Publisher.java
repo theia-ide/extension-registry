@@ -13,14 +13,19 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = "name") })
+@Indexed
 public class Publisher {
 
     @Id
     @GeneratedValue
     private long id;
 
+    @FullTextField(analyzer = "name")
     private String name;
 
 
