@@ -7,19 +7,19 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-import javax.annotation.Nullable;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;;
 
+/**
+ * A badge to be shown in the sidebar of the extension page in the marketplace.
+ */
 @JsonInclude(Include.NON_NULL)
-public class ExtensionReference {
+public class BadgeJson {
 
-    public String publisher;
+    public String url;
 
-    public String extension;
+    public String href;
 
-    @Nullable
-    public String version;
+    public String description;
 
 }

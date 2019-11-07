@@ -133,11 +133,6 @@ public class EntityService {
         return query.getResultList();
     }
 
-    public List<ExtensionReview> findAllReviews(String publisherName, String extensionName) {
-        var extension = findExtension(publisherName, extensionName);
-        return findAllReviews(extension);
-    }
-
     public void checkUniqueVersion(String version, Extension extension) {
         var qs = "SELECT count(*) FROM ExtensionVersion exv WHERE (exv.extension = :extension and exv.version = :version)";
         var query = entityManager.createQuery(qs, Long.class);

@@ -28,6 +28,8 @@ public class Extension {
     @OneToOne
     private ExtensionVersion latest;
 
+    private Double averageRating;
+
 
 	public long getId() {
 		return id;
@@ -59,6 +61,14 @@ public class Extension {
 
 	public void setLatest(ExtensionVersion latest) {
 		this.latest = latest;
+	}
+
+	public Double getAverageRating() {
+		return averageRating;
+	}
+
+	public void setAverageRating(Double averageRating) {
+		this.averageRating = averageRating;
 	}
 
 }

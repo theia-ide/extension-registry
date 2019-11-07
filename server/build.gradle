@@ -1,6 +1,6 @@
 buildscript {
     dependencies {
-        classpath "io.quarkus:quarkus-gradle-plugin:0.28.0"
+        classpath "io.quarkus:quarkus-gradle-plugin:0.28.1"
     }
 }
 
@@ -13,7 +13,7 @@ apply plugin: 'io.quarkus'
 
 def versions = [
     java: '11',
-    quarkus: '0.28.0',
+    quarkus: '0.28.1',
     guava: '28.1-jre'
 ]
 
@@ -27,6 +27,7 @@ dependencies {
     implementation enforcedPlatform("io.quarkus:quarkus-bom:${versions.quarkus}")
     implementation "io.quarkus:quarkus-resteasy-jackson:${versions.quarkus}"
     implementation "io.quarkus:quarkus-hibernate-orm:${versions.quarkus}"
+    implementation "io.quarkus:quarkus-hibernate-search-elasticsearch:${versions.quarkus}"
     implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
     implementation "io.quarkus:quarkus-vertx-web:${versions.quarkus}"
     implementation "com.google.guava:guava:${versions.guava}"

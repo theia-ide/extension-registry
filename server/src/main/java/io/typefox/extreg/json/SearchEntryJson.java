@@ -7,19 +7,30 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;;
+import java.time.LocalDateTime;
 
-/**
- * A badge to be shown in the sidebar of the extension page in the marketplace.
- */
-@JsonInclude(Include.NON_NULL)
-public class Badge {
+import javax.annotation.Nullable;
 
-    public String url;
+public class SearchEntryJson {
 
-    public String href;
+    String extensionUrl;
 
-    public String description;
+    String publisherUrl;
+
+    String iconUrl;
+
+    public String name;
+
+    public String publisher;
+
+    public String version;
+
+    public LocalDateTime timestamp;
+
+    @Nullable
+    public Double averageRating;
+
+    @Nullable
+    public String displayName;
 
 }

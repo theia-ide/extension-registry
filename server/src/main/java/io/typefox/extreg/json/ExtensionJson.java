@@ -9,6 +9,7 @@ package io.typefox.extreg.json;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -16,10 +17,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;;
 
 @JsonInclude(Include.NON_NULL)
-public class ExtensionInfo {
+public class ExtensionJson {
 
-    public static ExtensionInfo error(String message) {
-        var info = new ExtensionInfo();
+    public static ExtensionJson error(String message) {
+        var info = new ExtensionJson();
         info.error = message;
         return info;
     }
@@ -27,23 +28,30 @@ public class ExtensionInfo {
     @Nullable
     public String error;
 
+    public String publisherUrl;
+
+    public String reviewsUrl;
+
+    public String downloadUrl;
+
+    @Nullable
+    public String iconUrl;
+
+    @Nullable
+    public String readmeUrl;
+
     public String name;
 
     public String publisher;
 
-    public List<String> allVersions;
+    public Map<String, String> allVersions;
+
+    @Nullable
+    public Double averageRating;
 
     public String version;
 
     public LocalDateTime timestamp;
-
-    public String extensionFileName;
-
-    @Nullable
-    public String iconFileName;
-
-    @Nullable
-    public String readmeFileName;
 
     @Nullable
     public Boolean preview;
@@ -85,12 +93,12 @@ public class ExtensionInfo {
     public String qna;
 
     @Nullable
-    public List<Badge> badges;
+    public List<BadgeJson> badges;
 
     @Nullable
-    public List<ExtensionReference> dependencies;
+    public List<ExtensionReferenceJson> dependencies;
 
     @Nullable
-    public List<ExtensionReference> bundledExtensions;
+    public List<ExtensionReferenceJson> bundledExtensions;
 
 }

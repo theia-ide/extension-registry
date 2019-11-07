@@ -15,6 +15,7 @@ tasks:
     ./gradlew build downloadTestExtensions -x buildNative -x testNative
   command: |
     cd /workspace/extension-registry/server
+    export QUARKUS_HTTP_HOST=`gp url 8080`
     ./gradlew quarkusDev
 - command: |
     cd /workspace/extension-registry/server

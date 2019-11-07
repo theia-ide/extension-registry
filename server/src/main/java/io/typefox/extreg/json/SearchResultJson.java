@@ -7,18 +7,12 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;;
+import java.util.List;
 
-@JsonInclude(Include.NON_NULL)
-public class Review {
+public class SearchResultJson {
 
-    public String user;
+    int offset;
 
-    public String title;
-
-    public String comment;
-
-    public int rating;
+    List<SearchEntryJson> extensions;
 
 }

@@ -7,16 +7,15 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-import java.util.List;
+import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;;
 
 @JsonInclude(Include.NON_NULL)
-public class PublisherInfo {
+public class ReviewResultJson {
 
-    public String name;
-
-    public List<String> extensions;
+    @Nullable
+    public String error;
 
 }

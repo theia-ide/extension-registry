@@ -7,6 +7,8 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -21,6 +23,8 @@ public class ExtensionReview {
 
     @ManyToOne
     private Extension extension;
+
+    private LocalDateTime timestamp;
 
     private String username;
 
@@ -37,6 +41,14 @@ public class ExtensionReview {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public LocalDateTime getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(LocalDateTime timestamp) {
+		this.timestamp = timestamp;
 	}
 
 	public Extension getExtension() {

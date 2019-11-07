@@ -7,8 +7,16 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-public class SearchResult {
+import java.util.Map;
 
-    // TODO
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;;
+
+@JsonInclude(Include.NON_NULL)
+public class PublisherJson {
+
+    public String name;
+
+    public Map<String, String> extensions;
 
 }

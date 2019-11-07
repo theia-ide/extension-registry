@@ -9,8 +9,6 @@ package io.typefox.extreg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -86,7 +84,6 @@ public class ExtensionProcessor {
     public ExtensionVersion getMetadata() {
         loadPackageJson();
         var extension = new ExtensionVersion();
-        extension.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
         extension.setVersion(packageJson.path("version").textValue());
         extension.setPreview(packageJson.path("preview").booleanValue());
         extension.setDisplayName(packageJson.path("displayName").textValue());
