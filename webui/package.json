@@ -15,16 +15,16 @@
         "@material-ui/core": "latest",
         "@material-ui/icons": "latest",
         "@material-ui/styles": "latest",
-        "markdown-to-jsx": "^6.10.3",
         "react": "^16.10.2",
         "react-dom": "^16.10.2",
-        "react-router-dom": "^5.1.2"
+        "react-router-dom": "^5.1.2",
+        "markdown-it": "^10.0.0"
     },
     "devDependencies": {
-        "@types/markdown-to-jsx": "^6.9.0",
         "@types/react": "^16.9.9",
         "@types/react-dom": "^16.9.2",
         "@types/react-router-dom": "*",
+        "@types/markdown-it": "^0.0.9",
         "copy-webpack-plugin": "^5.0.4",
         "css-loader": "^3.2.0",
         "file-loader": "^4.2.0",

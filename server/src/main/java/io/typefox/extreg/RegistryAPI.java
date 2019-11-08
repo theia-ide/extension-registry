@@ -278,6 +278,7 @@ public class RegistryAPI {
     @POST
     @Path("/{publisher}/{extension}/review")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public ReviewResultJson review(ReviewJson review,
                                    @PathParam("publisher") String publisherName,

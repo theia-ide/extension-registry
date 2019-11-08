@@ -46,7 +46,7 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
 
     protected service: ExtensionRegistryService;
 
-    constructor(props: ExtensionRegistryMainProps){
+    constructor(props: ExtensionRegistryMainProps) {
         super(props);
 
         this.service = ExtensionRegistryService.instance;

@@ -20,7 +20,7 @@ import { ExportRatingStars } from "./extension-rating-stars";
 export namespace ExtensionDetailRoutes {
     export const ROOT = '/extension-detail';
     export const TAB = '/:tab';
-    export const PARAMS = '/:publisher/:name/:version?';
+    export const PARAMS = '/:publisher/:name';
     export const OVERVIEW = 'overview';
     export const RATING = 'rating';
 }
@@ -40,13 +40,13 @@ const detailStyles = (theme: Theme) => createStyles({
 
 export class ExtensionDetailComponent extends React.Component<ExtensionDetailComponent.Props, ExtensionDetailComponent.State> {
     protected service = ExtensionRegistryService.instance;
-    protected params: ExtensionRaw;
+    protected params: Extension;
 
     constructor(props: ExtensionDetailComponent.Props) {
         super(props);
 
         this.state = {};
-        this.params = this.props.match.params as ExtensionRaw;
+        this.params = this.props.match.params as Extension;
     }
 
     componentDidMount() {
@@ -54,7 +54,8 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
     }
 
     protected async init() {
-        const extension = await this.service.getExtensionDetail(this.params);
+        const extensionUrl = ExtensionRaw.getExtensionApiUrl(this.service.apiUrl, this.params);
+        const extension = await this.service.getExtensionDetail(extensionUrl);
         const user = await this.service.getUser();
         this.setState({ extension, user });
     }
@@ -64,17 +65,15 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
             return '';
         }
         const { extension } = this.state;
-        const extensionURL = ExtensionRaw.getExtensionApiUrl(this.props.service.apiUrl, extension);
-
         return <React.Fragment>
             <Box className={this.props.classes.head}>
                 <Container>
                     <Box display='flex' py={4}>
                         <Box display='flex' justifyContent='center' alignItems='center' mr={4}>
-                            <img src={extensionURL + '/file/' + extension.iconFileName} width='auto' height='120px' />
+                            <img src={extension.iconUrl} width='auto' height='120px' />
                         </Box>
                         <Box>
-                            <Typography variant='h6' className={this.props.classes.row}>{extension.name}</Typography>
+                            <Typography variant='h6' className={this.props.classes.row}>{extension.displayName || extension.name}</Typography>
                             <Box display='flex' className={this.props.classes.row}>
                                 <Box className={this.props.classes.alignVertically}>{extension.publisher}</Box>
                                 <TextDivider />
@@ -99,10 +98,10 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                     </Box>
                     <Box>
                         <Switch>
-                            <Route path={ExtensionDetailRoutes.ROOT + ExtensionDetailRoutes.OVERVIEW + ExtensionDetailRoutes.PARAMS}>
+                            <Route path={ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.OVERVIEW + ExtensionDetailRoutes.PARAMS}>
                                 <ExtensionDetailOverview extension={this.state.extension} service={this.props.service} />
                             </Route>
-                            <Route path={ExtensionDetailRoutes.ROOT + ExtensionDetailRoutes.RATING + ExtensionDetailRoutes.PARAMS}>
+                            <Route path={ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.RATING + ExtensionDetailRoutes.PARAMS}>
                                 <ExtensionDetailRating extension={this.state.extension} service={this.props.service} user={this.state.user} />
                             </Route>
                         </Switch>

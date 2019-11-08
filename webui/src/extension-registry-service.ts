@@ -7,7 +7,7 @@
  ********************************************************************************/
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
-import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw } from "./extension-registry-types";
+import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw, ExtensionReviewList } from "./extension-registry-types";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;
@@ -32,24 +32,24 @@ export class ExtensionRegistryService {
         return this._apiUrl;
     }
 
-    async getExtensions(filter?: ExtensionFilter): Promise<Extension[]> {
+    async getExtensions(filter?: ExtensionFilter): Promise<ExtensionRaw[]> {
         return this.api.getExtensions(filter);
     }
 
-    async getExtensionDetail(extension: ExtensionRaw): Promise<Extension> {
-        return this.api.getExtension(extension, this._apiUrl);
+    async getExtensionDetail(extensionURL: string): Promise<Extension> {
+        return this.api.getExtension(extensionURL);
     }
 
-    async getExtensionReadMe(extension: ExtensionRaw): Promise<string> {
-        return this.api.getExtensionReadMe(extension, this._apiUrl);
+    async getExtensionReadMe(readMeUrl: string): Promise<string> {
+        return this.api.getExtensionReadMe(readMeUrl);
     }
 
-    async getExtensionReviews(extension: ExtensionRaw): Promise<ExtensionReview[]> {
-        return this.api.getExtensionReviews(extension, this._apiUrl);
+    async getExtensionReviews(reviewsUrl: string): Promise<ExtensionReviewList> {
+        return this.api.getExtensionReviews(reviewsUrl);
     }
 
-    async postReview(rating: ExtensionReview): Promise<void> {
-        await this.api.postReview(rating);
+    async postReview(rating: ExtensionReview, postUrl: string): Promise<void> {
+        await this.api.postReview(rating, postUrl);
     }
 
     async getUser(): Promise<ExtensionRegistryUser> {

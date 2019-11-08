@@ -53,7 +53,7 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
 
         this.state = {
             category: ''
-        }
+        };
     }
 
     protected handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -63,12 +63,12 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
     }
 
     protected handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.props.onSearchChanged(event.target.value)
+        this.props.onSearchChanged(event.target.value);
     }
 
     protected renderValue = (value: string) => {
         if (value === '') {
-            return <Box component='span' className={this.props.classes.placeholder}>All Categories</Box>
+            return <Box component='span' className={this.props.classes.placeholder}>All Categories</Box>;
         } else {
             return value;
         }
@@ -101,7 +101,7 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
                             input={<InputBase className={classes.inputBase}></InputBase>}>
                             <MenuItem value=''>All Categories</MenuItem>
                             {this.categories.map(c => {
-                                return <MenuItem value={c} key={c}>{c}</MenuItem>
+                                return <MenuItem value={c} key={c}>{c}</MenuItem>;
                             })}
                         </Select>
                     </Paper>

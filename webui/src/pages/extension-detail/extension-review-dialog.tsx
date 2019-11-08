@@ -11,7 +11,7 @@ import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, TextFiel
 import { withStyles, createStyles, WithStyles } from "@material-ui/styles";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 import { ExtensionRatingStarSetter } from "./extension-rating-star-setter";
-import { ExtensionRegistryUser } from "../../extension-registry-types";
+import { ExtensionRegistryUser, ExtensionRaw } from "../../extension-registry-types";
 
 const revivewDialogStyles = (theme: Theme) => createStyles({
 
@@ -42,10 +42,10 @@ class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDial
             rating,
             title: this.state.title,
             comment: this.state.comment,
-            date: Date.now().toString(),
-            user: this.props.user
-        });
+            user: this.props.user.userName
+        }, this.props.reviewPostUrl);
         this.setState({open: false, title: '', comment: ''});
+        this.props.saveCompleted();
     }
     protected handleCommentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => this.setState({comment: event.target.value});
     protected handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => this.setState({title: event.target.value});
@@ -56,7 +56,7 @@ class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDial
                 Write a Review
             </Button>
             <Dialog open={this.state.open} onClose={this.handleCancel}>
-                <DialogTitle>{this.props.extensionName} Review</DialogTitle>
+                <DialogTitle>{this.props.extension.displayName || this.props.extension.name} Review</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Your review will be posted publicly as {this.props.user.userName}
@@ -90,8 +90,10 @@ class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDial
 
 export namespace ExtensionReviewDialogComponent {
     export interface Props extends WithStyles<typeof revivewDialogStyles> {
-        extensionName: string,
-        user: ExtensionRegistryUser
+        extension: ExtensionRaw,
+        reviewPostUrl: string,
+        user: ExtensionRegistryUser,
+        saveCompleted: () => void
     }
     export interface State {
         open: boolean,

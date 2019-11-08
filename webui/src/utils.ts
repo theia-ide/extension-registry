@@ -7,5 +7,5 @@
  ********************************************************************************/
 
 export function createURL(arr: string[]): string {
-    return arr.reduce((acc, curr) => acc + (curr ? '/' + curr : ''))
+    return arr.reduce((acc, curr) => acc + (curr ? '/' + curr : ''));
 }

@@ -1,5 +1,3 @@
-import { createURL } from "./utils";
-
 /********************************************************************************
  * Copyright (c) 2019 TypeFox
  *
@@ -7,6 +5,8 @@ import { createURL } from "./utils";
  * terms of the Eclipse Public License v. 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
+
+import { createURL } from "./utils";
 
 export interface ExtensionFilter {
     fullText?: string;
@@ -18,29 +18,34 @@ export interface ExtensionFilter {
 export interface ExtensionRaw {
     readonly name: string;
     readonly publisher: string;
+    readonly extensionUrl: string;
+    readonly iconUrl?: string;
+    readonly displayName?: string;
     readonly version?: string;
     readonly averageRating?: number;
-    readonly iconFileName?: string;
     readonly timestamp?: number;
 }
 export namespace ExtensionRaw {
     export function getExtensionApiUrl(root: string, extension: ExtensionRaw) {
-        const arr = [root, extension.publisher, extension.name, extension.version || ''];
+        const arr = [root, extension.publisher, extension.name];
         return createURL(arr);
     }
 }
 
 export interface Extension extends ExtensionRaw {
-    readonly allVersions: string[];
-    readonly extensionFileName: string;
-    readonly readmeFileName?: string;
+    readonly error?: string;
+
+    readonly publisherUrl: string;
+    readonly reviewsUrl: string;
+    readonly downloadUrl: string;
+
+    readonly readmeUrl?: string;
+
+    readonly allVersions: { [key: string]: string };
+    readonly preview?: boolean;
+
     readonly description?: string;
     readonly categories?: string[];
-
-    readonly preview: boolean;
-
-    readonly displayName?: string;
-    readonly error?: string;
 
     readonly keywords?: string[];
     readonly license?: string;
@@ -54,6 +59,11 @@ export interface Extension extends ExtensionRaw {
     readonly badges?: Badge[];
     readonly dependencies?: ExtensionReference[];
     readonly bundledExtensions?: ExtensionReference[];
+}
+export namespace Extension {
+    export function is(extension: any): extension is Extension {
+        return 'allVersions' in extension && 'extensionFileName' in extension;
+    }
 }
 
 export interface Badge {
@@ -74,8 +84,13 @@ export interface ExtensionReview {
     rating: StarNumber;
     title: string;
     comment: string;
-    user: ExtensionRegistryUser;
-    date: string;
+    user: string; // ExtensionRegistryUser;
+    timestamp?: string;
+}
+
+export interface ExtensionReviewList {
+    postUrl: string;
+    reviews: ExtensionReview[];
 }
 
 export interface ExtensionRegistryUser {
@@ -97,4 +112,4 @@ export type ExtensionCategory =
     'SCM Providers' |
     'Other' |
     'Extension Packs' |
-    'Language Packs'
+    'Language Packs';

@@ -9,19 +9,19 @@
 import * as React from "react";
 import { Grid } from "@material-ui/core";
 import { ExtensionListItem } from "./extension-list-item";
-import { Extension, ExtensionFilter } from "../../extension-registry-types";
+import { ExtensionFilter, ExtensionRaw } from "../../extension-registry-types";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 
 export class ExtensionList extends React.Component<ExtensionList.Props, ExtensionList.State> {
 
-    protected extensions: Extension[];
+    protected extensions: ExtensionRaw[];
 
     constructor(props: ExtensionList.Props) {
         super(props);
 
         this.state = {
             extensions: []
-        }
+        };
     }
 
     componentDidMount() {
@@ -42,7 +42,7 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
         });
         return <Grid container spacing={2}>
             {extensionList}
-        </Grid>
+        </Grid>;
     }
 }
 
@@ -52,7 +52,7 @@ export namespace ExtensionList {
         service: ExtensionRegistryService
     }
     export interface State {
-        extensions: Extension[]
+        extensions: ExtensionRaw[]
     }
 }
 

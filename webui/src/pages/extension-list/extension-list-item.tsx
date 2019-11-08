@@ -14,6 +14,7 @@ import { withStyles, createStyles, WithStyles, Theme } from '@material-ui/core/s
 import { ExtensionRaw } from "../../extension-registry-types";
 import { ExportRatingStars } from "../extension-detail/extension-rating-stars";
 import { ExtensionRegistryService } from "../../extension-registry-service";
+import { createURL } from "../../utils";
 
 
 const itemStyles = (theme: Theme) => createStyles({
@@ -34,20 +35,16 @@ interface ExtensionListItemProps extends WithStyles<typeof itemStyles> {
 class ExtensionListItemComp extends React.Component<ExtensionListItemProps> {
     render() {
         const { classes, extension } = this.props;
-        const versionURLPart = extension.version ? '/' + extension.version : '';
-        const route = ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.OVERVIEW + '/' + extension.publisher + '/' + extension.name + versionURLPart;
-        const imgURL = extension.iconFileName ?
-            ExtensionRaw.getExtensionApiUrl(this.props.service.apiUrl, extension) + '/file/' + extension.iconFileName :
-            '';
+        const route = createURL([ExtensionDetailRoutes.ROOT, ExtensionDetailRoutes.OVERVIEW, extension.publisher, extension.name]);
         return <React.Fragment>
             <Fade in={true} timeout={{ enter: this.props.idx * 200 }}>
                 <Grid item xs={12} sm={3} md={2}>
                     <Link to={route} className={classes.link}>
                         <Paper className={classes.paper}>
                             <Box display='flex' justifyContent='center'>
-                                <img src={imgURL} />
+                                <img width='80' src={extension.iconUrl} />
                             </Box>
-                            <Box display='flex' justifyContent='center'><Typography variant='h6'>{extension.name}</Typography></Box>
+                            <Box display='flex' justifyContent='center'><Typography variant='h6'>{extension.displayName || extension.name}</Typography></Box>
                             <Box display='flex' justifyContent='space-between'>
                                 <Typography component='div' variant='caption' noWrap={true} align='left'>
                                     {extension.publisher}
@@ -56,8 +53,8 @@ class ExtensionListItemComp extends React.Component<ExtensionListItemProps> {
                                     {extension.version}
                                 </Typography>
                             </Box>
-                            <Box>
-                                <ExportRatingStars number={this.props.extension.averageRating || 0} />
+                            <Box display='flex' justifyContent='center'>
+                                <ExportRatingStars number={extension.averageRating || 0} />
                             </Box>
                         </Paper>
                     </Link>

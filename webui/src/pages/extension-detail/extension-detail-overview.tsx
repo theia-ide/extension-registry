@@ -7,17 +7,20 @@
  ********************************************************************************/
 
 import * as React from "react";
-import Markdown from 'markdown-to-jsx';
 import { Box } from "@material-ui/core";
-import { ExtensionRaw } from "../../extension-registry-types";
 import { ExtensionRegistryService } from "../../extension-registry-service";
+import { Extension } from "../../extension-registry-types";
+import * as MarkdownIt from 'markdown-it';
 
 
 export class ExtensionDetailOverview extends React.Component<ExtensionDetailOverview.Props, ExtensionDetailOverview.State> {
 
+    protected markdownIt: MarkdownIt;
+
     constructor(props: ExtensionDetailOverview.Props) {
         super(props);
-
+        
+        this.markdownIt = new MarkdownIt('commonmark');
         this.state = {};
     }
 
@@ -26,27 +29,34 @@ export class ExtensionDetailOverview extends React.Component<ExtensionDetailOver
     }
 
     protected async init() {
-        const readMe = await this.props.service.getExtensionReadMe(this.props.extension);
-        this.setState({ readMe });
+        if (this.props.extension.readmeUrl) {
+            const readMe = await this.props.service.getExtensionReadMe(this.props.extension.readmeUrl);
+            this.setState({ readMe });
+        } else {
+            this.setState({ readMe: '## No README available' });
+        }
     }
 
     render() {
-        if(!this.state.readMe) {
+        if (!this.state.readMe) {
             return '';
         }
         return <React.Fragment>
             <Box>
-                <Markdown>
-                    {this.state.readMe}
-                </Markdown>
+                {this.renderMarkdown(this.state.readMe)}
             </Box>
         </React.Fragment>;
+    }
+
+    protected renderMarkdown(md: string) {
+        const renderedMd = this.markdownIt.render(md);
+        return <span dangerouslySetInnerHTML={{ __html: renderedMd }} />;
     }
 }
 
 export namespace ExtensionDetailOverview {
     export interface Props {
-        extension: ExtensionRaw,
+        extension: Extension,
         service: ExtensionRegistryService
     }
     export interface State {
