@@ -17,6 +17,8 @@ tasks:
     ./gradlew build downloadTestExtensions -x buildNative -x testNative
   name: Server
   command: |
+    $ES_HOME/bin/elasticsearch -d -p $ES_HOME/pid -Ediscovery.type=single-node -Expack.ml.enabled=false
+    gp await-port 9200
     cd /workspace/extension-registry/server
     export QUARKUS_HTTP_HOST=`gp url 8080`
     ./gradlew quarkusDev
