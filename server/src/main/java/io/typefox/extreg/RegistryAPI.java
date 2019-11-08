@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -90,9 +91,7 @@ public class RegistryAPI {
                                              @PathParam("version") String version) {
         try {
             var extVersion = entities.findVersion(publisherName, extensionName, version);
-            var json = new ExtensionJson();
-            copyMetadata(json, extVersion, false);
-            return json;
+            return toJson(extVersion, false);
         } catch (NoResultException exc) {
             throw new NotFoundException(exc);
         }
@@ -105,9 +104,7 @@ public class RegistryAPI {
                                       @PathParam("extension") String extensionName) {
         try {
             var extension = entities.findExtension(publisherName, extensionName);
-            var json = new ExtensionJson();
-            copyMetadata(json, extension.getLatest(), true);
-            return json;
+            return toJson(extension.getLatest(), true);
         } catch (NoResultException exc) {
             throw new NotFoundException(exc);
         }
@@ -167,27 +164,34 @@ public class RegistryAPI {
                                    @QueryParam("offset") @DefaultValue("0") int offset) {
         var extensions = Search.session(entityManager)
                 .search(Extension.class)
-                .predicate(f -> Strings.isNullOrEmpty(query)
-                                ? f.matchAll()
-                                : f.simpleQueryString().field("name").matching(query))
+                .predicate(pf -> Strings.isNullOrEmpty(query)
+                                ? pf.matchAll()
+                                : pf.simpleQueryString()
+                                    .fields("name", "publisher.name", "latest.keywords")
+                                    .matching(query))
                 .fetchHits(offset, size);
         var json = new SearchResultJson();
         json.offset = offset;
-        json.extensions = new ArrayList<>();
+        json.extensions = toSearchEntries(extensions);
+        return json;
+    }
+
+    private List<SearchEntryJson> toSearchEntries(List<Extension> extensions) {
+        var list = new ArrayList<SearchEntryJson>();
         for (var extension : extensions) {
             var extVer = extension.getLatest();
             var entry = new SearchEntryJson();
             entry.name = extension.getName();
             entry.publisher = extension.getPublisher().getName();
-            entry.extensionUrl = createApiUrl(entry.publisher, entry.name);
+            entry.url = createApiUrl(entry.publisher, entry.name);
             entry.iconUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getIconFileName());
             entry.version = extVer.getVersion();
             entry.timestamp = extVer.getTimestamp();
             entry.averageRating = extension.getAverageRating();
             entry.displayName = extVer.getDisplayName();
-            json.extensions.add(entry);
+            list.add(entry);
         }
-        return json;
+        return list;
     }
 
     @POST
@@ -239,9 +243,7 @@ public class RegistryAPI {
             processor.getExtensionDependencies().forEach(dep -> addDependency(dep, extVersion));
             processor.getBundledExtensions().forEach(dep -> addBundledExtension(dep, extVersion));
 
-            var json = new ExtensionJson();
-            copyMetadata(json, extVersion, false);
-            return json;
+            return toJson(extVersion, false);
         } catch (ErrorResultException | NoResultException exc) {
             return ExtensionJson.error(exc.getMessage());
         }
@@ -302,7 +304,8 @@ public class RegistryAPI {
         }
     }
 
-    private void copyMetadata(ExtensionJson json, ExtensionVersion extVersion, boolean isLatest) {
+    private ExtensionJson toJson(ExtensionVersion extVersion, boolean isLatest) {
+        var json = new ExtensionJson();
         var extension = extVersion.getExtension();
         json.publisher = extension.getPublisher().getName();
         json.name = extension.getName();
@@ -357,6 +360,7 @@ public class RegistryAPI {
                 json.bundledExtensions.add(ref);
             }
         }
+        return json;
     }
 
     private void addDependency(String dependency, ExtensionVersion extVersion) {
@@ -404,6 +408,9 @@ public class RegistryAPI {
         return (double) sum / reviews.size();
     }
 
+    /**
+     * Create a URL pointing to an API path.
+     */
     private String createApiUrl(String... segments) {
         try {
             var result = new StringBuilder(httpHost);

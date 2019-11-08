@@ -12,12 +12,19 @@ import java.util.List;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 
 @Entity
+@Indexed
 public class ExtensionVersion {
 
     @Id
@@ -26,6 +33,9 @@ public class ExtensionVersion {
 
     @ManyToOne
     private Extension extension;
+
+    @OneToOne(mappedBy = "latest", fetch = FetchType.LAZY)
+    private Extension latestInverse;
 
     private String version;
 
@@ -47,6 +57,7 @@ public class ExtensionVersion {
     private List<String> categories;
 
     @ElementCollection
+    @FullTextField(analyzer = "name")
     private List<String> keywords;
 
     private String license;

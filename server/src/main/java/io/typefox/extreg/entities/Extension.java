@@ -7,14 +7,18 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 
 @Entity
 @Indexed
@@ -28,9 +32,14 @@ public class Extension {
     private String name;
 
     @ManyToOne
+    @IndexedEmbedded
     private Publisher publisher;
 
+    @OneToMany(mappedBy = "extension")
+    private List<ExtensionVersion> versions;
+
     @OneToOne
+    @IndexedEmbedded
     private ExtensionVersion latest;
 
     private Double averageRating;

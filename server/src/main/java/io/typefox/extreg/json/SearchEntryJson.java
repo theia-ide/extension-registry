@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 public class SearchEntryJson {
 
-    public String extensionUrl;
+    public String url;
 
     @Nullable
     public String iconUrl;

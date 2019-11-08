@@ -7,9 +7,12 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -28,6 +31,9 @@ public class Publisher {
     @FullTextField(analyzer = "name")
     private String name;
 
+    @OneToMany(mappedBy = "publisher")
+    private List<Extension> extensions;
+
 
 	public long getId() {
 		return id;
@@ -43,6 +49,14 @@ public class Publisher {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public List<Extension> getExtensions() {
+		return extensions;
+	}
+
+	public void setExtensions(List<Extension> extensions) {
+		this.extensions = extensions;
 	}
 
 }
