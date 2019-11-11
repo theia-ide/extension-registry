@@ -79,7 +79,7 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
         return <React.Fragment>
             <Box display='flex' flexDirection='column' alignItems='center' py={6}>
                 <Typography variant='h4' classes={{ root: classes.typo }}>
-                    Extensions for the Eclipse theia IDE
+                    {this.props.listHeaderTitle}
                 </Typography>
                 <Box display='flex' width='70%'>
                     <Paper className={classes.search}>
@@ -114,7 +114,8 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
 namespace ExtensionListHeaderComp {
     export interface Props extends WithStyles<typeof headerStyles> {
         onSearchChanged: (s: string) => void,
-        onCategoryChanged: (c: ExtensionCategory) => void
+        onCategoryChanged: (c: ExtensionCategory) => void,
+        listHeaderTitle: string
     }
     export interface State {
         category: ExtensionCategory

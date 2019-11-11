@@ -15,6 +15,11 @@ const theme = createMuiTheme({
 const node = document.getElementById('main');
 ReactDOM.render(<BrowserRouter>
 <ThemeProvider theme={theme}>
-<Main apiUrl={window.location.protocol + "//" + window.location.hostname + "/api"} />
+<Main
+apiUrl={window.location.protocol + "//" + window.location.hostname + "/api"}
+listHeaderTitle='Customizable List Header'
+logoURL='./theia-logo.svg'
+pageTitle='Customizable Page Title'
+/>
 </ThemeProvider>
 </BrowserRouter>, node);

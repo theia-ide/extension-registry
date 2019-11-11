@@ -15,7 +15,6 @@ import { ExtensionListContainer } from './pages/extension-list/extension-list-co
 import { UserProfile } from './pages/user-profile';
 import { ExtensionDetailRoutes, ExtensionDetail } from './pages/extension-detail/extension-detail';
 import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
-import * as TheiaLogo from './img/theia-logo.svg';
 import { ExtensionRegistryService } from './extension-registry-service';
 
 export namespace ExtensionRegistryPages {
@@ -39,7 +38,10 @@ const mainStyles = (theme: Theme) => createStyles({
 });
 
 interface ExtensionRegistryMainProps extends WithStyles<typeof mainStyles> {
-    apiUrl: string
+    apiUrl: string;
+    pageTitle: string;
+    listHeaderTitle: string;
+    logoURL: string;
 }
 
 class MainComponent extends React.Component<ExtensionRegistryMainProps> {
@@ -63,9 +65,9 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                             <Link to={ExtensionRegistryPages.EXTENSION_LIST} className={this.props.classes.link}>
                                 <Box display='flex'>
                                     <Box width={120} display='flex' alignItems='center' marginRight={1}>
-                                        <img src={TheiaLogo} width='100%' />
+                                        <img src={this.props.logoURL} width='100%' />
                                     </Box>
-                                    <Typography variant='h6' noWrap>Extension Registry</Typography>
+                                    <Typography variant='h6' noWrap>{this.props.pageTitle}</Typography>
                                 </Box>
                             </Link>
                         </Box>
@@ -84,7 +86,7 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                 <Box flex='1'>
                     <Switch>
                         <Route exact path={['/', ExtensionRegistryPages.EXTENSION_LIST]}>
-                            <ExtensionListContainer service={this.service} />
+                            <ExtensionListContainer service={this.service} listHeaderTitle={this.props.listHeaderTitle} />
                         </Route>
                         <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
                         <Route path={ExtensionDetailRoutes.ROOT + ExtensionDetailRoutes.TAB + ExtensionDetailRoutes.PARAMS}
