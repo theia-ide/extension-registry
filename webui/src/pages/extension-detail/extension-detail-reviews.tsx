@@ -14,15 +14,15 @@ import { ExportRatingStars } from "./extension-rating-stars";
 import { ExtensionReviewDialog } from "./extension-review-dialog";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 
-const ratingStyles = (theme: Theme) => createStyles({
+const reviewStyles = (theme: Theme) => createStyles({
     boldText: {
         fontWeight: 'bold'
     }
 });
 
-class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRatingComponent.Props, ExtensionDetailRatingComponent.State> {
+class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailReviewsComponent.Props, ExtensionDetailReviewsComponent.State> {
 
-    constructor(props: ExtensionDetailRatingComponent.Props) {
+    constructor(props: ExtensionDetailReviewsComponent.Props) {
         super(props);
 
         this.state = {};
@@ -88,8 +88,8 @@ class ExtensionDetailRatingComponent extends React.Component<ExtensionDetailRati
     }
 }
 
-export namespace ExtensionDetailRatingComponent {
-    export interface Props extends WithStyles<typeof ratingStyles> {
+export namespace ExtensionDetailReviewsComponent {
+    export interface Props extends WithStyles<typeof reviewStyles> {
         extension: Extension,
         user?: ExtensionRegistryUser
         service: ExtensionRegistryService
@@ -99,5 +99,5 @@ export namespace ExtensionDetailRatingComponent {
     }
 }
 
-export const ExtensionDetailRating = withStyles(ratingStyles)(ExtensionDetailRatingComponent);
+export const ExtensionDetailReviews = withStyles(reviewStyles)(ExtensionDetailReviewsComponent);
 

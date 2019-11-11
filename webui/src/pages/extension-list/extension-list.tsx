@@ -31,7 +31,7 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
     componentDidUpdate(prevProps: ExtensionList.Props, prevState: ExtensionList.State) {
         const prevFilter = prevProps.filter;
         const newFilter = this.props.filter;
-        if (prevFilter.category !== newFilter.category || prevFilter.fullText !== newFilter.fullText) {
+        if (prevFilter.category !== newFilter.category || prevFilter.query !== newFilter.query) {
             this.props.service.getExtensions(newFilter).then(extensions => this.setState({ extensions }));
         }
     }

@@ -19,7 +19,6 @@ export class ExtensionDetailOverview extends React.Component<ExtensionDetailOver
 
     constructor(props: ExtensionDetailOverview.Props) {
         super(props);
-        
         this.markdownIt = new MarkdownIt('commonmark');
         this.state = {};
     }

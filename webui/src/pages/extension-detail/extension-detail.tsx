@@ -10,7 +10,7 @@ import * as React from "react";
 import { Typography, Box, createStyles, Theme, WithStyles, withStyles, Button, Container } from "@material-ui/core";
 import { RouteComponentProps, Switch, Route } from "react-router-dom";
 import { ExtensionDetailOverview } from "../extension-detail/extension-detail-overview";
-import { ExtensionDetailRating } from "./extension-detail-rating";
+import { ExtensionDetailReviews } from "./extension-detail-reviews";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 import { Extension, ExtensionRegistryUser, ExtensionRaw } from "../../extension-registry-types";
 import { TextDivider } from "../../custom-mui-components/text-divider";
@@ -102,7 +102,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                                 <ExtensionDetailOverview extension={this.state.extension} service={this.props.service} />
                             </Route>
                             <Route path={ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.RATING + ExtensionDetailRoutes.PARAMS}>
-                                <ExtensionDetailRating extension={this.state.extension} service={this.props.service} user={this.state.user} />
+                                <ExtensionDetailReviews extension={this.state.extension} service={this.props.service} user={this.state.user} />
                             </Route>
                         </Switch>
                     </Box>

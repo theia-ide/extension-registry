@@ -8,6 +8,7 @@
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
 import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw, ExtensionReviewList } from "./extension-registry-types";
+import { createURL } from "./utils";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;
@@ -33,7 +34,20 @@ export class ExtensionRegistryService {
     }
 
     async getExtensions(filter?: ExtensionFilter): Promise<ExtensionRaw[]> {
-        return this.api.getExtensions(filter);
+        let query: { key: string, value: string | number }[] | undefined;
+        if (filter) {
+            query = [];
+            for (const key in filter) {
+                if (filter[key]) {
+                    const value = filter[key];
+                    if (!!value) {
+                        query.push({ key, value });
+                    }
+                }
+            }
+        }
+        const endpoint = createURL([this._apiUrl, '-', 'search'], query);
+        return this.api.getExtensions(endpoint);
     }
 
     async getExtensionDetail(extensionURL: string): Promise<Extension> {

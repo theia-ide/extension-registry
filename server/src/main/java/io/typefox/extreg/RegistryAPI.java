@@ -337,6 +337,7 @@ public class RegistryAPI {
         json.homepage = extVersion.getHomepage();
         json.repository = extVersion.getRepository();
         json.bugs = extVersion.getBugs();
+        json.averageRating = extVersion.getExtension().getAverageRating();
         json.markdown = extVersion.getMarkdown();
         json.galleryColor = extVersion.getGalleryColor();
         json.galleryTheme = extVersion.getGalleryTheme();

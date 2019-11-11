@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import { ExtensionFilter, Extension, ExtensionRegistryUser, ExtensionReview, ExtensionRaw, ExtensionReviewList } from "./extension-registry-types";
+import { Extension, ExtensionRegistryUser, ExtensionReview, ExtensionRaw, ExtensionReviewList } from "./extension-registry-types";
 
 const user: ExtensionRegistryUser = {
     firstName: 'Friendly',
@@ -14,18 +14,6 @@ const user: ExtensionRegistryUser = {
     userName: 'userfriendly',
     email: 'userfriendly@test.ie'
 };
-
-const extArr: ExtensionRaw[] = [
-    {
-        name: 'python',
-        publisher: 'ms-python',
-        version: '2019.10.44104',
-        averageRating: 3.4,
-        iconUrl: 'https://8080-c1b8f7e4-95a3-4d7e-9168-51b9530254eb.ws-eu01.gitpod.io/api/ms-python/python/file/icon.png',
-        displayName: 'Python',
-        extensionUrl: 'https://8080-c1b8f7e4-95a3-4d7e-9168-51b9530254eb.ws-eu01.gitpod.io/api/ms-python/python'
-    }
-];
 
 export interface ExtensionRegistryAPIRequest<T> {
     endpoint: string,
@@ -71,9 +59,16 @@ export class ExtensionRegistryAPI {
         return req.operation(response);
     }
 
-    async getExtensions(filter?: ExtensionFilter): Promise<ExtensionRaw[]> {
-
-        return extArr;
+    async getExtensions(endpoint: string): Promise<ExtensionRaw[]> {
+        const extensions = await this.run<ExtensionRaw[]>({
+            method: 'GET',
+            endpoint,
+            operation: response => {
+                const resp = JSON.parse(response) as { offset: number; extensions: ExtensionRaw[] };
+                return resp.extensions;
+            }
+        });
+        return extensions;
     }
 
     async getExtension(endpoint: string): Promise<Extension> {

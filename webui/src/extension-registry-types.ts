@@ -9,16 +9,17 @@
 import { createURL } from "./utils";
 
 export interface ExtensionFilter {
-    fullText?: string;
+    query?: string;
     category?: ExtensionCategory;
     size?: number;
     offset?: number;
+    [key: string]: string | number | undefined;
 }
 
 export interface ExtensionRaw {
     readonly name: string;
     readonly publisher: string;
-    readonly extensionUrl: string;
+    readonly url: string;
     readonly iconUrl?: string;
     readonly displayName?: string;
     readonly version?: string;
