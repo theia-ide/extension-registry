@@ -48,7 +48,9 @@ export interface Extension extends ExtensionRaw {
     readonly description?: string;
     readonly categories?: string[];
 
-    readonly keywords?: string[];
+    readonly reviewCount: number;
+
+    readonly tags?: string[];
     readonly license?: string;
     readonly homepage?: string;
     readonly repository?: string;

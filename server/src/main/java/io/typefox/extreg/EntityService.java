@@ -133,6 +133,13 @@ public class EntityService {
         return query.getResultList();
     }
 
+    public int countReviews(Extension extension) {
+        var qs = "SELECT count(*) FROM ExtensionReview rev WHERE (rev.extension = :extension)";
+        var query = entityManager.createQuery(qs, Long.class);
+        query.setParameter("extension", extension);
+        return query.getSingleResult().intValue();
+    }
+
     public void checkUniqueVersion(String version, Extension extension) {
         var qs = "SELECT count(*) FROM ExtensionVersion exv WHERE (exv.extension = :extension and exv.version = :version)";
         var query = entityManager.createQuery(qs, Long.class);

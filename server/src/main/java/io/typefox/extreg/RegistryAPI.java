@@ -321,6 +321,7 @@ public class RegistryAPI {
         json.publisher = extension.getPublisher().getName();
         json.name = extension.getName();
         json.averageRating = extension.getAverageRating();
+        json.reviewCount = entities.countReviews(extension);
         json.publisherUrl = createApiUrl(json.publisher);
         json.reviewsUrl = createApiUrl(json.publisher, json.name, "reviews");
         json.allVersions = new HashMap<>();

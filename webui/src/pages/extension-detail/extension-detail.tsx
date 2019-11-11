@@ -69,7 +69,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
         const { extension } = this.state;
         return <React.Fragment>
             <Box className={this.props.classes.head}>
-                <Container>
+                <Container maxWidth='lg'>
                     <Box display='flex' py={4}>
                         <Box display='flex' justifyContent='center' alignItems='center' mr={4}>
                             <img src={extension.iconUrl} width='auto' height='120px' />
@@ -79,7 +79,10 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                             <Box display='flex' className={this.props.classes.row}>
                                 <Box className={this.props.classes.alignVertically}>{extension.publisher}</Box>
                                 <TextDivider />
-                                <Box className={this.props.classes.alignVertically}><ExportRatingStars number={extension.averageRating || 0} /></Box>
+                                <Box className={this.props.classes.alignVertically}>
+                                <ExportRatingStars number={extension.averageRating || 0} />
+                                {`(${this.state.extension.reviewCount})`}
+                                </Box>
                                 <TextDivider />
                                 <Box className={this.props.classes.alignVertically}>{extension.license}</Box>
                             </Box>
@@ -93,7 +96,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                     </Box>
                 </Container>
             </Box>
-            <Container>
+            <Container maxWidth='lg'>
                 <Box>
                     <Box>
                         <ExtensionDetailTabs history={this.props.history} location={this.props.location} match={this.props.match} />

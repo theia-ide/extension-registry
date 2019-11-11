@@ -49,6 +49,8 @@ public class ExtensionJson {
     @Nullable
     public Double averageRating;
 
+    public int reviewCount;
+
     public String version;
 
     public LocalDateTime timestamp;

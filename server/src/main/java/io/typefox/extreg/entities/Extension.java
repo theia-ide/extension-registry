@@ -83,6 +83,5 @@ public class Extension {
 
 	public void setAverageRating(Double averageRating) {
 		this.averageRating = averageRating;
-	}
-
+    }
 }
