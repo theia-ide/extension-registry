@@ -66,7 +66,7 @@ public class ExtensionJson {
     public List<String> categories;
 
     @Nullable
-    public List<String> keywords;
+    public List<String> tags;
 
     @Nullable
     public String license;

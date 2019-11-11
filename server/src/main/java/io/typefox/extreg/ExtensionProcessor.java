@@ -89,7 +89,7 @@ public class ExtensionProcessor {
         extension.setDisplayName(packageJson.path("displayName").textValue());
         extension.setDescription(packageJson.path("description").textValue());
         extension.setCategories(getStringList(packageJson.path("categories")));
-        extension.setKeywords(getStringList(packageJson.path("keywords")));
+        extension.setTags(getStringList(packageJson.path("keywords")));
         extension.setLicense(packageJson.path("license").textValue());
         extension.setHomepage(getUrl(packageJson.path("homepage")));
         extension.setRepository(getUrl(packageJson.path("repository")));

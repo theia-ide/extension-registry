@@ -26,23 +26,23 @@ public class Extension {
 
     @Id
     @GeneratedValue
-    private long id;
+    long id;
 
     @FullTextField(analyzer = "name")
-    private String name;
+    String name;
 
     @ManyToOne
     @IndexedEmbedded
-    private Publisher publisher;
+    Publisher publisher;
 
     @OneToMany(mappedBy = "extension")
-    private List<ExtensionVersion> versions;
+    List<ExtensionVersion> versions;
 
     @OneToOne
     @IndexedEmbedded
-    private ExtensionVersion latest;
+    ExtensionVersion latest;
 
-    private Double averageRating;
+    Double averageRating;
 
 
 	public long getId() {

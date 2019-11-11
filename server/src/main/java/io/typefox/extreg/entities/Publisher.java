@@ -26,13 +26,13 @@ public class Publisher {
 
     @Id
     @GeneratedValue
-    private long id;
+    long id;
 
     @FullTextField(analyzer = "name")
-    private String name;
+    String name;
 
     @OneToMany(mappedBy = "publisher")
-    private List<Extension> extensions;
+    List<Extension> extensions;
 
 
 	public long getId() {
@@ -49,14 +49,6 @@ public class Publisher {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public List<Extension> getExtensions() {
-		return extensions;
-	}
-
-	public void setExtensions(List<Extension> extensions) {
-		this.extensions = extensions;
 	}
 
 }

@@ -21,7 +21,6 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
 
 @Entity
 @Indexed
@@ -29,58 +28,60 @@ public class ExtensionVersion {
 
     @Id
     @GeneratedValue
-    private long id;
+    long id;
 
     @ManyToOne
-    private Extension extension;
+    Extension extension;
 
     @OneToOne(mappedBy = "latest", fetch = FetchType.LAZY)
-    private Extension latestInverse;
+    Extension latestInverse;
 
-    private String version;
+    String version;
 
-    private boolean preview;
+    boolean preview;
 
-    private LocalDateTime timestamp;
+    LocalDateTime timestamp;
 
-    private String extensionFileName;
+    String extensionFileName;
 
-    private String iconFileName;
+    String iconFileName;
 
-    private String readmeFileName;
+    String readmeFileName;
 
-    private String displayName;
+    @FullTextField(analyzer = "name")
+    String displayName;
 
-    private String description;
+    @FullTextField(analyzer = "english")
+    String description;
 
     @ElementCollection
-    private List<String> categories;
+    List<String> categories;
 
     @ElementCollection
     @FullTextField(analyzer = "name")
-    private List<String> keywords;
+    List<String> tags;
 
-    private String license;
+    String license;
 
-    private String homepage;
+    String homepage;
 
-    private String repository;
+    String repository;
 
-    private String bugs;
+    String bugs;
 
-    private String markdown;
+    String markdown;
 
-    private String galleryColor;
+    String galleryColor;
 
-    private String galleryTheme;
+    String galleryTheme;
 
-    private String qna;
-
-    @ManyToMany
-    private List<Extension> dependencies;
+    String qna;
 
     @ManyToMany
-    private List<Extension> bundledExtensions;
+    List<Extension> dependencies;
+
+    @ManyToMany
+    List<Extension> bundledExtensions;
 
 
 	public long getId() {
@@ -179,12 +180,12 @@ public class ExtensionVersion {
 		this.categories = categories;
 	}
 
-	public List<String> getKeywords() {
-		return keywords;
+	public List<String> getTags() {
+		return tags;
 	}
 
-	public void setKeywords(List<String> keywords) {
-		this.keywords = keywords;
+	public void setTags(List<String> tags) {
+		this.tags = tags;
 	}
 
 	public String getHomepage() {

@@ -167,7 +167,7 @@ public class RegistryAPI {
                 .predicate(pf -> Strings.isNullOrEmpty(query)
                                 ? pf.matchAll()
                                 : pf.simpleQueryString()
-                                    .fields("name", "publisher.name", "latest.keywords")
+                                    .fields("name", "publisher.name", "latest.tags", "latest.displayName", "latest.description")
                                     .matching(query))
                 .fetchHits(offset, size);
         var json = new SearchResultJson();
@@ -310,6 +310,7 @@ public class RegistryAPI {
         var extension = extVersion.getExtension();
         json.publisher = extension.getPublisher().getName();
         json.name = extension.getName();
+        json.averageRating = extension.getAverageRating();
         json.publisherUrl = createApiUrl(json.publisher);
         json.reviewsUrl = createApiUrl(json.publisher, json.name, "reviews");
         json.allVersions = new HashMap<>();
@@ -332,12 +333,11 @@ public class RegistryAPI {
         json.displayName = extVersion.getDisplayName();
         json.description = extVersion.getDescription();
         json.categories = extVersion.getCategories();
-        json.keywords = extVersion.getKeywords();
+        json.tags = extVersion.getTags();
         json.license = extVersion.getLicense();
         json.homepage = extVersion.getHomepage();
         json.repository = extVersion.getRepository();
         json.bugs = extVersion.getBugs();
-        json.averageRating = extVersion.getExtension().getAverageRating();
         json.markdown = extVersion.getMarkdown();
         json.galleryColor = extVersion.getGalleryColor();
         json.galleryTheme = extVersion.getGalleryTheme();

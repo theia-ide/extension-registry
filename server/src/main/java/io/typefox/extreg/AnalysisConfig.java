@@ -14,8 +14,13 @@ public class AnalysisConfig implements ElasticsearchAnalysisConfigurer {
 
 	@Override
 	public void configure(ElasticsearchAnalysisConfigurationContext context) {
+        context.tokenFilter("substring")
+                .type("ngram")
+                .param("min_gram", 2)
+                .param("max_gram", 3);
 		context.analyzer("name").custom()
                 .tokenizer("standard")
-                .tokenFilters("asciifolding", "lowercase");
-	}
+                .tokenFilters("asciifolding", "lowercase", "substring");
+    }
+
 }

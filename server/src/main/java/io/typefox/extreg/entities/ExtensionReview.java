@@ -19,20 +19,20 @@ public class ExtensionReview {
 
     @Id
     @GeneratedValue
-    private long id;
+    long id;
 
     @ManyToOne
-    private Extension extension;
+    Extension extension;
 
-    private LocalDateTime timestamp;
+    LocalDateTime timestamp;
 
-    private String username;
+    String username;
 
-    private String title;
+    String title;
 
-    private String comment;
+    String comment;
 
-    private int rating;
+    int rating;
 
 
 	public long getId() {

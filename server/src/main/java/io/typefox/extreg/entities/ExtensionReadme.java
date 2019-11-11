@@ -17,12 +17,12 @@ public class ExtensionReadme {
 
     @Id
     @GeneratedValue
-    private long id;
+    long id;
 
     @OneToOne
-    private ExtensionVersion extension;
+    ExtensionVersion extension;
 
-    private byte[] content;
+    byte[] content;
 
 
 	public long getId() {
