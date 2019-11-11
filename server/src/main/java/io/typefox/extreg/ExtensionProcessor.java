@@ -7,16 +7,20 @@
  ********************************************************************************/
 package io.typefox.extreg;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 
 import io.typefox.extreg.entities.ExtensionBinary;
 import io.typefox.extreg.entities.ExtensionIcon;
@@ -25,26 +29,46 @@ import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.util.ArchiveUtil;
 import io.typefox.extreg.util.ErrorResultException;
 
-public class ExtensionProcessor {
+/**
+ * Processes uploaded extension files and extracts their metadata.
+ */
+public class ExtensionProcessor implements AutoCloseable {
 
     private static final String PACKAGE_JSON = "extension/package.json";
     private static final String README = "extension/README";
     private static final String README_MD = "extension/README.md";
 
     private final byte[] content;
+    private final ZipFile zipFile;
     private JsonNode packageJson;
 
     public ExtensionProcessor(InputStream stream) {
         try {
-			this.content = ByteStreams.toByteArray(stream);
+            content = ByteStreams.toByteArray(stream);
+            var tempFile = File.createTempFile("extension_", ".vsix");
+            Files.write(content, tempFile);
+            zipFile = new ZipFile(tempFile);
+        } catch (ZipException exc) {
+            throw new ErrorResultException("Could not read zip file: " + exc.getMessage());
 		} catch (IOException exc) {
 			throw new RuntimeException(exc);
 		}
     }
 
+	@Override
+	public void close() {
+        if (zipFile != null) {
+			try {
+				zipFile.close();
+			} catch (IOException exc) {
+				throw new RuntimeException(exc);
+            }
+        }
+	}
+
     private void loadPackageJson() {
         if (packageJson == null) {
-            var bytes = ArchiveUtil.readEntry(content, PACKAGE_JSON);
+            var bytes = ArchiveUtil.readEntry(zipFile, PACKAGE_JSON);
             if (bytes == null)
                 throw new ErrorResultException("Entry not found: " + PACKAGE_JSON);
             try {
@@ -133,10 +157,10 @@ public class ExtensionProcessor {
 
     public ExtensionReadme getReadme(ExtensionVersion extension) {
         var fileName = "README.md";
-        var bytes = ArchiveUtil.readEntry(content, README_MD);
+        var bytes = ArchiveUtil.readEntry(zipFile, README_MD);
         if (bytes == null) {
             fileName = "README";
-            bytes = ArchiveUtil.readEntry(content, README);
+            bytes = ArchiveUtil.readEntry(zipFile, README);
         }
         if (bytes == null)
             return null;
@@ -153,7 +177,7 @@ public class ExtensionProcessor {
         if (iconPath == null || !iconPath.isTextual())
             return null;
         var iconPathStr = iconPath.asText().replace('\\', '/');
-        var bytes = ArchiveUtil.readEntry(content, "extension/" + iconPathStr);
+        var bytes = ArchiveUtil.readEntry(zipFile, "extension/" + iconPathStr);
         if (bytes == null)
             return null;
         var icon = new ExtensionIcon();

@@ -11,6 +11,9 @@ import io.quarkus.vertx.web.Route;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
 
+/**
+ * Reroute paths to static resources to support client-side routing.
+ */
 public class WebUIRouter {
 
     @Route(path = "/*", methods = HttpMethod.GET)

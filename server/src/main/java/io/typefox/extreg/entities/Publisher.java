@@ -28,7 +28,7 @@ public class Publisher {
     @GeneratedValue
     long id;
 
-    @FullTextField(analyzer = "name")
+    @FullTextField(analyzer = "substring")
     String name;
 
     @OneToMany(mappedBy = "publisher")

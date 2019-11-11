@@ -10,6 +10,9 @@ package io.typefox.extreg;
 import org.hibernate.search.backend.elasticsearch.analysis.ElasticsearchAnalysisConfigurationContext;
 import org.hibernate.search.backend.elasticsearch.analysis.ElasticsearchAnalysisConfigurer;
 
+/**
+ * Configuration of Elasticsearch analysis.
+ */
 public class AnalysisConfig implements ElasticsearchAnalysisConfigurer {
 
 	@Override
@@ -18,7 +21,7 @@ public class AnalysisConfig implements ElasticsearchAnalysisConfigurer {
                 .type("ngram")
                 .param("min_gram", 2)
                 .param("max_gram", 3);
-		context.analyzer("name").custom()
+		context.analyzer("substring").custom()
                 .tokenizer("standard")
                 .tokenFilters("asciifolding", "lowercase", "substring");
     }

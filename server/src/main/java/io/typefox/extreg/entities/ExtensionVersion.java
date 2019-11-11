@@ -10,6 +10,7 @@ package io.typefox.extreg.entities;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -48,17 +49,19 @@ public class ExtensionVersion {
 
     String readmeFileName;
 
-    @FullTextField(analyzer = "name")
+    @FullTextField(analyzer = "substring")
     String displayName;
 
+    @Column(length=2048)
     @FullTextField(analyzer = "english")
     String description;
 
     @ElementCollection
+    @FullTextField(analyzer = "keyword")
     List<String> categories;
 
     @ElementCollection
-    @FullTextField(analyzer = "name")
+    @FullTextField(analyzer = "standard")
     List<String> tags;
 
     String license;

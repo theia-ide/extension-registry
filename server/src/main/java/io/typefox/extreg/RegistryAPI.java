@@ -162,14 +162,25 @@ public class RegistryAPI {
                                    @QueryParam("category") String category,
                                    @QueryParam("size") @DefaultValue("20") int size,
                                    @QueryParam("offset") @DefaultValue("0") int offset) {
-        var extensions = Search.session(entityManager)
+        var search = Search.session(entityManager)
                 .search(Extension.class)
-                .predicate(pf -> Strings.isNullOrEmpty(query)
-                                ? pf.matchAll()
-                                : pf.simpleQueryString()
-                                    .fields("name", "publisher.name", "latest.tags", "latest.displayName", "latest.description")
-                                    .matching(query))
-                .fetchHits(offset, size);
+                .predicate(spf -> {
+                    if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(category))
+                        return spf.matchAll();
+                    var bool = spf.bool();
+                    if (!Strings.isNullOrEmpty(category))
+                        bool = bool.must(spf.match()
+                                .field("latest.categories")
+                                .matching(category));
+                    if (!Strings.isNullOrEmpty(query))
+                        bool = bool.must(spf.simpleQueryString()
+                            .fields("name", "latest.displayName").boost(5)
+                            .fields("publisher.name", "latest.tags").boost(2)
+                            .fields("latest.description")
+                            .matching(query));
+                    return bool;
+                });
+        var extensions = search.fetchHits(offset, size);
         var json = new SearchResultJson();
         json.offset = offset;
         json.extensions = toSearchEntries(extensions);
@@ -200,8 +211,7 @@ public class RegistryAPI {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public ExtensionJson publish(InputStream content) {
-        try {
-            var processor = new ExtensionProcessor(content);
+        try (var processor = new ExtensionProcessor(content)) {
             var publisher = entities.findPublisherOptional(processor.getPublisherName());
             if (publisher.isEmpty()) {
                 var pub = new Publisher();
