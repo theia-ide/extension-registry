@@ -13,6 +13,7 @@ import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExportRatingStars } from "./extension-rating-stars";
 import { ExtensionReviewDialog } from "./extension-review-dialog";
 import { ExtensionRegistryService } from "../../extension-registry-service";
+import { utcToZonedTime } from "date-fns-tz";
 
 const reviewStyles = (theme: Theme) => createStyles({
     boldText: {
@@ -63,10 +64,16 @@ class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailRev
             <Divider />
             <Box>
                 {this.state.reviewList.reviews.map((r: ExtensionReview) => {
+                    let zonedDate;
+                    if (r.timestamp) {
+                        const date = new Date(r.timestamp);
+                        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                        zonedDate = utcToZonedTime(date, timeZone);
+                    }
                     return <React.Fragment key={r.user + r.title + r.timestamp}>
                         <Box my={2}>
                             <Box display='flex'>
-                                <Typography variant='body2'>{r.timestamp}</Typography>
+                                <Typography variant='body2'>{zonedDate ? zonedDate.toLocaleString() : '-'}</Typography>
                                 <TextDivider />
                                 <Typography variant='body2'>{r.user}</Typography>
                             </Box>

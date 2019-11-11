@@ -19,7 +19,8 @@
         "react-dom": "^16.10.2",
         "react-router-dom": "^5.1.2",
         "markdown-it": "^10.0.0",
-        "date-fns": "^2.7.0"
+        "date-fns": "^2.7.0",
+        "date-fns-tz": "^1.0.8"
     },
     "devDependencies": {
         "@types/react": "^16.9.9",

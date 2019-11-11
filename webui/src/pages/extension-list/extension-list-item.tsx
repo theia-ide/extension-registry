@@ -38,13 +38,17 @@ class ExtensionListItemComp extends React.Component<ExtensionListItemProps> {
         const route = createURL([ExtensionDetailRoutes.ROOT, ExtensionDetailRoutes.OVERVIEW, extension.publisher, extension.name]);
         return <React.Fragment>
             <Fade in={true} timeout={{ enter: this.props.idx * 200 }}>
-                <Grid item xs={12} sm={3} md={2}>
+                <Grid item xs={12} sm={3} md={2} title={extension.displayName || extension.name}>
                     <Link to={route} className={classes.link}>
                         <Paper className={classes.paper}>
-                            <Box display='flex' justifyContent='center'>
+                            <Box display='flex' justifyContent='center' alignItems='center' width='100%' height={80}>
                                 <img width='80' src={extension.iconUrl} />
                             </Box>
-                            <Box display='flex' justifyContent='center'><Typography variant='h6'>{extension.displayName || extension.name}</Typography></Box>
+                            <Box display='flex' justifyContent='center'>
+                                <Typography variant='h6' noWrap>
+                                    {extension.displayName || extension.name}
+                                </Typography>
+                            </Box>
                             <Box display='flex' justifyContent='space-between'>
                                 <Typography component='div' variant='caption' noWrap={true} align='left'>
                                     {extension.publisher}
