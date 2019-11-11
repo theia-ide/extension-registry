@@ -12,7 +12,7 @@ import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import ExitToAppIcon from '@material-ui/icons/ExitToAppOutlined';
 import { Route, Link, Switch } from 'react-router-dom';
 import { ExtensionListContainer } from './pages/extension-list/extension-list-container';
-import { UserProfile } from './pages/user-profile';
+import { UserProfile } from './pages/user/user-profile';
 import { ExtensionDetailRoutes, ExtensionDetail } from './pages/extension-detail/extension-detail';
 import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
 import { ExtensionRegistryService } from './extension-registry-service';

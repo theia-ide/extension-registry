@@ -84,6 +84,7 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
                 <Box display='flex' width='70%'>
                     <Paper className={classes.search}>
                         <InputBase
+                            autoFocus
                             onChange={this.handleSearchChange}
                             className={classes.inputBase}
                             placeholder='Search in Name and Description'>
