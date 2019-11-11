@@ -38,7 +38,10 @@ class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailRev
         this.setState({ reviewList });
     }
 
-    protected readonly saveCompleted = () => this.init();
+    protected readonly saveCompleted = () => {
+        this.props.reviewsDidUpdate();
+        this.init();
+    }
 
     render() {
         if (!this.state.reviewList) {
@@ -97,9 +100,10 @@ class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailRev
 
 export namespace ExtensionDetailReviewsComponent {
     export interface Props extends WithStyles<typeof reviewStyles> {
-        extension: Extension,
+        extension: Extension
         user?: ExtensionRegistryUser
         service: ExtensionRegistryService
+        reviewsDidUpdate: () => void
     }
     export interface State {
         reviewList?: ExtensionReviewList

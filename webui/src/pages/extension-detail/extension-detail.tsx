@@ -60,6 +60,8 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
         this.setState({ extension, user });
     }
 
+    protected onReviewUpdate = () => this.init();
+
     render() {
         if (!this.state.extension) {
             return '';
@@ -83,8 +85,8 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                             </Box>
                             <Box className={this.props.classes.row}>{extension.description}</Box>
                             <Box className={this.props.classes.row}>
-                                <Button variant='contained' color='secondary'>
-                                    Install
+                                <Button variant='contained' color='secondary' href={extension.downloadUrl}>
+                                    Download
                                 </Button>
                             </Box>
                         </Box>
@@ -102,7 +104,7 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                                 <ExtensionDetailOverview extension={this.state.extension} service={this.props.service} />
                             </Route>
                             <Route path={ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.RATING + ExtensionDetailRoutes.PARAMS}>
-                                <ExtensionDetailReviews extension={this.state.extension} service={this.props.service} user={this.state.user} />
+                                <ExtensionDetailReviews extension={this.state.extension} reviewsDidUpdate={this.onReviewUpdate} service={this.props.service} user={this.state.user} />
                             </Route>
                         </Switch>
                     </Box>
