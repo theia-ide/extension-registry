@@ -12,6 +12,9 @@ import { ExtensionRegistryService } from "../../extension-registry-service";
 import { Extension } from "../../extension-registry-types";
 import * as MarkdownIt from 'markdown-it';
 import { utcToZonedTime } from "date-fns-tz";
+import { ExtensionListRoutes } from "../extension-list/extension-list-container";
+import { createURL } from "../../utils";
+import { RouteComponentProps } from "react-router-dom";
 
 const overviewStyles = (theme: Theme) => createStyles({
     markdown: {
@@ -69,19 +72,9 @@ class ExtensionDetailOverviewComponent extends React.Component<ExtensionDetailOv
                 </Box>
                 <Box flex={3} display='flex' justifyContent='flex-end'>
                     <Box width='80%'>
-                        {extension.categories ?
-                            <Box>
-                                <Typography variant='h6'>Categories</Typography>
-                                {extension.categories.map((cat: string) =>
-                                    <Button className={classes.categoryButton} size='small' key={cat} variant='outlined'>{cat}</Button>)}
-                            </Box> : ''}
+                        {this.renderButtonList('category', 'Categories', extension.categories)}
                         <Box mt={2}>
-                            {extension.tags ?
-                                <Box>
-                                    <Typography variant='h6'>Tags</Typography>
-                                    {extension.tags.map((tag: string) =>
-                                        <Button className={classes.categoryButton} size='small' key={tag} variant='outlined'>{tag}</Button>)}
-                                </Box> : ''}
+                            {this.renderButtonList('search', 'Tags', extension.tags)}
                         </Box>
                         <Box mt={2}>
                             <Typography variant='h6'>Resources</Typography>
@@ -101,6 +94,29 @@ class ExtensionDetailOverviewComponent extends React.Component<ExtensionDetailOv
                 </Box>
             </Box>
         </React.Fragment>;
+    }
+
+    protected handleFilterButtonClicked = (kind: 'category' | 'search', buttonLabel: string) => {
+        this.props.history.push(createURL([ExtensionListRoutes.EXTENSION_LIST_LINK], [{ key: kind, value: buttonLabel }]));
+    }
+
+    protected renderButtonList(kind: 'category' | 'search', title: string, arr?: string[]) {
+        return arr ?
+            <Box>
+                <Typography variant='h6'>{title}</Typography>
+                {
+                    arr.map((buttonLabel: string) =>
+                        <Button
+                            className={this.props.classes.categoryButton}
+                            size='small'
+                            key={buttonLabel}
+                            variant='outlined'
+                            onClick={()=> this.handleFilterButtonClicked(kind, buttonLabel)}
+                        >
+                            {buttonLabel}
+                        </Button>)
+                }
+            </Box> : '';
     }
 
     protected renderResourceLink(label: string, href?: string) {
@@ -125,7 +141,7 @@ class ExtensionDetailOverviewComponent extends React.Component<ExtensionDetailOv
 }
 
 export namespace ExtensionDetailOverview {
-    export interface Props extends WithStyles<typeof overviewStyles> {
+    export interface Props extends WithStyles<typeof overviewStyles>, RouteComponentProps {
         extension: Extension,
         service: ExtensionRegistryService
     }

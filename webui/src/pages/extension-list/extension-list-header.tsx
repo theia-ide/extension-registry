@@ -56,6 +56,16 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
         };
     }
 
+    componentDidMount() {
+        this.setState({ category: this.props.category || '' });
+    }
+
+    componentDidUpdate(prevProps: ExtensionListHeaderComp.Props) {
+        if(this.props.category !== prevProps.category) {
+            this.setState({ category: this.props.category || '' });
+        }
+    }
+
     protected handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const category = event.target.value as ExtensionCategory;
         this.setState({ category });
@@ -85,6 +95,7 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
                     <Paper className={classes.search}>
                         <InputBase
                             autoFocus
+                            value={this.props.searchTerm || ''}
                             onChange={this.handleSearchChange}
                             className={classes.inputBase}
                             placeholder='Search in Name and Description'>
@@ -116,7 +127,9 @@ namespace ExtensionListHeaderComp {
     export interface Props extends WithStyles<typeof headerStyles> {
         onSearchChanged: (s: string) => void,
         onCategoryChanged: (c: ExtensionCategory) => void,
-        listHeaderTitle: string
+        listHeaderTitle: string,
+        searchTerm?: string,
+        category?: ExtensionCategory
     }
     export interface State {
         category: ExtensionCategory

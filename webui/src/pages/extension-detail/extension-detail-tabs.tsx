@@ -15,13 +15,13 @@ import { ExtensionRaw } from "../../extension-registry-types";
 
 export class ExtensionDetailTabs extends React.Component<ExtensionDetailTabs.Props, ExtensionDetailTabs.State> {
 
-    protected extensionResolvedRoute: string;
+    protected extensionResolvedRoute: string[];
 
     constructor(props: ExtensionDetailTabs.Props) {
         super(props);
 
         const params = this.props.match.params as ExtensionDetailTabs.Params;
-        this.extensionResolvedRoute = createURL([params.publisher, params.name, params.version || '']);
+        this.extensionResolvedRoute = [params.publisher, params.name, params.version || ''];
 
         this.state = { tab: params.tab };
     }
@@ -32,7 +32,7 @@ export class ExtensionDetailTabs extends React.Component<ExtensionDetailTabs.Pro
     }
 
     protected createRoute(tab: string) {
-        return ExtensionDetailRoutes.ROOT + '/' + tab + '/' + this.extensionResolvedRoute;
+        return createURL([ExtensionDetailRoutes.ROOT, tab, ...this.extensionResolvedRoute]);
     }
 
     render() {

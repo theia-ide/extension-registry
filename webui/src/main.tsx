@@ -11,20 +11,23 @@ import { Container, AppBar, Toolbar, Typography, IconButton, CssBaseline, Box, T
 import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import ExitToAppIcon from '@material-ui/icons/ExitToAppOutlined';
 import { Route, Link, Switch } from 'react-router-dom';
-import { ExtensionListContainer } from './pages/extension-list/extension-list-container';
+import { ExtensionListContainer, ExtensionListRoutes } from './pages/extension-list/extension-list-container';
 import { UserProfile } from './pages/user/user-profile';
 import { ExtensionDetailRoutes, ExtensionDetail } from './pages/extension-detail/extension-detail';
 import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
 import { ExtensionRegistryService } from './extension-registry-service';
+import { createURL } from './utils';
 
 export namespace ExtensionRegistryPages {
-    export const EXTENSION_LIST = '/extension-list';
+    export const EXTENSION_REGISTRY = 'extension-registry';
+    export const EXTENSION_UPDATE = 'extension-update';
+    export const LOGIN = 'login';
+    export const USER_PROFILE = 'user-profile';
+    export const USER_REGISTRY = 'user-registry';
+}
 
-    export const EXTENSION_REGISTRY = '/extension-registry';
-    export const EXTENSION_UPDATE = '/extension-update';
-    export const LOGIN = '/login';
-    export const USER_PROFILE = '/user-profile';
-    export const USER_REGISTRY = '/user-registry';
+export namespace ExtensionRegistryMainRoutes {
+    export const USER_PROFILE = createURL(['user-profile']);
 }
 
 const mainStyles = (theme: Theme) => createStyles({
@@ -62,7 +65,7 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                 <AppBar position='sticky'>
                     <Toolbar classes={{ root: this.props.classes.toolbar }}>
                         <Box>
-                            <Link to={ExtensionRegistryPages.EXTENSION_LIST} className={this.props.classes.link}>
+                            <Link to={ExtensionListRoutes.EXTENSION_LIST_LINK} className={this.props.classes.link}>
                                 <Box display='flex'>
                                     <Box width={120} display='flex' alignItems='center' marginRight={1}>
                                         <img src={this.props.logoURL} width='100%' />
@@ -72,7 +75,7 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                             </Link>
                         </Box>
                         <Box>
-                            <Link to={ExtensionRegistryPages.USER_PROFILE}>
+                            <Link to={ExtensionRegistryMainRoutes.USER_PROFILE}>
                                 <IconButton>
                                     <AccountBoxIcon />
                                 </IconButton>
@@ -85,12 +88,10 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                 </AppBar>
                 <Box flex='1'>
                     <Switch>
-                        <Route exact path={['/', ExtensionRegistryPages.EXTENSION_LIST]}>
-                            <ExtensionListContainer service={this.service} listHeaderTitle={this.props.listHeaderTitle} />
-                        </Route>
-                        <Route path={ExtensionRegistryPages.USER_PROFILE} component={UserProfile} />
-                        <Route path={ExtensionDetailRoutes.ROOT + ExtensionDetailRoutes.TAB + ExtensionDetailRoutes.PARAMS}
-                            render={routeProps => <ExtensionDetail {...routeProps} service={this.service} />} />
+                        <Route exact path={['/', ExtensionListRoutes.EXTENSION_LIST_LINK]}
+                            render={routeProps => <ExtensionListContainer {...routeProps} service={this.service} listHeaderTitle={this.props.listHeaderTitle} />} />
+                        <Route path={ExtensionRegistryMainRoutes.USER_PROFILE} component={UserProfile} />
+                        <Route path={ExtensionDetailRoutes.EXTENSION_DETAIL_MAIN_ROUTE} render={routeProps => <ExtensionDetail {...routeProps} service={this.service} />} />
                     </Switch>
                 </Box>
                 <footer>

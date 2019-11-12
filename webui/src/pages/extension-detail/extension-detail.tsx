@@ -16,13 +16,20 @@ import { Extension, ExtensionRegistryUser, ExtensionRaw } from "../../extension-
 import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExtensionDetailTabs } from "./extension-detail-tabs";
 import { ExportRatingStars } from "./extension-rating-stars";
+import { createURL } from "../../utils";
 
 export namespace ExtensionDetailRoutes {
-    export const ROOT = '/extension-detail';
-    export const TAB = '/:tab';
-    export const PARAMS = '/:publisher/:name';
+    export const ROOT = 'extension-detail';
+    export const TAB_PARAM = ':tab';
+    export const PUBLISHER_PARAM = ':publisher';
+    export const NAME_PARAM = ':name';
     export const OVERVIEW = 'overview';
     export const RATING = 'rating';
+
+    export const OVERVIEW_ROUTE = createURL([ROOT, OVERVIEW, PUBLISHER_PARAM, NAME_PARAM]);
+    export const REVIEW_ROUTE = createURL([ROOT, RATING, PUBLISHER_PARAM, NAME_PARAM]);
+
+    export const EXTENSION_DETAIL_MAIN_ROUTE = createURL([ROOT, TAB_PARAM, PUBLISHER_PARAM, NAME_PARAM]);
 }
 
 const detailStyles = (theme: Theme) => createStyles({
@@ -103,10 +110,10 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                     </Box>
                     <Box>
                         <Switch>
-                            <Route path={ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.OVERVIEW + ExtensionDetailRoutes.PARAMS}>
-                                <ExtensionDetailOverview extension={this.state.extension} service={this.props.service} />
+                            <Route path={ExtensionDetailRoutes.OVERVIEW_ROUTE}>
+                                <ExtensionDetailOverview history={this.props.history} location={this.props.location} match={this.props.match} extension={this.state.extension} service={this.props.service} />
                             </Route>
-                            <Route path={ExtensionDetailRoutes.ROOT + '/' + ExtensionDetailRoutes.RATING + ExtensionDetailRoutes.PARAMS}>
+                            <Route path={ExtensionDetailRoutes.REVIEW_ROUTE}>
                                 <ExtensionDetailReviews extension={this.state.extension} reviewsDidUpdate={this.onReviewUpdate} service={this.props.service} user={this.state.user} />
                             </Route>
                         </Switch>

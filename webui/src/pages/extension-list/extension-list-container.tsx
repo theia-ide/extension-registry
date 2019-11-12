@@ -12,7 +12,14 @@ import { ExtensionListHeader } from "./extension-list-header";
 import { ExtensionCategory } from "../../extension-registry-types";
 import { ExtensionList } from "./extension-list";
 import { ExtensionRegistryService } from "../../extension-registry-service";
+import { createURL } from "../../utils";
+import { RouteComponentProps } from "react-router-dom";
 
+export const EXTENSION_LIST_COMPONENT_NAME = 'extension-list';
+
+export namespace ExtensionListRoutes {
+    export const EXTENSION_LIST_LINK = createURL([EXTENSION_LIST_COMPONENT_NAME]);
+}
 
 export class ExtensionListContainer extends React.Component<ExtensionListContainer.Props, ExtensionListContainer.State> {
 
@@ -22,6 +29,16 @@ export class ExtensionListContainer extends React.Component<ExtensionListContain
             searchTerm: '',
             category: ''
         };
+    }
+
+    componentDidMount() {
+        const searchParams = new URLSearchParams(this.props.location.search);
+        const search = searchParams.get('search');
+        const category = searchParams.get('category') as ExtensionCategory;
+        this.setState({
+            searchTerm: search || '',
+            category: category || ''
+        });
     }
 
     protected onSearchChanged = async (searchTerm: string) => {
@@ -34,15 +51,15 @@ export class ExtensionListContainer extends React.Component<ExtensionListContain
     render() {
         return <React.Fragment>
             <Container>
-                <ExtensionListHeader onSearchChanged={this.onSearchChanged} onCategoryChanged={this.onCategoryChanged} listHeaderTitle={this.props.listHeaderTitle}/>
-                <ExtensionList service={this.props.service} filter={{query: this.state.searchTerm, category: this.state.category}} />
+                <ExtensionListHeader searchTerm={this.state.searchTerm} category={this.state.category} onSearchChanged={this.onSearchChanged} onCategoryChanged={this.onCategoryChanged} listHeaderTitle={this.props.listHeaderTitle} />
+                <ExtensionList service={this.props.service} filter={{ query: this.state.searchTerm, category: this.state.category }} />
             </Container>
         </React.Fragment>;
     }
 }
 
 export namespace ExtensionListContainer {
-    export interface Props {
+    export interface Props extends RouteComponentProps {
         service: ExtensionRegistryService;
         listHeaderTitle: string;
     }

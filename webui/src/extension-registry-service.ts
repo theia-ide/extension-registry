@@ -8,7 +8,7 @@
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
 import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw, ExtensionReviewList } from "./extension-registry-types";
-import { createURL } from "./utils";
+import { createAbsoluteURL } from "./utils";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;
@@ -46,7 +46,7 @@ export class ExtensionRegistryService {
                 }
             }
         }
-        const endpoint = createURL([this._apiUrl, '-', 'search'], query);
+        const endpoint = createAbsoluteURL([this._apiUrl, '-', 'search'], query);
         return this.api.getExtensions(endpoint);
     }
 

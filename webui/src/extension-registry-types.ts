@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import { createURL } from "./utils";
+import { createAbsoluteURL } from "./utils";
 
 export interface ExtensionFilter {
     query?: string;
@@ -29,7 +29,7 @@ export interface ExtensionRaw {
 export namespace ExtensionRaw {
     export function getExtensionApiUrl(root: string, extension: ExtensionRaw) {
         const arr = [root, extension.publisher, extension.name];
-        return createURL(arr);
+        return createAbsoluteURL(arr);
     }
 }
 

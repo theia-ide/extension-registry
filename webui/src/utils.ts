@@ -6,8 +6,13 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-export function createURL(arr: string[], queries?: {key: string, value: string | number}[]): string {
+export function createAbsoluteURL(arr: string[], queries?: {key: string, value: string | number}[]): string {
     const url = arr.reduce((acc, curr) => acc + (curr ? '/' + curr : ''));
     const queryString = queries ? '?' + queries.map<string>((obj) => obj.key + '=' + obj.value).join('&') : '';
     return url + queryString;
+}
+
+export function createURL(arr: string[], queries?: {key: string, value: string | number}[]): string {
+    const url = createAbsoluteURL(arr, queries);
+    return url.startsWith('/') ? url : '/' + url;
 }
