@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -31,6 +32,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -292,9 +295,19 @@ public class RegistryAPI {
     @Transactional
     public ReviewResultJson review(ReviewJson review,
                                    @PathParam("publisher") String publisherName,
-                                   @PathParam("extension") String extensionName) {
+                                   @PathParam("extension") String extensionName,
+                                   @CookieParam("sessionid") Cookie sessionCookie) {
         try {
             var json = new ReviewResultJson();
+            if (sessionCookie == null) {
+                json.error = "Not logged in.";
+                return json;
+            }
+            var user = entities.findUser(sessionCookie.getValue());
+            if (user == null) {
+                json.error = "Invalid session.";
+                return json;
+            }
             if (review.rating < 0 || review.rating > 5) {
                 json.error = "The rating must be an integer number between 0 and 5.";
                 return json;
@@ -303,7 +316,7 @@ public class RegistryAPI {
             var extReview = new ExtensionReview();
             extReview.setExtension(extension);
             extReview.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
-            extReview.setUsername(review.user);
+            extReview.setUsername(user.getName());
             extReview.setTitle(review.title);
             extReview.setComment(review.comment);
             extReview.setRating(review.rating);
@@ -435,7 +448,7 @@ public class RegistryAPI {
             }
             return result.toString();
         } catch (UnsupportedEncodingException exc) {
-            throw new RuntimeException(exc);
+            throw new WebApplicationException(exc);
         }
     }
 
