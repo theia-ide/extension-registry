@@ -16,7 +16,7 @@ import { UserProfile } from './pages/user/user-profile';
 import { ExtensionDetailRoutes, ExtensionDetail } from './pages/extension-detail/extension-detail';
 import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
 import { ExtensionRegistryService } from './extension-registry-service';
-import { createURL } from './utils';
+import { createURL, createAbsoluteURL } from './utils';
 
 export namespace ExtensionRegistryPages {
     export const EXTENSION_REGISTRY = 'extension-registry';
@@ -75,12 +75,12 @@ class MainComponent extends React.Component<ExtensionRegistryMainProps> {
                             </Link>
                         </Box>
                         <Box>
-                            <Link to={ExtensionRegistryMainRoutes.USER_PROFILE}>
-                                <IconButton>
-                                    <AccountBoxIcon />
-                                </IconButton>
-                            </Link>
-                            <IconButton>
+
+                            <IconButton href={createAbsoluteURL([this.service.apiUrl, '-', 'user', 'login'])}>
+                                <AccountBoxIcon />
+                            </IconButton>
+
+                            <IconButton href={createAbsoluteURL([this.service.apiUrl, '-', 'user', 'logout'])}>
                                 <ExitToAppIcon />
                             </IconButton>
                         </Box>

@@ -17,7 +17,7 @@ const user: ExtensionRegistryUser = {
 
 export interface ExtensionRegistryAPIRequest<T> {
     endpoint: string,
-    operation: (json: any) => T
+    operation: (response: Response) => Promise<T>
 }
 
 export interface ExtensionRegistryAPIRequestWithoutPayload<T> extends ExtensionRegistryAPIRequest<T> {
@@ -33,38 +33,29 @@ export interface ExtensionRegistryAPIRequestWithPayload<T> extends ExtensionRegi
 export class ExtensionRegistryAPI {
 
     async run<T>(req: ExtensionRegistryAPIRequestWithPayload<T> | ExtensionRegistryAPIRequestWithoutPayload<T>): Promise<T> {
-        let payload: string;
-        let contentType: string;
-
-        if (req.method === 'POST' || req.method === 'PUT') {
-            payload = JSON.stringify(req.payload);
-            contentType = req.contentType;
+        const headers: { [key: string]: any } = { 'Content-Type': 'application/json' };
+        const param: { [key: string]: any } = {
+            method: req.method,
+            credentials: 'include',
+            headers
         }
 
-        const response = await new Promise<string>((resolve, reject) => {
-            const request = new XMLHttpRequest();
-            request.open(req.method, req.endpoint);
-            if (contentType) {
-                request.setRequestHeader("Content-Type", contentType);
-            }
-            request.addEventListener('load', () => {
-                resolve(request.responseText);
-            });
-            request.addEventListener('error', (event) => {
-                reject(event);
-            });
-            request.send(payload);
-        });
+        if (req.method === 'POST' || req.method === 'PUT') {
+            param.body = JSON.stringify(req.payload);
+            param.headers['Accept'] = req.contentType;
+        }
 
-        return req.operation(response);
+        const response = await fetch(req.endpoint, param);
+
+        return await req.operation(response);
     }
 
     async getExtensions(endpoint: string): Promise<ExtensionRaw[]> {
         const extensions = await this.run<ExtensionRaw[]>({
             method: 'GET',
             endpoint,
-            operation: response => {
-                const resp = JSON.parse(response) as { offset: number; extensions: ExtensionRaw[] };
+            operation: async response => {
+                const resp = await response.json() as { offset: number; extensions: ExtensionRaw[] };
                 return resp.extensions;
             }
         });
@@ -75,7 +66,7 @@ export class ExtensionRegistryAPI {
         const ext = await this.run<Extension>({
             method: 'GET',
             endpoint,
-            operation: response => JSON.parse(response)
+            operation: async response => await response.json()
         });
         return ext;
     }
@@ -84,7 +75,7 @@ export class ExtensionRegistryAPI {
         const readme = await this.run<string>({
             method: 'GET',
             endpoint,
-            operation: json => json
+            operation: async response => await response.text()
         });
         return readme;
     }
@@ -93,7 +84,7 @@ export class ExtensionRegistryAPI {
         const reviews = await this.run<ExtensionReviewList>({
             method: 'GET',
             endpoint,
-            operation: response => JSON.parse(response)
+            operation: async response => await response.json()
         });
         return reviews;
     }
@@ -104,7 +95,7 @@ export class ExtensionRegistryAPI {
             payload,
             contentType: 'application/json;charset=UTF-8',
             endpoint,
-            operation: response => response
+            operation: async response => await response.json()
         });
     }
 
