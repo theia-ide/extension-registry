@@ -24,7 +24,6 @@ import io.typefox.extreg.entities.ExtensionReadme;
 import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.entities.Publisher;
-import io.typefox.extreg.entities.UserData;
 import io.typefox.extreg.entities.UserSession;
 import io.typefox.extreg.util.ErrorResultException;
 import io.typefox.extreg.util.SemanticVersion;
@@ -164,13 +163,6 @@ public class EntityService {
 
     public UserSession findSession(String sessionId) {
         return entityManager.find(UserSession.class, sessionId);
-    }
-
-    public UserData findUser(String sessionId) {
-        var session = findSession(sessionId);
-        if (session == null)
-            return null;
-        return session.getUser();
     }
 
 }

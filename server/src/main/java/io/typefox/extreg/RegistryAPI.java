@@ -303,8 +303,8 @@ public class RegistryAPI {
                 json.error = "Not logged in.";
                 return json;
             }
-            var user = entities.findUser(sessionCookie.getValue());
-            if (user == null) {
+            var session = entities.findSession(sessionCookie.getValue());
+            if (session == null) {
                 json.error = "Invalid session.";
                 return json;
             }
@@ -316,7 +316,7 @@ public class RegistryAPI {
             var extReview = new ExtensionReview();
             extReview.setExtension(extension);
             extReview.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
-            extReview.setUsername(user.getName());
+            extReview.setUsername(session.getUser().getName());
             extReview.setTitle(review.title);
             extReview.setComment(review.comment);
             extReview.setRating(review.rating);

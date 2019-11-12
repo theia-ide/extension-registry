@@ -7,6 +7,8 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -20,6 +22,7 @@ public class UserSession {
     @ManyToOne
     UserData user;
 
+    LocalDateTime lastUsed;
 
     public String getId() {
         return id;
@@ -35,6 +38,14 @@ public class UserSession {
 
     public void setUser(UserData user) {
         this.user = user;
+    }
+
+    public LocalDateTime getLastUsed() {
+        return lastUsed;
+    }
+
+    public void setLastUsed(LocalDateTime lastUsed) {
+        this.lastUsed = lastUsed;
     }
 
 }
