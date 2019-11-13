@@ -13,7 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 @Entity
-public class ExtensionIcon {
+public class ExtensionIcon implements FileResource {
 
     @Id
     @GeneratedValue
@@ -41,10 +41,12 @@ public class ExtensionIcon {
 		this.extension = extension;
 	}
 
+    @Override
 	public byte[] getContent() {
 		return content;
 	}
 
+    @Override
 	public void setContent(byte[] content) {
 		this.content = content;
 	}

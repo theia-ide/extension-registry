@@ -8,15 +8,16 @@
 package io.typefox.extreg;
 
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -32,27 +33,21 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.google.common.base.Strings;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.hibernate.search.mapper.orm.Search;
+import com.google.common.collect.Lists;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.entities.Publisher;
 import io.typefox.extreg.json.ExtensionJson;
-import io.typefox.extreg.json.ExtensionReferenceJson;
-import io.typefox.extreg.json.PublisherJson;
 import io.typefox.extreg.json.ReviewJson;
-import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.ReviewResultJson;
-import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
 import io.typefox.extreg.util.ErrorResultException;
 
@@ -65,149 +60,115 @@ public class RegistryAPI {
     @Inject
     EntityService entities;
 
-    @ConfigProperty(name = "quarkus.http.host")
-    String httpHost;
+    @Inject
+    LocalRegistryService local;
+
+    @Inject
+    UpstreamRegistryService upstream;
+
+    protected Iterable<IExtensionRegistry> getRegistries() {
+        return Lists.newArrayList(local, upstream);
+    }
 
     @GET
     @Path("/{publisher}")
     @Produces(MediaType.APPLICATION_JSON)
-    public PublisherJson getPublisher(@PathParam("publisher") String publisherName) {
-        try {
-            var publisher = entities.findPublisher(publisherName);
-            var json = new PublisherJson();
-            json.name = publisher.getName();
-            json.extensions = new HashMap<>();
-            for (var extName : entities.getAllExtensionNames(publisher)) {
-                json.extensions.put(extName, createApiUrl(publisher.getName(), extName));
-            }
-            return json;
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
-        }
-    }
-
-    @GET
-    @Path("/{publisher}/{extension}/{version}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ExtensionJson getExtensionVersion(@PathParam("publisher") String publisherName,
-                                             @PathParam("extension") String extensionName,
-                                             @PathParam("version") String version) {
-        try {
-            var extVersion = entities.findVersion(publisherName, extensionName, version);
-            return toJson(extVersion, false);
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
-        }
+    public void getPublisher(@PathParam("publisher") String publisherName,
+                             @Suspended AsyncResponse response) {
+        handle(response, registry -> registry.getPublisher(publisherName));
     }
 
     @GET
     @Path("/{publisher}/{extension}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ExtensionJson getExtension(@PathParam("publisher") String publisherName,
-                                      @PathParam("extension") String extensionName) {
-        try {
-            var extension = entities.findExtension(publisherName, extensionName);
-            return toJson(extension.getLatest(), true);
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
-        }
+    public void getExtension(@PathParam("publisher") String publisherName,
+                             @PathParam("extension") String extensionName,
+                             @Suspended AsyncResponse response) {
+        handle(response, registry -> registry.getExtension(publisherName, extensionName));
     }
 
     @GET
-    @Path("/{publisher}/{extension}/{version}/file/{fileName}")
-    public Response getFile(@PathParam("publisher") String publisherName,
-                            @PathParam("extension") String extensionName,
-                            @PathParam("version") String version,
-                            @PathParam("fileName") String fileName) {
-        try {
-            var extVersion = entities.findVersion(publisherName, extensionName, version);
-            return getFile(extVersion, fileName);
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
-        }
+    @Path("/{publisher}/{extension}/{version}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void getExtensionVersion(@PathParam("publisher") String publisherName,
+                                    @PathParam("extension") String extensionName,
+                                    @PathParam("version") String version,
+                                    @Suspended AsyncResponse response) {
+        handle(response, registry -> registry.getExtensionVersion(publisherName, extensionName, version));
     }
 
     @GET
     @Path("/{publisher}/{extension}/file/{fileName}")
-    public Response getFile(@PathParam("publisher") String publisherName,
-                            @PathParam("extension") String extensionName,
-                            @PathParam("fileName") String fileName) {
-        try {
-            var extension = entities.findExtension(publisherName, extensionName);
-            var extVersion = extension.getLatest();
-            return getFile(extVersion, fileName);
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
-        }
+    public void getFile(@PathParam("publisher") String publisherName,
+                        @PathParam("extension") String extensionName,
+                        @PathParam("fileName") String fileName,
+                        @Suspended AsyncResponse response) {
+        handle(response, registry -> registry.getFile(publisherName, extensionName, fileName));
     }
 
-    private Response getFile(ExtensionVersion extVersion, String fileName) {
-        if (fileName.equals(extVersion.getExtensionFileName())) {
-            var content = entities.findBinary(extVersion).getContent();
-            return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM).build();
-        }
-        if (fileName.equals(extVersion.getReadmeFileName())) {
-            var content = entities.findReadme(extVersion).getContent();
-            return Response.ok(content, MediaType.TEXT_PLAIN).build();
-        }
-        if (fileName.equals(extVersion.getIconFileName())) {
-            var content = entities.findIcon(extVersion).getContent();
-            return Response.ok(content, URLConnection.guessContentTypeFromName(fileName)).build();
-        }
-        throw new NotFoundException();
+    @GET
+    @Path("/{publisher}/{extension}/{version}/file/{fileName}")
+    public void getFile(@PathParam("publisher") String publisherName,
+                        @PathParam("extension") String extensionName,
+                        @PathParam("version") String version,
+                        @PathParam("fileName") String fileName,
+                        @Suspended AsyncResponse response) {
+        String type;
+        if (fileName.endsWith(".vsix"))
+            type = MediaType.APPLICATION_OCTET_STREAM;
+        else if (fileName.contains("."))
+            type = URLConnection.guessContentTypeFromName(fileName);
+        else
+            type = MediaType.TEXT_PLAIN;
+        handle(response, type, registry -> registry.getFile(publisherName, extensionName, version, fileName));
+    }
+
+    @GET
+    @Path("/{publisher}/{extension}/reviews")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void getReviews(@PathParam("publisher") String publisherName,
+                           @PathParam("extension") String extensionName,
+                           @Suspended AsyncResponse response) {
+        handle(response, registry -> registry.getReviews(publisherName, extensionName));
     }
 
     @GET
     @Path("/-/search")
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public SearchResultJson search(@QueryParam("query") String query,
-                                   @QueryParam("category") String category,
-                                   @QueryParam("size") @DefaultValue("20") int size,
-                                   @QueryParam("offset") @DefaultValue("0") int offset) {
-        var search = Search.session(entityManager)
-                .search(Extension.class)
-                .predicate(spf -> {
-                    if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(category))
-                        return spf.matchAll();
-                    var bool = spf.bool();
-                    if (!Strings.isNullOrEmpty(category))
-                        bool = bool.must(spf.match()
-                                .field("latest.categories")
-                                .matching(category));
-                    if (!Strings.isNullOrEmpty(query))
-                        bool = bool.must(spf.simpleQueryString()
-                            .fields("name", "latest.displayName").boost(5)
-                            .fields("publisher.name", "latest.tags").boost(2)
-                            .fields("latest.description")
-                            .matching(query));
-                    return bool;
-                });
-        var extensions = search.fetchHits(offset, size);
-        var json = new SearchResultJson();
-        json.offset = offset;
-        json.extensions = toSearchEntries(extensions);
-        return json;
+    public void search(@QueryParam("query") String query,
+                       @QueryParam("category") String category,
+                       @QueryParam("size") @DefaultValue("20") int size,
+                       @QueryParam("offset") @DefaultValue("0") int offset,
+                       @Suspended AsyncResponse response) {
+        var result = new SearchResultJson();
+        result.extensions = new ArrayList<>(size);
+        search(query, category, size, offset, getRegistries().iterator(), result, response);
     }
 
-    private List<SearchEntryJson> toSearchEntries(List<Extension> extensions) {
-        var list = new ArrayList<SearchEntryJson>();
-        for (var extension : extensions) {
-            var extVer = extension.getLatest();
-            var entry = new SearchEntryJson();
-            entry.name = extension.getName();
-            entry.publisher = extension.getPublisher().getName();
-            entry.url = createApiUrl(entry.publisher, entry.name);
-            entry.iconUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getIconFileName());
-            entry.version = extVer.getVersion();
-            entry.timestamp = extVer.getTimestamp();
-            entry.averageRating = extension.getAverageRating();
-            entry.displayName = extVer.getDisplayName();
-            entry.description = extVer.getDescription();
-            entry.downloadUrl = createApiUrl(extension.getPublisher().getName(), extension.getName(), "file", extVer.getExtensionFileName());
-            list.add(entry);
-        }
-        return list;
+    private void search(String query, String category, int size, int offset,
+            Iterator<IExtensionRegistry> registryIterator, SearchResultJson result,
+            AsyncResponse response) {
+        if (!registryIterator.hasNext())
+            response.resume(result);
+        var registry = registryIterator.next();
+        registry.search(query, category, size, offset)
+                .handle((subResult, throwable) -> {
+                    if (subResult == null) {
+                        search(query, category, size, offset, registryIterator, result, response);
+                    } else {
+                        result.extensions.addAll(subResult.extensions);
+                        result.offset = Math.max(result.offset, subResult.offset);
+                        var subResultSize = subResult.extensions.size();
+                        if (subResultSize < size)
+                            search(query, category,
+                                   size - subResultSize,
+                                   Math.max(offset - subResult.offset - subResultSize, 0),
+                                   registryIterator, result, response);
+                        else
+                            response.resume(result);
+                    }
+                    return null;
+                });
     }
 
     @POST
@@ -258,35 +219,45 @@ public class RegistryAPI {
             processor.getExtensionDependencies().forEach(dep -> addDependency(dep, extVersion));
             processor.getBundledExtensions().forEach(dep -> addBundledExtension(dep, extVersion));
 
-            return toJson(extVersion, false);
+            return local.toJson(extVersion, false);
         } catch (ErrorResultException | NoResultException exc) {
             return ExtensionJson.error(exc.getMessage());
         }
     }
 
-    @GET
-    @Path("/{publisher}/{extension}/reviews")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ReviewListJson getReviews(@PathParam("publisher") String publisherName,
-                                     @PathParam("extension") String extensionName) {
+    private void addDependency(String dependency, ExtensionVersion extVersion) {
+        var split = dependency.split("\\.");
+        if (split.length != 2)
+            return;
         try {
-            var extension = entities.findExtension(publisherName, extensionName);
-            var reviews = entities.findAllReviews(extension);
-            var list = new ReviewListJson();
-            list.postUrl = createApiUrl(extension.getPublisher().getName(), extension.getName(), "review");
-            list.reviews = new ArrayList<>();
-            for (var extReview : reviews) {
-                var json = new ReviewJson();
-                json.user = extReview.getUsername();
-                json.timestamp = extReview.getTimestamp();
-                json.title = extReview.getTitle();
-                json.comment = extReview.getComment();
-                json.rating = extReview.getRating();
-                list.reviews.add(json);
+            var publisher = entities.findPublisher(split[0]);
+            var extension = entities.findExtension(split[1], publisher);
+            var depList = extVersion.getDependencies();
+            if (depList == null) {
+                depList = new ArrayList<Extension>();
+                extVersion.setDependencies(depList);
             }
-            return list;
+            depList.add(extension);
         } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
+            // Ignore the entry
+        }
+    }
+
+    private void addBundledExtension(String bundled, ExtensionVersion extVersion) {
+        var split = bundled.split("\\.");
+        if (split.length != 2)
+            return;
+        try {
+            var publisher = entities.findPublisher(split[0]);
+            var extension = entities.findExtension(split[1], publisher);
+            var depList = extVersion.getBundledExtensions();
+            if (depList == null) {
+                depList = new ArrayList<Extension>();
+                extVersion.setBundledExtensions(depList);
+            }
+            depList.add(extension);
+        } catch (NoResultException exc) {
+            // Ignore the entry
         }
     }
 
@@ -330,103 +301,6 @@ public class RegistryAPI {
         }
     }
 
-    private ExtensionJson toJson(ExtensionVersion extVersion, boolean isLatest) {
-        var json = new ExtensionJson();
-        var extension = extVersion.getExtension();
-        json.publisher = extension.getPublisher().getName();
-        json.name = extension.getName();
-        json.averageRating = extension.getAverageRating();
-        json.reviewCount = entities.countReviews(extension);
-        json.publisherUrl = createApiUrl(json.publisher);
-        json.reviewsUrl = createApiUrl(json.publisher, json.name, "reviews");
-        json.allVersions = new HashMap<>();
-        for (var versionStr : entities.getAllVersionStrings(extension)) {
-            String url = createApiUrl(json.publisher, json.name, versionStr);
-            json.allVersions.put(versionStr, url);
-        }
-        json.version = extVersion.getVersion();
-        json.preview = extVersion.isPreview();
-        json.timestamp = extVersion.getTimestamp();
-        if (isLatest) {
-            json.downloadUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getExtensionFileName());
-            json.iconUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getIconFileName());
-            json.readmeUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getReadmeFileName());
-        } else {
-            json.downloadUrl = createApiUrl(json.publisher, json.name, json.version, "file", extVersion.getExtensionFileName());
-            json.iconUrl = createApiUrl(json.publisher, json.name, json.version, "file", extVersion.getIconFileName());
-            json.readmeUrl = createApiUrl(json.publisher, json.name, json.version, "file", extVersion.getReadmeFileName());
-        }
-        json.displayName = extVersion.getDisplayName();
-        json.description = extVersion.getDescription();
-        json.categories = extVersion.getCategories();
-        json.tags = extVersion.getTags();
-        json.license = extVersion.getLicense();
-        json.homepage = extVersion.getHomepage();
-        json.repository = extVersion.getRepository();
-        json.bugs = extVersion.getBugs();
-        json.markdown = extVersion.getMarkdown();
-        json.galleryColor = extVersion.getGalleryColor();
-        json.galleryTheme = extVersion.getGalleryTheme();
-        json.qna = extVersion.getQna();
-        if (extVersion.getDependencies() != null) {
-            json.dependencies = new ArrayList<>();
-            for (var depExtension : extVersion.getDependencies()) {
-                var ref = new ExtensionReferenceJson();
-                ref.publisher = depExtension.getPublisher().getName();
-                ref.extension = depExtension.getName();
-                ref.url = createApiUrl(ref.publisher, ref.extension);
-                json.dependencies.add(ref);
-            }
-        }
-        if (extVersion.getBundledExtensions() != null) {
-            json.bundledExtensions = new ArrayList<>();
-            for (var bndExtension : extVersion.getBundledExtensions()) {
-                var ref = new ExtensionReferenceJson();
-                ref.publisher = bndExtension.getPublisher().getName();
-                ref.extension = bndExtension.getName();
-                ref.url = createApiUrl(ref.publisher, ref.extension);
-                json.bundledExtensions.add(ref);
-            }
-        }
-        return json;
-    }
-
-    private void addDependency(String dependency, ExtensionVersion extVersion) {
-        var split = dependency.split("\\.");
-        if (split.length != 2)
-            return;
-        try {
-            var publisher = entities.findPublisher(split[0]);
-            var extension = entities.findExtension(split[1], publisher);
-            var depList = extVersion.getDependencies();
-            if (depList == null) {
-                depList = new ArrayList<Extension>();
-                extVersion.setDependencies(depList);
-            }
-            depList.add(extension);
-        } catch (NoResultException exc) {
-            // Ignore the entry
-        }
-    }
-
-    private void addBundledExtension(String bundled, ExtensionVersion extVersion) {
-        var split = bundled.split("\\.");
-        if (split.length != 2)
-            return;
-        try {
-            var publisher = entities.findPublisher(split[0]);
-            var extension = entities.findExtension(split[1], publisher);
-            var depList = extVersion.getBundledExtensions();
-            if (depList == null) {
-                depList = new ArrayList<Extension>();
-                extVersion.setBundledExtensions(depList);
-            }
-            depList.add(extension);
-        } catch (NoResultException exc) {
-            // Ignore the entry
-        }
-    }
-
     private double computeAverageRating(Extension extension) {
         var reviews = entities.findAllReviews(extension);
         long sum = 0;
@@ -436,22 +310,41 @@ public class RegistryAPI {
         return (double) sum / reviews.size();
     }
 
-    /**
-     * Create a URL pointing to an API path.
-     */
-    private String createApiUrl(String... segments) {
-        try {
-            var result = new StringBuilder(httpHost);
-            result.append("/api");
-            for (var segment : segments) {
-                if (segment == null)
+    protected <T> void handle(AsyncResponse response, Function<IExtensionRegistry, CompletableFuture<T>> serviceCall) {
+        handle(getRegistries().iterator(), response, null, serviceCall);
+    }
+
+    protected <T> void handle(AsyncResponse response, String mediaType, Function<IExtensionRegistry, CompletableFuture<T>> serviceCall) {
+        handle(getRegistries().iterator(), response, mediaType, serviceCall);
+    }
+
+    private <T> void handle(Iterator<IExtensionRegistry> registryIterator, AsyncResponse response, String mediaType,
+            Function<IExtensionRegistry, CompletableFuture<T>> serviceCall) {
+        if (!registryIterator.hasNext())
+            response.resume(new NotFoundException());
+        var registry = registryIterator.next();
+        serviceCall.apply(registry)
+                .thenAccept(result -> {
+                    if (mediaType == null)
+                        response.resume(result);
+                    else
+                        response.resume(Response.ok(result, mediaType).build());
+                })
+                .exceptionally(throwable -> {
+                    var cause = getCause(throwable);
+                    if (cause instanceof NotFoundException)
+                        handle(registryIterator, response, mediaType, serviceCall);
+                    else
+                        response.resume(cause);
                     return null;
-				result.append('/').append(URLEncoder.encode(segment, "UTF-8"));
-            }
-            return result.toString();
-        } catch (UnsupportedEncodingException exc) {
-            throw new WebApplicationException(exc);
-        }
+                });
+    }
+
+    private Throwable getCause(Throwable throwable) {
+        if (throwable instanceof CompletionException || throwable instanceof ExecutionException)
+            return throwable.getCause();
+        else
+            return throwable;
     }
 
 }

@@ -49,17 +49,17 @@ public class UserSessionReaper implements Runnable {
 
             var qs = "SELECT us FROM UserSession us";
             var query = entityManager.createQuery(qs, UserSession.class);
-            var userSessions = query.getResultList();
+            var userSessions = query.getResultStream();
             var currentTime = LocalDateTime.now(ZoneId.of("UTC"));
-            int deletedRows = 0;
-            for (var userSession : userSessions) {
+            var deletedRows = new int[1];
+            userSessions.forEach(userSession -> {
                 var age = Duration.between(userSession.getLastUsed(), currentTime);
                 if (age.compareTo(SESSION_DURATION) >= 0) {
                     entityManager.remove(userSession);
-                    deletedRows++;
+                    deletedRows[0]++;
                 }
-            }
-            logger.debug("Deleted user sessions: " + deletedRows);
+            });
+            logger.debug("Deleted user sessions: " + deletedRows[0]);
 
             transaction.commit();
             entityManager.close();
