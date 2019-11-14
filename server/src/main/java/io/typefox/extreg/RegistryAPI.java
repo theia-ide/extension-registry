@@ -62,7 +62,7 @@ public class RegistryAPI {
 
     @Inject
     @RestClient
-    IExtensionRegistry upstream;
+    IUpstreamRegistry upstream;
 
     protected Iterable<IExtensionRegistry> getRegistries() {
         return Lists.newArrayList(local, upstream);
