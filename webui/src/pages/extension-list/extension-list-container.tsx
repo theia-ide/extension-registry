@@ -51,7 +51,12 @@ export class ExtensionListContainer extends React.Component<ExtensionListContain
     render() {
         return <React.Fragment>
             <Container>
-                <ExtensionListHeader searchTerm={this.state.searchTerm} category={this.state.category} onSearchChanged={this.onSearchChanged} onCategoryChanged={this.onCategoryChanged} listHeaderTitle={this.props.listHeaderTitle} />
+                <ExtensionListHeader
+                    searchTerm={this.state.searchTerm}
+                    category={this.state.category}
+                    onSearchChanged={this.onSearchChanged}
+                    onCategoryChanged={this.onCategoryChanged}
+                    listHeaderTitle={this.props.listHeaderTitle} />
                 <ExtensionList service={this.props.service} filter={{ query: this.state.searchTerm, category: this.state.category }} />
             </Container>
         </React.Fragment>;

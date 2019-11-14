@@ -6,14 +6,7 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import { Extension, ExtensionRegistryUser, ExtensionReview, ExtensionRaw, ExtensionReviewList } from "./extension-registry-types";
-
-const user: ExtensionRegistryUser = {
-    firstName: 'Friendly',
-    lastName: 'User',
-    userName: 'userfriendly',
-    email: 'userfriendly@test.ie'
-};
+import { Extension, ExtensionRegistryUser, ExtensionReview, ExtensionRaw, ExtensionReviewList, ErrorResponse } from "./extension-registry-types";
 
 export interface ExtensionRegistryAPIRequest<T> {
     endpoint: string,
@@ -38,7 +31,7 @@ export class ExtensionRegistryAPI {
             method: req.method,
             credentials: 'include',
             headers
-        }
+        };
 
         if (req.method === 'POST' || req.method === 'PUT') {
             param.body = JSON.stringify(req.payload);
@@ -99,7 +92,11 @@ export class ExtensionRegistryAPI {
         });
     }
 
-    async getUser(): Promise<ExtensionRegistryUser> {
-        return user;
+    async getUser(endpoint: string): Promise<ExtensionRegistryUser | ErrorResponse> {
+        return await this.run({
+            method: 'GET',
+            endpoint,
+            operation: async response => await response.json()
+        });
     }
 }

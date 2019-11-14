@@ -55,7 +55,7 @@ class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailRev
                     </Typography>
                 </Box>
                 {
-                    this.props.user ? <Box>
+                    this.props.user && ExtensionRegistryUser.is(this.props.user) ? <Box>
                         <ExtensionReviewDialog
                             saveCompleted={this.saveCompleted}
                             extension={this.props.extension}

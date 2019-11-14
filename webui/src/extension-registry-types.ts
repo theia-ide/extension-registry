@@ -97,11 +97,23 @@ export interface ExtensionReviewList {
 }
 
 export interface ExtensionRegistryUser {
-    firstName?: string;
-    lastName?: string;
-    userName: string;
-    email?: string;
+    name: string;
+    avatarUrl: string;
 }
+export namespace ExtensionRegistryUser {
+    export function is(resp: any): resp is ExtensionRegistryUser {
+        return resp && 'name' in resp && 'avatarUrl' in resp;
+    }
+}
+
+export interface ErrorResponse {
+    error: string;
+}
+export namespace ErrorResponse {
+    export function is(resp: any): resp is ErrorResponse {
+        return 'error' in resp;
+    }
+ }
 
 export type ExtensionCategory =
     '' |

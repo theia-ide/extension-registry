@@ -87,8 +87,8 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                                 <Box className={this.props.classes.alignVertically}>{extension.publisher}</Box>
                                 <TextDivider />
                                 <Box className={this.props.classes.alignVertically}>
-                                <ExportRatingStars number={extension.averageRating || 0} />
-                                {`(${this.state.extension.reviewCount})`}
+                                    <ExportRatingStars number={extension.averageRating || 0} />
+                                    {`(${this.state.extension.reviewCount})`}
                                 </Box>
                                 <TextDivider />
                                 <Box className={this.props.classes.alignVertically}>{extension.license}</Box>
@@ -111,17 +111,25 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
                     <Box>
                         <Switch>
                             <Route path={ExtensionDetailRoutes.OVERVIEW_ROUTE}>
-                                <ExtensionDetailOverview history={this.props.history} location={this.props.location} match={this.props.match} extension={this.state.extension} service={this.props.service} />
+                                <ExtensionDetailOverview
+                                    history={this.props.history}
+                                    location={this.props.location}
+                                    match={this.props.match}
+                                    extension={this.state.extension}
+                                    service={this.props.service} />
                             </Route>
                             <Route path={ExtensionDetailRoutes.REVIEW_ROUTE}>
-                                <ExtensionDetailReviews extension={this.state.extension} reviewsDidUpdate={this.onReviewUpdate} service={this.props.service} user={this.state.user} />
+                                <ExtensionDetailReviews
+                                    extension={this.state.extension}
+                                    reviewsDidUpdate={this.onReviewUpdate}
+                                    service={this.props.service}
+                                    user={this.state.user} />
                             </Route>
                         </Switch>
                     </Box>
                 </Box>
             </Container>
         </React.Fragment>;
-
     }
 }
 

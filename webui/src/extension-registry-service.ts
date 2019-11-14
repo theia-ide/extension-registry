@@ -66,8 +66,12 @@ export class ExtensionRegistryService {
         await this.api.postReview(rating, postUrl);
     }
 
-    async getUser(): Promise<ExtensionRegistryUser> {
-        return this.api.getUser();
+    async getUser(): Promise<ExtensionRegistryUser | undefined> {
+        const user = await this.api.getUser(createAbsoluteURL([this._apiUrl, '-', 'user']));
+        if (ExtensionRegistryUser.is(user)) {
+            return user;
+        }
+        return;
     }
 
     getCategories(): ExtensionCategory[] {

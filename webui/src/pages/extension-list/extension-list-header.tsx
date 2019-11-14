@@ -61,7 +61,7 @@ class ExtensionListHeaderComp extends React.Component<ExtensionListHeaderComp.Pr
     }
 
     componentDidUpdate(prevProps: ExtensionListHeaderComp.Props) {
-        if(this.props.category !== prevProps.category) {
+        if (this.props.category !== prevProps.category) {
             this.setState({ category: this.props.category || '' });
         }
     }

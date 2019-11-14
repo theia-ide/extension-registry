@@ -111,7 +111,7 @@ class ExtensionDetailOverviewComponent extends React.Component<ExtensionDetailOv
                             size='small'
                             key={buttonLabel}
                             variant='outlined'
-                            onClick={()=> this.handleFilterButtonClicked(kind, buttonLabel)}
+                            onClick={() => this.handleFilterButtonClicked(kind, buttonLabel)}
                         >
                             {buttonLabel}
                         </Button>)
@@ -131,7 +131,7 @@ class ExtensionDetailOverviewComponent extends React.Component<ExtensionDetailOv
             <Box flex='1'>
                 <Typography variant='body2'>{value}</Typography>
             </Box>
-        </Box>
+        </Box>;
     }
 
     protected renderMarkdown(md: string) {

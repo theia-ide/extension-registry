@@ -34,21 +34,26 @@ class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDial
         };
     }
 
-    protected handleOpenButton = () => this.setState({ open: true });
-    protected handleCancel = () => this.setState({open: false});
+    protected handleOpenButton = async () => {
+        const user = await this.service.getUser();
+        if (user && ExtensionRegistryUser.is(user)) {
+            this.setState({ open: true });
+        }
+    }
+    protected handleCancel = () => this.setState({ open: false });
     protected handleSave = async () => {
         const rating = this.starSetter ? this.starSetter.state.number : 1;
         await this.service.postReview({
             rating,
             title: this.state.title,
             comment: this.state.comment,
-            user: this.props.user.userName
+            user: this.props.user.name
         }, this.props.reviewPostUrl);
-        this.setState({open: false, title: '', comment: ''});
+        this.setState({ open: false, title: '', comment: '' });
         this.props.saveCompleted();
     }
-    protected handleCommentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => this.setState({comment: event.target.value});
-    protected handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => this.setState({title: event.target.value});
+    protected handleCommentChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => this.setState({ comment: event.target.value });
+    protected handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => this.setState({ title: event.target.value });
 
     render() {
         return <React.Fragment>
@@ -59,7 +64,7 @@ class ExtensionReviewDialogComponent extends React.Component<ExtensionReviewDial
                 <DialogTitle>{this.props.extension.displayName || this.props.extension.name} Review</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Your review will be posted publicly as {this.props.user.userName}
+                        Your review will be posted publicly as {this.props.user.name}
                     </DialogContentText>
                     <ExtensionRatingStarSetter ref={ref => this.starSetter = ref} />
                     <Box my={2}>
