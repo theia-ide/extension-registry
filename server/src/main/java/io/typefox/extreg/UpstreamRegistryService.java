@@ -7,12 +7,9 @@
  ********************************************************************************/
 package io.typefox.extreg;
 
-import static java.util.concurrent.CompletableFuture.failedFuture;
-
-import java.util.concurrent.CompletableFuture;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -25,7 +22,6 @@ import io.typefox.extreg.json.ExtensionJson;
 import io.typefox.extreg.json.PublisherJson;
 import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.SearchResultJson;
-import io.typefox.extreg.util.CompletableFutureCallback;
 
 @ApplicationScoped
 public class UpstreamRegistryService implements IExtensionRegistry {
@@ -37,127 +33,89 @@ public class UpstreamRegistryService implements IExtensionRegistry {
 
     private WebTarget getTarget() {
         if (Strings.isNullOrEmpty(upstreamUrl))
-            return null;
-        if (target == null)
-            target = ClientBuilder.newClient().target(upstreamUrl);
+            throw new NotFoundException();
+        if (target == null) {
+            Client client = ClientBuilder.newClient();
+            client.property("jersey.config.client.connectTimeout", 10_000);
+            client.property("jersey.config.client.readTimeout", 30_000);
+            target = client.target(upstreamUrl).path("/api");
+        }
         return target;
     }
 
     @Override
-    public CompletableFuture<PublisherJson> getPublisher(String publisherName) {
-        var target = getTarget();
-        if (target == null)
-            return failedFuture(new NotFoundException());
-        var result = new CompletableFuture<PublisherJson>();
-        target.path("/api/{publisher}")
+    public PublisherJson getPublisher(String publisherName) {
+        return getTarget().path("/{publisher}")
                 .resolveTemplate("publisher", publisherName)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                .async()
-                .get(new CompletableFutureCallback<>(result));
-        return result;
+                .get(PublisherJson.class);
     }
 
     @Override
-    public CompletableFuture<ExtensionJson> getExtension(String publisherName, String extensionName) {
-        var target = getTarget();
-        if (target == null)
-            return failedFuture(new NotFoundException());
-        var result = new CompletableFuture<ExtensionJson>();
-        target.path("/api/{publisher}/{extension}")
+    public ExtensionJson getExtension(String publisherName, String extensionName) {
+        var target = getTarget().path("/{publisher}/{extension}")
                 .resolveTemplate("publisher", publisherName)
-                .resolveTemplate("extension", extensionName)
-                .request()
+                .resolveTemplate("extension", extensionName);
+        System.out.println(target.getUri());
+        return target.request()
                 .accept(MediaType.APPLICATION_JSON)
-                .async()
-                .get(new CompletableFutureCallback<>(result));
-        return result;
+                .get(ExtensionJson.class);
     }
 
     @Override
-    public CompletableFuture<ExtensionJson> getExtensionVersion(String publisherName,
+    public ExtensionJson getExtension(String publisherName,
             String extensionName, String version) {
-        var target = getTarget();
-        if (target == null)
-            return failedFuture(new NotFoundException());
-        var result = new CompletableFuture<ExtensionJson>();
-        target.path("/api/{publisher}/{extension}/{version}")
+        return getTarget().path("/{publisher}/{extension}/{version}")
                 .resolveTemplate("publisher", publisherName)
                 .resolveTemplate("extension", extensionName)
                 .resolveTemplate("version", version)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                .async()
-                .get(new CompletableFutureCallback<>(result));
-        return result;
+                .get(ExtensionJson.class);
     }
 
     @Override
-    public CompletableFuture<byte[]> getFile(String publisherName, String extensionName, String fileName) {
-        var target = getTarget();
-        if (target == null)
-            return failedFuture(new NotFoundException());
-        var result = new CompletableFuture<byte[]>();
-        target.path("/api/{publisher}/{extension}/file/{fileName}")
+    public byte[] getFile(String publisherName, String extensionName, String fileName) {
+        return getTarget().path("/{publisher}/{extension}/file/{fileName}")
                 .resolveTemplate("publisher", publisherName)
                 .resolveTemplate("extension", extensionName)
                 .resolveTemplate("fileName", fileName)
                 .request()
-                .async()
-                .get(new CompletableFutureCallback<>(result));
-        return result;
+                .get(byte[].class);
     }
 
     @Override
-    public CompletableFuture<byte[]> getFile(String publisherName, String extensionName, String version,
-            String fileName) {
-        var target = getTarget();
-        if (target == null)
-            return failedFuture(new NotFoundException());
-        var result = new CompletableFuture<byte[]>();
-        target.path("/api/{publisher}/{extension}/{version}/file/{fileName}")
+    public byte[] getFile(String publisherName, String extensionName, String version, String fileName) {
+        return getTarget().path("/{publisher}/{extension}/{version}/file/{fileName}")
                 .resolveTemplate("publisher", publisherName)
                 .resolveTemplate("extension", extensionName)
                 .resolveTemplate("version", version)
                 .resolveTemplate("fileName", fileName)
                 .request()
-                .async()
-                .get(new CompletableFutureCallback<>(result));
-        return result;
+                .get(byte[].class);
     }
 
     @Override
-    public CompletableFuture<ReviewListJson> getReviews(String publisherName, String extensionName) {
-        var target = getTarget();
-        if (target == null)
-            return failedFuture(new NotFoundException());
-        var result = new CompletableFuture<ReviewListJson>();
-        target.path("/api/{publisher}/{extension}/reviews")
+    public ReviewListJson getReviews(String publisherName, String extensionName) {
+        return getTarget().path("/{publisher}/{extension}/reviews")
                 .resolveTemplate("publisher", publisherName)
                 .resolveTemplate("extension", extensionName)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                .async()
-                .get(new CompletableFutureCallback<>(result));
-        return result;
+                .get(ReviewListJson.class);
 	}
 
     @Override
-    public CompletableFuture<SearchResultJson> search(String query, String category, int size, int offset) {
-        var target = getTarget();
-        if (target == null)
-            return failedFuture(new NotFoundException());
-        var result = new CompletableFuture<SearchResultJson>();
-        target.path("/api/-/search")
+    public SearchResultJson search(String query, String category, int size, int offset) {
+        return getTarget().path("/-/search")
                 .queryParam("query", query)
                 .queryParam("category", category)
                 .queryParam("size", size)
                 .queryParam("offset", offset)
                 .request()
                 .accept(MediaType.APPLICATION_JSON)
-                .async()
-                .get(new CompletableFutureCallback<>(result));
-        return result;
+                .get(SearchResultJson.class);
     }
 
 }

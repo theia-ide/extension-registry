@@ -12,12 +12,7 @@ import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -33,20 +28,22 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.common.collect.Lists;
 
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.entities.Publisher;
 import io.typefox.extreg.json.ExtensionJson;
+import io.typefox.extreg.json.PublisherJson;
 import io.typefox.extreg.json.ReviewJson;
+import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.ReviewResultJson;
 import io.typefox.extreg.json.SearchResultJson;
 import io.typefox.extreg.util.ErrorResultException;
@@ -64,7 +61,8 @@ public class RegistryAPI {
     LocalRegistryService local;
 
     @Inject
-    UpstreamRegistryService upstream;
+    @RestClient
+    IExtensionRegistry upstream;
 
     protected Iterable<IExtensionRegistry> getRegistries() {
         return Lists.newArrayList(local, upstream);
@@ -73,102 +71,131 @@ public class RegistryAPI {
     @GET
     @Path("/{publisher}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getPublisher(@PathParam("publisher") String publisherName,
-                             @Suspended AsyncResponse response) {
-        handle(response, registry -> registry.getPublisher(publisherName));
+    public PublisherJson getPublisher(@PathParam("publisher") String publisherName) {
+        for (var registry : getRegistries()) {
+            try {
+                return registry.getPublisher(publisherName);
+            } catch (NotFoundException exc) {
+                // Try the next registry
+            }
+        }
+        throw new NotFoundException();
     }
 
     @GET
     @Path("/{publisher}/{extension}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getExtension(@PathParam("publisher") String publisherName,
-                             @PathParam("extension") String extensionName,
-                             @Suspended AsyncResponse response) {
-        handle(response, registry -> registry.getExtension(publisherName, extensionName));
+    public ExtensionJson getExtension(@PathParam("publisher") String publisherName,
+                                      @PathParam("extension") String extensionName) {
+        for (var registry : getRegistries()) {
+            try {
+                return registry.getExtension(publisherName, extensionName);
+            } catch (NotFoundException exc) {
+                // Try the next registry
+            }
+        }
+        throw new NotFoundException();
     }
 
     @GET
     @Path("/{publisher}/{extension}/{version}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getExtensionVersion(@PathParam("publisher") String publisherName,
-                                    @PathParam("extension") String extensionName,
-                                    @PathParam("version") String version,
-                                    @Suspended AsyncResponse response) {
-        handle(response, registry -> registry.getExtensionVersion(publisherName, extensionName, version));
+    public ExtensionJson getExtension(@PathParam("publisher") String publisherName,
+                                      @PathParam("extension") String extensionName,
+                                      @PathParam("version") String version) {
+        for (var registry : getRegistries()) {
+            try {
+                return registry.getExtension(publisherName, extensionName, version);
+            } catch (NotFoundException exc) {
+                // Try the next registry
+            }
+        }
+        throw new NotFoundException();
     }
 
     @GET
     @Path("/{publisher}/{extension}/file/{fileName}")
-    public void getFile(@PathParam("publisher") String publisherName,
-                        @PathParam("extension") String extensionName,
-                        @PathParam("fileName") String fileName,
-                        @Suspended AsyncResponse response) {
-        handle(response, registry -> registry.getFile(publisherName, extensionName, fileName));
+    public Response getFile(@PathParam("publisher") String publisherName,
+                            @PathParam("extension") String extensionName,
+                            @PathParam("fileName") String fileName) {
+        for (var registry : getRegistries()) {
+            try {
+                var content = registry.getFile(publisherName, extensionName, fileName);
+                return Response.ok(content, getFileType(fileName)).build();
+            } catch (NotFoundException exc) {
+                // Try the next registry
+            }
+        }
+        throw new NotFoundException();
     }
 
     @GET
     @Path("/{publisher}/{extension}/{version}/file/{fileName}")
-    public void getFile(@PathParam("publisher") String publisherName,
-                        @PathParam("extension") String extensionName,
-                        @PathParam("version") String version,
-                        @PathParam("fileName") String fileName,
-                        @Suspended AsyncResponse response) {
-        String type;
+    public Response getFile(@PathParam("publisher") String publisherName,
+                            @PathParam("extension") String extensionName,
+                            @PathParam("version") String version,
+                            @PathParam("fileName") String fileName) {
+        for (var registry : getRegistries()) {
+            try {
+                var content = registry.getFile(publisherName, extensionName, version, fileName);
+                return Response.ok(content, getFileType(fileName)).build();
+            } catch (NotFoundException exc) {
+                // Try the next registry
+            }
+        }
+        throw new NotFoundException();
+    }
+
+    private String getFileType(String fileName) {
         if (fileName.endsWith(".vsix"))
-            type = MediaType.APPLICATION_OCTET_STREAM;
+            return MediaType.APPLICATION_OCTET_STREAM;
         else if (fileName.contains("."))
-            type = URLConnection.guessContentTypeFromName(fileName);
+            return URLConnection.guessContentTypeFromName(fileName);
         else
-            type = MediaType.TEXT_PLAIN;
-        handle(response, type, registry -> registry.getFile(publisherName, extensionName, version, fileName));
+            return MediaType.TEXT_PLAIN;
     }
 
     @GET
     @Path("/{publisher}/{extension}/reviews")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getReviews(@PathParam("publisher") String publisherName,
-                           @PathParam("extension") String extensionName,
-                           @Suspended AsyncResponse response) {
-        handle(response, registry -> registry.getReviews(publisherName, extensionName));
+    public ReviewListJson getReviews(@PathParam("publisher") String publisherName,
+                                     @PathParam("extension") String extensionName) {
+        for (var registry : getRegistries()) {
+            try {
+                return registry.getReviews(publisherName, extensionName);
+            } catch (NotFoundException exc) {
+                // Try the next registry
+            }
+        }
+        throw new NotFoundException();
     }
 
     @GET
     @Path("/-/search")
     @Produces(MediaType.APPLICATION_JSON)
-    public void search(@QueryParam("query") String query,
-                       @QueryParam("category") String category,
-                       @QueryParam("size") @DefaultValue("20") int size,
-                       @QueryParam("offset") @DefaultValue("0") int offset,
-                       @Suspended AsyncResponse response) {
+    public SearchResultJson search(@QueryParam("query") String query,
+                                   @QueryParam("category") String category,
+                                   @QueryParam("size") @DefaultValue("20") int size,
+                                   @QueryParam("offset") @DefaultValue("0") int offset) {
         var result = new SearchResultJson();
         result.extensions = new ArrayList<>(size);
-        search(query, category, size, offset, getRegistries().iterator(), result, response);
-    }
-
-    private void search(String query, String category, int size, int offset,
-            Iterator<IExtensionRegistry> registryIterator, SearchResultJson result,
-            AsyncResponse response) {
-        if (!registryIterator.hasNext())
-            response.resume(result);
-        var registry = registryIterator.next();
-        registry.search(query, category, size, offset)
-                .handle((subResult, throwable) -> {
-                    if (subResult == null) {
-                        search(query, category, size, offset, registryIterator, result, response);
-                    } else {
-                        result.extensions.addAll(subResult.extensions);
-                        result.offset = Math.max(result.offset, subResult.offset);
-                        var subResultSize = subResult.extensions.size();
-                        if (subResultSize < size)
-                            search(query, category,
-                                   size - subResultSize,
-                                   Math.max(offset - subResult.offset - subResultSize, 0),
-                                   registryIterator, result, response);
-                        else
-                            response.resume(result);
-                    }
-                    return null;
-                });
+        for (var registry : getRegistries()) {
+            try {
+                var subResult = registry.search(query, category, size, offset);
+                result.extensions.addAll(subResult.extensions);
+                result.offset += subResult.offset;
+                var subResultSize = subResult.extensions.size();
+                if (subResultSize < size) {
+                    size -= subResultSize;
+                    offset = Math.max(offset - subResult.offset - subResultSize, 0);
+                } else {
+                    return result;
+                }
+            } catch (NotFoundException exc) {
+                // Try the next registry
+            }
+        }
+        return result;
     }
 
     @POST
@@ -308,43 +335,6 @@ public class RegistryAPI {
             sum += review.getRating();
         }
         return (double) sum / reviews.size();
-    }
-
-    protected <T> void handle(AsyncResponse response, Function<IExtensionRegistry, CompletableFuture<T>> serviceCall) {
-        handle(getRegistries().iterator(), response, null, serviceCall);
-    }
-
-    protected <T> void handle(AsyncResponse response, String mediaType, Function<IExtensionRegistry, CompletableFuture<T>> serviceCall) {
-        handle(getRegistries().iterator(), response, mediaType, serviceCall);
-    }
-
-    private <T> void handle(Iterator<IExtensionRegistry> registryIterator, AsyncResponse response, String mediaType,
-            Function<IExtensionRegistry, CompletableFuture<T>> serviceCall) {
-        if (!registryIterator.hasNext())
-            response.resume(new NotFoundException());
-        var registry = registryIterator.next();
-        serviceCall.apply(registry)
-                .thenAccept(result -> {
-                    if (mediaType == null)
-                        response.resume(result);
-                    else
-                        response.resume(Response.ok(result, mediaType).build());
-                })
-                .exceptionally(throwable -> {
-                    var cause = getCause(throwable);
-                    if (cause instanceof NotFoundException)
-                        handle(registryIterator, response, mediaType, serviceCall);
-                    else
-                        response.resume(cause);
-                    return null;
-                });
-    }
-
-    private Throwable getCause(Throwable throwable) {
-        if (throwable instanceof CompletionException || throwable instanceof ExecutionException)
-            return throwable.getCause();
-        else
-            return throwable;
     }
 
 }

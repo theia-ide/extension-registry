@@ -7,15 +7,11 @@
  ********************************************************************************/
 package io.typefox.extreg;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.concurrent.CompletableFuture.failedFuture;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -54,7 +50,7 @@ public class LocalRegistryService implements IExtensionRegistry {
     String httpHost;
 
     @Override
-    public CompletableFuture<PublisherJson> getPublisher(String publisherName) {
+    public PublisherJson getPublisher(String publisherName) {
         try {
             var publisher = entities.findPublisher(publisherName);
             var json = new PublisherJson();
@@ -63,70 +59,58 @@ public class LocalRegistryService implements IExtensionRegistry {
             for (var extName : entities.getAllExtensionNames(publisher)) {
                 json.extensions.put(extName, createApiUrl(publisher.getName(), extName));
             }
-            return completedFuture(json);
+            return json;
         } catch (NoResultException exc) {
-            return failedFuture(new NotFoundException(exc));
-        } catch (Exception exc) {
-            return failedFuture(exc);
+            throw new NotFoundException(exc);
         }
     }
 
     @Override
-    public CompletableFuture<ExtensionJson> getExtension(String publisherName, String extensionName) {
+    public ExtensionJson getExtension(String publisherName, String extensionName) {
         try {
             var extension = entities.findExtension(publisherName, extensionName);
             ExtensionJson json = toJson(extension.getLatest(), true);
-            return completedFuture(json);
+            return json;
         } catch (NoResultException exc) {
-            return failedFuture(new NotFoundException(exc));
-        } catch (Exception exc) {
-            return failedFuture(exc);
+            throw new NotFoundException(exc);
         }
     }
 
     @Override
-    public CompletableFuture<ExtensionJson> getExtensionVersion(String publisherName, String extensionName,
-            String version) {
+    public ExtensionJson getExtension(String publisherName, String extensionName, String version) {
         try {
             var extVersion = entities.findVersion(publisherName, extensionName, version);
             ExtensionJson json = toJson(extVersion, false);
-            return completedFuture(json);
+            return json;
         } catch (NoResultException exc) {
-            return failedFuture(new NotFoundException(exc));
-        } catch (Exception exc) {
-            return failedFuture(exc);
+            throw new NotFoundException(exc);
         }
     }
 
     @Override
-    public CompletableFuture<byte[]> getFile(String publisherName, String extensionName, String fileName) {
+    public byte[] getFile(String publisherName, String extensionName, String fileName) {
         try {
             var extension = entities.findExtension(publisherName, extensionName);
             var extVersion = extension.getLatest();
             var resource = getFile(extVersion, fileName);
             if (resource == null)
-                return failedFuture(new NotFoundException());
-            return completedFuture(resource.getContent());
+                throw new NotFoundException();
+            return resource.getContent();
         } catch (NoResultException exc) {
-            return failedFuture(new NotFoundException(exc));
-        } catch (Exception exc) {
-            return failedFuture(exc);
+            throw new NotFoundException(exc);
         }
     }
 
     @Override
-    public CompletableFuture<byte[]> getFile(String publisherName, String extensionName, String version,
-            String fileName) {
+    public byte[] getFile(String publisherName, String extensionName, String version, String fileName) {
         try {
             var extVersion = entities.findVersion(publisherName, extensionName, version);
             var resource = getFile(extVersion, fileName);
             if (resource == null)
-                return failedFuture(new NotFoundException());
-            return completedFuture(resource.getContent());
+                throw new NotFoundException();
+            return resource.getContent();
         } catch (NoResultException exc) {
-            return failedFuture(new NotFoundException(exc));
-        } catch (Exception exc) {
-            return failedFuture(exc);
+            throw new NotFoundException(exc);
         }
     }
 
@@ -141,7 +125,7 @@ public class LocalRegistryService implements IExtensionRegistry {
     }
 
     @Override
-    public CompletableFuture<ReviewListJson> getReviews(String publisherName, String extensionName) {
+    public ReviewListJson getReviews(String publisherName, String extensionName) {
         try {
             var extension = entities.findExtension(publisherName, extensionName);
             var reviews = entities.findAllReviews(extension);
@@ -157,44 +141,38 @@ public class LocalRegistryService implements IExtensionRegistry {
                 json.rating = extReview.getRating();
                 list.reviews.add(json);
             }
-            return completedFuture(list);
+            return list;
         } catch (NoResultException exc) {
-            return failedFuture(new NotFoundException(exc));
-        } catch (Exception exc) {
-            return failedFuture(exc);
+            throw new NotFoundException(exc);
         }
     }
 
     @Override
     @Transactional
-    public CompletableFuture<SearchResultJson> search(String query, String category, int size, int offset) {
-        try {
-            var searchResult = Search.session(entityManager)
-                .search(Extension.class)
-                .predicate(spf -> {
-                    if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(category))
-                        return spf.matchAll();
-                    var bool = spf.bool();
-                    if (!Strings.isNullOrEmpty(category))
-                        bool = bool.must(spf.match()
-                                .field("latest.categories")
-                                .matching(category));
-                    if (!Strings.isNullOrEmpty(query))
-                        bool = bool.must(spf.simpleQueryString()
-                            .fields("name", "latest.displayName").boost(5)
-                            .fields("publisher.name", "latest.tags").boost(2)
-                            .fields("latest.description")
-                            .matching(query));
-                    return bool;
-                })
-                .fetch(offset, size);
-            var json = new SearchResultJson();
-            json.extensions = toSearchEntries(searchResult.getHits());
-            json.offset = (int) Math.min(offset, searchResult.getTotalHitCount());
-            return completedFuture(json);
-        } catch (Exception exc) {
-            return failedFuture(exc);
-        }
+    public SearchResultJson search(String query, String category, int size, int offset) {
+        var searchResult = Search.session(entityManager)
+            .search(Extension.class)
+            .predicate(spf -> {
+                if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(category))
+                    return spf.matchAll();
+                var bool = spf.bool();
+                if (!Strings.isNullOrEmpty(category))
+                    bool = bool.must(spf.match()
+                            .field("latest.categories")
+                            .matching(category));
+                if (!Strings.isNullOrEmpty(query))
+                    bool = bool.must(spf.simpleQueryString()
+                        .fields("name", "latest.displayName").boost(5)
+                        .fields("publisher.name", "latest.tags").boost(2)
+                        .fields("latest.description")
+                        .matching(query));
+                return bool;
+            })
+            .fetch(offset, size);
+        var json = new SearchResultJson();
+        json.extensions = toSearchEntries(searchResult.getHits());
+        json.offset = (int) Math.min(offset, searchResult.getTotalHitCount());
+        return json;
     }
 
     private List<SearchEntryJson> toSearchEntries(List<Extension> extensions) {

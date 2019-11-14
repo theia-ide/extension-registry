@@ -26,6 +26,7 @@ repositories {
 dependencies {
     implementation enforcedPlatform("io.quarkus:quarkus-bom:${versions.quarkus}")
     implementation "io.quarkus:quarkus-resteasy-jackson:${versions.quarkus}"
+    implementation "io.quarkus:quarkus-rest-client:${versions.quarkus}"
     implementation "io.quarkus:quarkus-hibernate-orm:${versions.quarkus}"
     implementation "io.quarkus:quarkus-hibernate-search-elasticsearch:${versions.quarkus}"
     implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
