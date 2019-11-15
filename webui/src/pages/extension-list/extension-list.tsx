@@ -16,6 +16,8 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
 
     protected extensions: ExtensionRaw[];
 
+    protected cancellationToken = { cancel: () => { } };
+
     constructor(props: ExtensionList.Props) {
         super(props);
 
@@ -25,15 +27,25 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
     }
 
     componentDidMount() {
-        this.props.service.getExtensions(this.props.filter).then(extensions => this.setState({ extensions }));
+        this.getExtensions(this.props.filter).then(extensions => this.setState({ extensions })).catch(() => console.log('cancled'));
     }
 
     componentDidUpdate(prevProps: ExtensionList.Props, prevState: ExtensionList.State) {
         const prevFilter = prevProps.filter;
         const newFilter = this.props.filter;
         if (prevFilter.category !== newFilter.category || prevFilter.query !== newFilter.query) {
+            this.cancellationToken.cancel();
             this.props.service.getExtensions(newFilter).then(extensions => this.setState({ extensions }));
         }
+    }
+
+    protected getExtensions(filter: ExtensionFilter) {
+        return new Promise<ExtensionRaw[]>((resolve, reject) => {
+            this.cancellationToken.cancel = () => {
+                reject();
+            }
+            this.props.service.getExtensions(filter).then(ext => resolve(ext));
+        });
     }
 
     render() {
