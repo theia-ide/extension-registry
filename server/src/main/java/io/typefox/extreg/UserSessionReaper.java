@@ -11,21 +11,23 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.search.mapper.orm.common.impl.HibernateOrmUtils;
+import org.hibernate.Session;
 import org.jboss.logging.Logger;
 
 import io.typefox.extreg.entities.UserSession;
 
 /**
  * Daemon thread that removes outdated user sessions from the database.
+ * XXX Do we still need this?
+ *     If yes, use a ScheduledExecutorService to schedule it at a fixed rate.
  */
 public class UserSessionReaper implements Runnable {
 
     private static final Duration SESSION_DURATION = Duration.of(6, ChronoUnit.DAYS);
-    private static final long SLEEP_TIME = 30_000;
 
     private final EntityManagerFactory entityManagerFactory;
 
@@ -37,33 +39,21 @@ public class UserSessionReaper implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
-            try {
-                Thread.sleep(SLEEP_TIME);
-            } catch (InterruptedException exc) {
-                // Interrupt to force wake up
-            }
+        var entityManager = entityManagerFactory.createEntityManager();
+        var transaction = entityManager.unwrap(Session.class).beginTransaction();
 
-            var entityManager = entityManagerFactory.createEntityManager();
-            var transaction = HibernateOrmUtils.toSessionImplementor(entityManager).beginTransaction();
+        var qs = "SELECT us FROM UserSession us";
+        var query = entityManager.createQuery(qs, UserSession.class);
+        var userSessions = query.getResultStream();
+        var currentTime = LocalDateTime.now(ZoneId.of("UTC"));
+        var toRemove = userSessions
+                .filter(us -> Duration.between(us.getLastUsed(), currentTime).compareTo(SESSION_DURATION) >= 0)
+                .collect(Collectors.toList());
+        toRemove.forEach(us -> entityManager.remove(us));
+        logger.debug("Deleted user sessions: " + toRemove.size());
 
-            var qs = "SELECT us FROM UserSession us";
-            var query = entityManager.createQuery(qs, UserSession.class);
-            var userSessions = query.getResultStream();
-            var currentTime = LocalDateTime.now(ZoneId.of("UTC"));
-            var deletedRows = new int[1];
-            userSessions.forEach(userSession -> {
-                var age = Duration.between(userSession.getLastUsed(), currentTime);
-                if (age.compareTo(SESSION_DURATION) >= 0) {
-                    entityManager.remove(userSession);
-                    deletedRows[0]++;
-                }
-            });
-            logger.debug("Deleted user sessions: " + deletedRows[0]);
-
-            transaction.commit();
-            entityManager.close();
-        }
+        transaction.commit();
+        entityManager.close();
     }
 
 }

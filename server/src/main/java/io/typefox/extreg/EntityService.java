@@ -10,12 +10,12 @@ package io.typefox.extreg;
 import java.util.List;
 import java.util.Optional;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import org.hibernate.NonUniqueResultException;
+import org.springframework.stereotype.Component;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionBinary;
@@ -28,7 +28,7 @@ import io.typefox.extreg.entities.UserSession;
 import io.typefox.extreg.util.ErrorResultException;
 import io.typefox.extreg.util.SemanticVersion;
 
-@ApplicationScoped
+@Component
 public class EntityService {
 
     @Inject

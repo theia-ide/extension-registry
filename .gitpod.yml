@@ -16,14 +16,14 @@ tasks:
     cd /workspace/extension-registry/cli
     yarn
     cd /workspace/extension-registry/server
-    ./gradlew build downloadTestExtensions -x buildNative -x testNative
+    ./gradlew build downloadTestExtensions
   name: Server
   command: |
+    export REGISTRY_SERVER_URL=`gp url 8080`
     $ES_HOME/bin/elasticsearch -d -p $ES_HOME/pid -Ediscovery.type=single-node -Expack.ml.enabled=false
     gp await-port 9200
     cd /workspace/extension-registry/server
-    export QUARKUS_HTTP_HOST=`gp url 8080`
-    ./gradlew quarkusDev
+    ./gradlew runServer
 - name: Publisher
   command: |
     gp await-port 8080

@@ -1,20 +1,14 @@
-buildscript {
-    dependencies {
-        classpath "io.quarkus:quarkus-gradle-plugin:0.28.1"
-    }
-}
-
 plugins {
-    id 'java'
     id 'de.undercouch.download' version '4.0.1'
+	id 'org.springframework.boot' version '2.2.1.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+	id 'java'
 }
-
-apply plugin: 'io.quarkus'
 
 def versions = [
     java: '11',
-    quarkus: '0.28.1',
-    guava: '28.1-jre'
+    guava: '28.1-jre',
+    hibernate: '5.11.3.Final'
 ]
 
 sourceCompatibility = versions.java
@@ -24,20 +18,30 @@ repositories {
 }
 
 dependencies {
-    implementation enforcedPlatform("io.quarkus:quarkus-bom:${versions.quarkus}")
-    implementation "io.quarkus:quarkus-resteasy-jackson:${versions.quarkus}"
-    implementation "io.quarkus:quarkus-rest-client:${versions.quarkus}"
-    implementation "io.quarkus:quarkus-hibernate-orm:${versions.quarkus}"
-    implementation "io.quarkus:quarkus-hibernate-search-elasticsearch:${versions.quarkus}"
-    implementation "io.quarkus:quarkus-jdbc-postgresql:${versions.quarkus}"
-    implementation "io.quarkus:quarkus-vertx-web:${versions.quarkus}"
+    implementation "org.springframework.boot:spring-boot-starter-data-elasticsearch"
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+	implementation "org.springframework.boot:spring-boot-starter-jersey"
+	implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.hibernate:hibernate-search-orm:${versions.hibernate}"
     implementation "com.google.guava:guava:${versions.guava}"
-    testImplementation "io.quarkus:quarkus-junit5:${versions.quarkus}"
+	runtimeOnly "org.postgresql:postgresql"
+	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+		exclude group: "org.junit.vintage", module: "junit-vintage-engine"
+	}
+}
+
+task runServer(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'io.typefox.extreg.RegistryApplication'
+}
+
+jar.manifest {
+    attributes('Main-Class': 'io.typefox.extreg.RegistryApplication')
 }
 
 
 // Download some extensions for testing
-tasks.register('downloadTestExtensions') {
+task downloadTestExtensions {
     doLast {
         download {
             src "https://github.com/microsoft/vscode-python/releases/download/2019.9.34911/ms-python-release.vsix"

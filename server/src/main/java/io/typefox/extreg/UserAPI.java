@@ -13,25 +13,21 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
 
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.springframework.beans.factory.annotation.Value;
 
-import io.quarkus.runtime.StartupEvent;
 import io.typefox.extreg.entities.UserData;
 import io.typefox.extreg.entities.UserSession;
 import io.typefox.extreg.json.UserJson;
@@ -48,15 +44,8 @@ public class UserAPI {
     @Inject
     EntityService entities;
 
-    @ConfigProperty(name = "quarkus.http.host")
-    String httpHost;
-
-    void onStart(@Observes StartupEvent event, @Context EntityManagerFactory entityManagerFactory) {
-        var sessionReaper = new Thread(new UserSessionReaper(entityManagerFactory));
-        sessionReaper.setName("User session reaper");
-        sessionReaper.setDaemon(true);
-        sessionReaper.start();
-    }
+    @Value("#{environment.REGISTRY_SERVER_URL}")
+    String serverUrl;
 
     @GET
     @Path("/")
@@ -131,7 +120,7 @@ public class UserAPI {
 
     private String getDomain() {
         try {
-            var uri = new URI(httpHost);
+            var uri = new URI(serverUrl);
             return uri.getHost();
         } catch (URISyntaxException exc) {
             throw new WebApplicationException(exc);

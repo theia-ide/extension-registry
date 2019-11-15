@@ -15,7 +15,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import io.typefox.extreg.json.ExtensionJson;
 import io.typefox.extreg.json.PublisherJson;
@@ -24,9 +23,10 @@ import io.typefox.extreg.json.SearchResultJson;
 
 /**
  * Interface for upstream registry to be accessed through the REST client.
+ * XXX Do we still need this?
  */
 @Path("/api")
-@RegisterRestClient
+// @RegisterRestClient
 public interface IUpstreamRegistry extends IExtensionRegistry {
 
     @GET

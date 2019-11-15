@@ -16,8 +16,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = "name") })
@@ -28,7 +28,7 @@ public class Publisher {
     @GeneratedValue
     long id;
 
-    @FullTextField(analyzer = "substring")
+    @Field //XXX (analyzer = "substring")
     String name;
 
     @OneToMany(mappedBy = "publisher")

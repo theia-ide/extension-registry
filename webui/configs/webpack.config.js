@@ -2,7 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 
-const outputPath = path.resolve(__dirname, '../../server/src/main/resources/META-INF/resources')
+const outputPath = path.resolve(__dirname, '../../server/src/main/resources/static')
 
 module.exports = {
     mode: 'development',

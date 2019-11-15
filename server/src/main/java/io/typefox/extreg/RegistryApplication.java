@@ -5,19 +5,27 @@
  * terms of the Eclipse Public License v. 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
-package io.typefox.extreg.json;
-
-import javax.inject.Singleton;
+package io.typefox.extreg;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import io.quarkus.jackson.ObjectMapperCustomizer;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
-@Singleton
-public class JacksonConfig implements ObjectMapperCustomizer {
+@SpringBootApplication
+public class RegistryApplication {
 
-    public void customize(ObjectMapper mapper) {
+	public static void main(String[] args) {
+		SpringApplication.run(RegistryApplication.class, args);
+	}
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        return mapper;
     }
+
 }

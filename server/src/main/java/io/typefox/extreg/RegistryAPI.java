@@ -34,8 +34,6 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.collect.Lists;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
@@ -60,12 +58,13 @@ public class RegistryAPI {
     @Inject
     LocalRegistryService local;
 
-    @Inject
-    @RestClient
-    IUpstreamRegistry upstream;
+    //XXX
+    // @Inject
+    // @RestClient
+    // IUpstreamRegistry upstream;
 
     protected Iterable<IExtensionRegistry> getRegistries() {
-        return Lists.newArrayList(local, upstream);
+        return Lists.newArrayList(local);
     }
 
     @GET

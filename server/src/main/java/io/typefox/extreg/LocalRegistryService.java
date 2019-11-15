@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -23,8 +22,8 @@ import javax.ws.rs.WebApplicationException;
 
 import com.google.common.base.Strings;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.hibernate.search.mapper.orm.Search;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionVersion;
@@ -37,7 +36,7 @@ import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
 
-@ApplicationScoped
+@Component
 public class LocalRegistryService implements IExtensionRegistry {
 
     @Inject
@@ -46,8 +45,8 @@ public class LocalRegistryService implements IExtensionRegistry {
     @Inject
     EntityService entities;
 
-    @ConfigProperty(name = "quarkus.http.host")
-    String httpHost;
+    @Value("#{environment.REGISTRY_SERVER_URL}")
+    String serverUrl;
 
     @Override
     public PublisherJson getPublisher(String publisherName) {
@@ -150,28 +149,29 @@ public class LocalRegistryService implements IExtensionRegistry {
     @Override
     @Transactional
     public SearchResultJson search(String query, String category, int size, int offset) {
-        var searchResult = Search.session(entityManager)
-            .search(Extension.class)
-            .predicate(spf -> {
-                if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(category))
-                    return spf.matchAll();
-                var bool = spf.bool();
-                if (!Strings.isNullOrEmpty(category))
-                    bool = bool.must(spf.match()
-                            .field("latest.categories")
-                            .matching(category));
-                if (!Strings.isNullOrEmpty(query))
-                    bool = bool.must(spf.simpleQueryString()
-                        .fields("name", "latest.displayName").boost(5)
-                        .fields("publisher.name", "latest.tags").boost(2)
-                        .fields("latest.description")
-                        .matching(query));
-                return bool;
-            })
-            .fetch(offset, size);
+        //XXX
+        // var searchResult = Search.session(entityManager)
+        //     .search(Extension.class)
+        //     .predicate(spf -> {
+        //         if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(category))
+        //             return spf.matchAll();
+        //         var bool = spf.bool();
+        //         if (!Strings.isNullOrEmpty(category))
+        //             bool = bool.must(spf.match()
+        //                     .field("latest.categories")
+        //                     .matching(category));
+        //         if (!Strings.isNullOrEmpty(query))
+        //             bool = bool.must(spf.simpleQueryString()
+        //                 .fields("name", "latest.displayName").boost(5)
+        //                 .fields("publisher.name", "latest.tags").boost(2)
+        //                 .fields("latest.description")
+        //                 .matching(query));
+        //         return bool;
+        //     })
+        //     .fetch(offset, size);
         var json = new SearchResultJson();
-        json.extensions = toSearchEntries(searchResult.getHits());
-        json.offset = (int) Math.min(offset, searchResult.getTotalHitCount());
+        // json.extensions = toSearchEntries(searchResult.getHits());
+        // json.offset = (int) Math.min(offset, searchResult.getTotalHitCount());
         return json;
     }
 
@@ -261,7 +261,7 @@ public class LocalRegistryService implements IExtensionRegistry {
      */
     private String createApiUrl(String... segments) {
         try {
-            var result = new StringBuilder(httpHost);
+            var result = new StringBuilder(serverUrl);
             result.append("/api");
             for (var segment : segments) {
                 if (segment == null)

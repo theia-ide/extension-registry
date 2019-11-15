@@ -20,8 +20,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.annotations.Field;
+import org.hibernate.search.annotations.Indexed;
 
 @Entity
 @Indexed
@@ -49,19 +49,19 @@ public class ExtensionVersion {
 
     String readmeFileName;
 
-    @FullTextField(analyzer = "substring")
+    @Field //XXX (analyzer = "substring")
     String displayName;
 
     @Column(length=2048)
-    @FullTextField(analyzer = "english")
+    @Field //XXX (analyzer = "english")
     String description;
 
     @ElementCollection
-    @FullTextField(analyzer = "keyword")
+    @Field //XXX (analyzer = "keyword")
     List<String> categories;
 
     @ElementCollection
-    @FullTextField(analyzer = "standard")
+    @Field //XXX (analyzer = "standard")
     List<String> tags;
 
     String license;
