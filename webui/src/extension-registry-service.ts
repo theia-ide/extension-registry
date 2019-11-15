@@ -103,14 +103,14 @@ export class ExtensionRegistryService {
         const tArr: ExtensionRegistryToken[] = [];
         for (const id in tokens) {
             if (tokens[id]) {
-                tArr.push({ id, content: tokens[id] });
+                tArr.push(tokens[id]);
             }
         }
         return tArr;
     }
 
-    async generateToken(): Promise<void> {
-        await this.tokenApiMock.generateToken();
+    async generateToken(description: string): Promise<ExtensionRegistryToken> {
+        return await this.tokenApiMock.generateToken(description);
     }
 
     async deleteToken(tokenId: string): Promise<void> {

@@ -27,7 +27,7 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
     }
 
     componentDidMount() {
-        this.getExtensions(this.props.filter).then(extensions => this.setState({ extensions })).catch(() => console.log('cancled'));
+        this.getExtensions(this.props.filter).then(extensions => this.setState({ extensions })).catch(()=>{});
     }
 
     componentDidUpdate(prevProps: ExtensionList.Props, prevState: ExtensionList.State) {

@@ -15,6 +15,7 @@ import { ExtensionRegistryUser } from '../extension-registry-types';
 import { ExtensionRegistryService } from '../extension-registry-service';
 import { createAbsoluteURL } from '../utils';
 import { UserSettingsRoutes } from './user/user-settings';
+import PopperJS from 'popper.js';
 
 const avatarStyle = (theme: Theme) => createStyles({
     avatar: {
@@ -33,6 +34,7 @@ const avatarStyle = (theme: Theme) => createStyles({
 class ExtensionRegistryAvatarComponent extends React.Component<ExtensionRegistryAvatarComponent.Props, ExtensionRegistryAvatarComponent.State> {
 
     protected avatarButton: HTMLElement | null;
+    protected popperRef: PopperJS | null;
 
     constructor(props: ExtensionRegistryAvatarComponent.Props) {
         super(props);
@@ -42,8 +44,17 @@ class ExtensionRegistryAvatarComponent extends React.Component<ExtensionRegistry
         };
     }
 
-    protected handleAvatarClick = () => this.setState({ open: !this.state.open });
+    protected handleAvatarClick = () => {
+        this.setState({ open: !this.state.open })
+    };
     protected handleClose = () => this.setState({ open: false });
+
+    componentDidUpdate(prevProps: ExtensionRegistryAvatarComponent.Props, prevState: ExtensionRegistryAvatarComponent.State) {
+        if (this.popperRef) {
+            this.popperRef.update();
+            this.popperRef.update();
+        }
+    }
 
     render() {
         return <React.Fragment>
@@ -53,7 +64,7 @@ class ExtensionRegistryAvatarComponent extends React.Component<ExtensionRegistry
                 variant='rounded'
                 classes={{ root: this.props.classes.avatar }}
                 ref={ref => this.avatarButton = ref} />
-            <Popper open={this.state.open} anchorEl={this.avatarButton} placement='bottom-end' disablePortal transition>
+            <Popper open={this.state.open} anchorEl={this.avatarButton} popperRef={ref => this.popperRef = ref} placement='bottom-end' disablePortal transition>
                 {({ TransitionProps, placement }) => (
                     <Grow {...TransitionProps}>
                         <Paper>

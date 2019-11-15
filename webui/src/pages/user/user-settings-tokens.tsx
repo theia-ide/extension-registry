@@ -10,6 +10,7 @@ import * as React from "react";
 import { Theme, createStyles, WithStyles, withStyles, Typography, Box, Paper, Button } from "@material-ui/core";
 import { ExtensionRegistryUser, ExtensionRegistryToken } from "../../extension-registry-types";
 import { ExtensionRegistryService } from "../../extension-registry-service";
+import { GenerateTokenDialog } from "./generate-token-dialog";
 
 const tokensStyle = (theme: Theme) => createStyles({
     boldText: {
@@ -49,8 +50,7 @@ class UserSettingsTokensComponent extends React.Component<UserSettingsTokensComp
         this.initTokens();
     }
 
-    protected handleGenerateNewToken = () => {
-        this.props.service.generateToken();
+    protected handleTokenGenerated = () => {
         this.initTokens();
     }
 
@@ -62,7 +62,7 @@ class UserSettingsTokensComponent extends React.Component<UserSettingsTokensComp
                 </Box>
                 <Box display='flex'>
                     <Box mr={1}>
-                        <Button variant='outlined' onClick={this.handleGenerateNewToken}>Generate new token</Button>
+                        <GenerateTokenDialog handleTokenGenerated={this.handleTokenGenerated} service={this.props.service} user={this.props.user} />
                     </Box>
                     <Box>
                         <Button variant='outlined' onClick={this.handleDeleteAll} classes={{ root: this.props.classes.deleteBtn }}>Delete all</Button>
@@ -82,7 +82,7 @@ class UserSettingsTokensComponent extends React.Component<UserSettingsTokensComp
                         this.state.tokens.map(token => {
                             return <Box key={'token' + token.id} p={2} display='flex' justifyContent='space-between'>
                                 <Box display='flex' alignItems='center'>
-                                    <Typography classes={{ root: this.props.classes.boldText }}>{token.content}</Typography>
+                                    <Typography classes={{ root: this.props.classes.boldText }}>{token.tokenValue}</Typography>
                                 </Box>
                                 <Button
                                     variant='outlined'

@@ -131,5 +131,8 @@ export type ExtensionCategory =
 
 export interface ExtensionRegistryToken {
     id: string;
-    content: string;
+    tokenValue: string;
+    userId: string;
+    description: string;
+    date?: string;
 }
