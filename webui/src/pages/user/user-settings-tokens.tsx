@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import { Theme, createStyles, WithStyles, withStyles, Typography, Box, Paper, Button } from "@material-ui/core";
-import { ExtensionRegistryUser } from "../../extension-registry-types";
+import { ExtensionRegistryUser, ExtensionRegistryToken } from "../../extension-registry-types";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 
 const tokensStyle = (theme: Theme) => createStyles({
@@ -25,10 +25,34 @@ class UserSettingsTokensComponent extends React.Component<UserSettingsTokensComp
     constructor(props: UserSettingsTokensComponent.Props) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            tokens: []
+        };
     }
 
+    componentDidMount() {
+        this.initTokens();
+    }
 
+    protected async initTokens() {
+        const tokens = await this.props.service.getTokens();
+        this.setState({ tokens });
+    }
+
+    protected handleDelete = (id: string) => {
+        this.props.service.deleteToken(id);
+        this.initTokens();
+    }
+
+    protected handleDeleteAll = () => {
+        this.props.service.deleteTokens();
+        this.initTokens();
+    }
+
+    protected handleGenerateNewToken = () => {
+        this.props.service.generateToken();
+        this.initTokens();
+    }
 
     render() {
         return <React.Fragment>
@@ -38,37 +62,37 @@ class UserSettingsTokensComponent extends React.Component<UserSettingsTokensComp
                 </Box>
                 <Box display='flex'>
                     <Box mr={1}>
-                        <Button variant='outlined'>Generate new token</Button>
+                        <Button variant='outlined' onClick={this.handleGenerateNewToken}>Generate new token</Button>
                     </Box>
                     <Box>
-                        <Button variant='outlined' classes={{ root: this.props.classes.deleteBtn }}>Delete all</Button>
+                        <Button variant='outlined' onClick={this.handleDeleteAll} classes={{ root: this.props.classes.deleteBtn }}>Delete all</Button>
                     </Box>
                 </Box>
             </Box>
             <Box my={2}>
-                <Typography variant='body1'>Tokens you have generated.</Typography>
+                <Typography variant='body1'>
+                    {
+                        this.state.tokens.length ? 'Tokens you have generated.' : 'There are no tokens generated.'
+                    }
+                </Typography>
             </Box>
             <Box>
                 <Paper>
-                    <Box p={2} display='flex' justifyContent='space-between'>
-                        <Box display='flex' alignItems='center'>
-                            <Typography classes={{ root: this.props.classes.boldText }}>Some token which was generated for some app</Typography>
-                        </Box>
-                        <Button variant='outlined' classes={{ root: this.props.classes.deleteBtn }}>Delete</Button>
-                    </Box>
-                    <Box p={2} display='flex' justifyContent='space-between'>
-                        <Box display='flex' alignItems='center'>
-                            <Typography classes={{ root: this.props.classes.boldText }}>Some token which was generated for some app</Typography>
-                        </Box>
-                        <Button variant='outlined' classes={{ root: this.props.classes.deleteBtn }}>Delete</Button>
-                    </Box>
-                    <Box p={2} display='flex' justifyContent='space-between'>
-                        <Box display='flex' alignItems='center'>
-                            <Typography classes={{ root: this.props.classes.boldText }}>Some token which was generated for some app</Typography>
-                        </Box>
-                        <Button variant='outlined' classes={{ root: this.props.classes.deleteBtn }}>Delete</Button>
-                    </Box>
-
+                    {
+                        this.state.tokens.map(token => {
+                            return <Box key={'token' + token.id} p={2} display='flex' justifyContent='space-between'>
+                                <Box display='flex' alignItems='center'>
+                                    <Typography classes={{ root: this.props.classes.boldText }}>{token.content}</Typography>
+                                </Box>
+                                <Button
+                                    variant='outlined'
+                                    onClick={() => this.handleDelete(token.id)}
+                                    classes={{ root: this.props.classes.deleteBtn }}>
+                                    Delete
+                                </Button>
+                            </Box>;
+                        })
+                    }
                 </Paper>
             </Box>
         </React.Fragment>;
@@ -82,7 +106,7 @@ export namespace UserSettingsTokensComponent {
     }
 
     export interface State {
-
+        tokens: ExtensionRegistryToken[]
     }
 }
 

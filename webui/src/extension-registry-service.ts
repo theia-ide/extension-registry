@@ -7,15 +7,21 @@
  ********************************************************************************/
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
-import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw, ExtensionReviewList } from "./extension-registry-types";
+import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw, ExtensionReviewList, ExtensionRegistryToken } from "./extension-registry-types";
 import { createAbsoluteURL } from "./utils";
+import { MockTokenAPI } from "./pages/mock-token-api";
 
 export class ExtensionRegistryService {
     private static _instance: ExtensionRegistryService;
     private api: ExtensionRegistryAPI;
     private _apiUrl: string;
+
+    private tokenApiMock: MockTokenAPI;
+
     private constructor() {
         this.api = new ExtensionRegistryAPI();
+
+        this.tokenApiMock = new MockTokenAPI();
     }
 
     static get instance(): ExtensionRegistryService {
@@ -88,5 +94,30 @@ export class ExtensionRegistryService {
             'Extension Packs',
             'Language Packs'
         ];
+    }
+
+    // TOKENS
+
+    async getTokens(): Promise<ExtensionRegistryToken[]> {
+        const tokens = await this.tokenApiMock.getTokens();
+        const tArr: ExtensionRegistryToken[] = [];
+        for (const id in tokens) {
+            if (tokens[id]) {
+                tArr.push({ id, content: tokens[id] });
+            }
+        }
+        return tArr;
+    }
+
+    async generateToken(): Promise<void> {
+        await this.tokenApiMock.generateToken();
+    }
+
+    async deleteToken(tokenId: string): Promise<void> {
+        await this.tokenApiMock.deleteToken(tokenId);
+    }
+
+    async deleteTokens(): Promise<void> {
+        await this.tokenApiMock.deleteTokens();
     }
 }

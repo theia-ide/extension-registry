@@ -128,3 +128,8 @@ export type ExtensionCategory =
     'Other' |
     'Extension Packs' |
     'Language Packs';
+
+export interface ExtensionRegistryToken {
+    id: string;
+    content: string;
+}
