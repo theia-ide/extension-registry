@@ -70,8 +70,12 @@ class MainComponent extends React.Component<MainComponent.Props, MainComponent.S
                         <Box>
                             <Link to={ExtensionListRoutes.EXTENSION_LIST_LINK} className={this.props.classes.link}>
                                 <Box display='flex'>
-                                    <Box width={120} display='flex' alignItems='center' marginRight={1}>
-                                        <img src={this.props.logoURL} width='100%' />
+                                    <Box display='flex' alignItems='center' marginRight={1}>
+                                        <img src={this.props.logoURL} style={{
+                                            width: 'auto', 
+                                            height: 25,
+                                            paddingRight: 10
+                                        }}/>
                                     </Box>
                                     <Typography variant='h6' noWrap>{this.props.pageTitle}</Typography>
                                 </Box>
