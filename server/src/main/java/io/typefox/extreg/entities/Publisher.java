@@ -16,19 +16,18 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
-
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = "name") })
-@Indexed
+//XXX
+// @Indexed
 public class Publisher {
 
     @Id
     @GeneratedValue
     long id;
 
-    @Field //XXX (analyzer = "substring")
+    //XXX
+    // @Field (analyzer = "substring")
     String name;
 
     @OneToMany(mappedBy = "publisher")

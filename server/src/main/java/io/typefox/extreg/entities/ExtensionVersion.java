@@ -20,11 +20,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
-
 @Entity
-@Indexed
+//XXX
+// @Indexed
 public class ExtensionVersion {
 
     @Id
@@ -49,19 +47,23 @@ public class ExtensionVersion {
 
     String readmeFileName;
 
-    @Field //XXX (analyzer = "substring")
+    //XXX
+    // @Field (analyzer = "substring")
     String displayName;
 
     @Column(length=2048)
-    @Field //XXX (analyzer = "english")
+    //XXX
+    // @Field (analyzer = "english")
     String description;
 
     @ElementCollection
-    @Field //XXX (analyzer = "keyword")
+    //XXX
+    // @Field (analyzer = "keyword")
     List<String> categories;
 
     @ElementCollection
-    @Field //XXX (analyzer = "standard")
+    //XXX
+    // @Field (analyzer = "standard")
     List<String> tags;
 
     String license;

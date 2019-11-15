@@ -7,22 +7,20 @@
  ********************************************************************************/
 package io.typefox.extreg.util;
 
-/**
- * Throw this exception to reply with a JSON object of the form
- * <pre>
- * { "error": "«message»" }
- * </pre
- */
-public class ErrorResultException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-    private static final long serialVersionUID = 147466147310091931L;
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+public class NotFoundException extends RuntimeException {
 
-    public ErrorResultException(String message) {
-        super(message);
+    private static final long serialVersionUID = -733820065815760051L;
+
+    public NotFoundException() {
+        super();
     }
 
-    public ErrorResultException(String message, Throwable cause) {
-        super(message, cause);
+    public NotFoundException(Throwable cause) {
+        super(cause);
     }
 
 }

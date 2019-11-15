@@ -13,15 +13,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.WebApplicationException;
 
 import com.google.common.base.Strings;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -35,14 +33,15 @@ import io.typefox.extreg.json.ReviewJson;
 import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
+import io.typefox.extreg.util.NotFoundException;
 
 @Component
 public class LocalRegistryService implements IExtensionRegistry {
 
-    @Inject
+    @Autowired
     EntityManager entityManager;
 
-    @Inject
+    @Autowired
     EntityService entities;
 
     @Value("#{environment.REGISTRY_SERVER_URL}")
@@ -270,7 +269,7 @@ public class LocalRegistryService implements IExtensionRegistry {
             }
             return result.toString();
         } catch (UnsupportedEncodingException exc) {
-            throw new WebApplicationException(exc);
+            throw new RuntimeException(exc);
         }
     }
 

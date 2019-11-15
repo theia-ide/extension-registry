@@ -14,25 +14,24 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import com.google.common.collect.Lists;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.server.Session.Cookie;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionReview;
@@ -45,17 +44,18 @@ import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.ReviewResultJson;
 import io.typefox.extreg.json.SearchResultJson;
 import io.typefox.extreg.util.ErrorResultException;
+import io.typefox.extreg.util.NotFoundException;
 
-@Path("/api")
+@RestController
 public class RegistryAPI {
 
-    @Inject
+    @Autowired
     EntityManager entityManager;
 
-    @Inject
+    @Autowired
     EntityService entities;
 
-    @Inject
+    @Autowired
     LocalRegistryService local;
 
     //XXX
@@ -67,10 +67,11 @@ public class RegistryAPI {
         return Lists.newArrayList(local);
     }
 
-    @GET
-    @Path("/{publisher}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public PublisherJson getPublisher(@PathParam("publisher") String publisherName) {
+    @GetMapping(
+        value = "/api/{publisher}",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public PublisherJson getPublisher(@PathVariable("publisher") String publisherName) {
         for (var registry : getRegistries()) {
             try {
                 return registry.getPublisher(publisherName);
@@ -81,11 +82,12 @@ public class RegistryAPI {
         throw new NotFoundException();
     }
 
-    @GET
-    @Path("/{publisher}/{extension}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ExtensionJson getExtension(@PathParam("publisher") String publisherName,
-                                      @PathParam("extension") String extensionName) {
+    @GetMapping(
+        value = "/api/{publisher}/{extension}",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ExtensionJson getExtension(@PathVariable("publisher") String publisherName,
+                                      @PathVariable("extension") String extensionName) {
         for (var registry : getRegistries()) {
             try {
                 return registry.getExtension(publisherName, extensionName);
@@ -96,12 +98,13 @@ public class RegistryAPI {
         throw new NotFoundException();
     }
 
-    @GET
-    @Path("/{publisher}/{extension}/{version}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ExtensionJson getExtension(@PathParam("publisher") String publisherName,
-                                      @PathParam("extension") String extensionName,
-                                      @PathParam("version") String version) {
+    @GetMapping(
+        value = "/api/{publisher}/{extension}/{version}",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ExtensionJson getExtension(@PathVariable("publisher") String publisherName,
+                                      @PathVariable("extension") String extensionName,
+                                      @PathVariable("version") String version) {
         for (var registry : getRegistries()) {
             try {
                 return registry.getExtension(publisherName, extensionName, version);
@@ -112,15 +115,16 @@ public class RegistryAPI {
         throw new NotFoundException();
     }
 
-    @GET
-    @Path("/{publisher}/{extension}/file/{fileName}")
-    public Response getFile(@PathParam("publisher") String publisherName,
-                            @PathParam("extension") String extensionName,
-                            @PathParam("fileName") String fileName) {
+    @GetMapping("/api/{publisher}/{extension}/file/{fileName}")
+    public ResponseEntity<byte[]> getFile(@PathVariable("publisher") String publisherName,
+                                          @PathVariable("extension") String extensionName,
+                                          @PathVariable("fileName") String fileName) {
         for (var registry : getRegistries()) {
             try {
                 var content = registry.getFile(publisherName, extensionName, fileName);
-                return Response.ok(content, getFileType(fileName)).build();
+                var headers = new HttpHeaders();
+                headers.setContentType(getFileType(fileName));
+                return new ResponseEntity<>(content, headers, HttpStatus.OK);
             } catch (NotFoundException exc) {
                 // Try the next registry
             }
@@ -128,16 +132,17 @@ public class RegistryAPI {
         throw new NotFoundException();
     }
 
-    @GET
-    @Path("/{publisher}/{extension}/{version}/file/{fileName}")
-    public Response getFile(@PathParam("publisher") String publisherName,
-                            @PathParam("extension") String extensionName,
-                            @PathParam("version") String version,
-                            @PathParam("fileName") String fileName) {
+    @GetMapping("/api/{publisher}/{extension}/{version}/file/{fileName}")
+    public ResponseEntity<byte[]> getFile(@PathVariable("publisher") String publisherName,
+                                          @PathVariable("extension") String extensionName,
+                                          @PathVariable("version") String version,
+                                          @PathVariable("fileName") String fileName) {
         for (var registry : getRegistries()) {
             try {
                 var content = registry.getFile(publisherName, extensionName, version, fileName);
-                return Response.ok(content, getFileType(fileName)).build();
+                var headers = new HttpHeaders();
+                headers.setContentType(getFileType(fileName));
+                return new ResponseEntity<>(content, headers, HttpStatus.OK);
             } catch (NotFoundException exc) {
                 // Try the next registry
             }
@@ -145,20 +150,21 @@ public class RegistryAPI {
         throw new NotFoundException();
     }
 
-    private String getFileType(String fileName) {
+    private MediaType getFileType(String fileName) {
         if (fileName.endsWith(".vsix"))
             return MediaType.APPLICATION_OCTET_STREAM;
         else if (fileName.contains("."))
-            return URLConnection.guessContentTypeFromName(fileName);
+            return MediaType.parseMediaType(URLConnection.guessContentTypeFromName(fileName));
         else
             return MediaType.TEXT_PLAIN;
     }
 
-    @GET
-    @Path("/{publisher}/{extension}/reviews")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ReviewListJson getReviews(@PathParam("publisher") String publisherName,
-                                     @PathParam("extension") String extensionName) {
+    @GetMapping(
+        value = "/api/{publisher}/{extension}/reviews",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ReviewListJson getReviews(@PathVariable("publisher") String publisherName,
+                                     @PathVariable("extension") String extensionName) {
         for (var registry : getRegistries()) {
             try {
                 return registry.getReviews(publisherName, extensionName);
@@ -169,13 +175,14 @@ public class RegistryAPI {
         throw new NotFoundException();
     }
 
-    @GET
-    @Path("/-/search")
-    @Produces(MediaType.APPLICATION_JSON)
-    public SearchResultJson search(@QueryParam("query") String query,
-                                   @QueryParam("category") String category,
-                                   @QueryParam("size") @DefaultValue("20") int size,
-                                   @QueryParam("offset") @DefaultValue("0") int offset) {
+    @GetMapping(
+        value = "/api/-/search",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public SearchResultJson search(@RequestParam("query") String query,
+                                   @RequestParam("category") String category,
+                                   @RequestParam(value = "size", defaultValue = "20") int size,
+                                   @RequestParam(value = "offset", defaultValue = "0") int offset) {
         var result = new SearchResultJson();
         result.extensions = new ArrayList<>(size);
         for (var registry : getRegistries()) {
@@ -197,10 +204,11 @@ public class RegistryAPI {
         return result;
     }
 
-    @POST
-    @Path("/-/publish")
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    @Produces(MediaType.APPLICATION_JSON)
+    @PostMapping(
+        value = "/api/-/publish",
+        consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @Transactional
     public ExtensionJson publish(InputStream content) {
         try (var processor = new ExtensionProcessor(content)) {
@@ -287,22 +295,23 @@ public class RegistryAPI {
         }
     }
 
-    @POST
-    @Path("/{publisher}/{extension}/review")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @PostMapping(
+        value = "/{publisher}/{extension}/review",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @Transactional
     public ReviewResultJson review(ReviewJson review,
-                                   @PathParam("publisher") String publisherName,
-                                   @PathParam("extension") String extensionName,
-                                   @CookieParam("sessionid") Cookie sessionCookie) {
+                                   @PathVariable("publisher") String publisherName,
+                                   @PathVariable("extension") String extensionName,
+                                   @CookieValue("sessionid") String sessionCookie) {
         try {
             var json = new ReviewResultJson();
             if (sessionCookie == null) {
                 json.error = "Not logged in.";
                 return json;
             }
-            var session = entities.findSession(sessionCookie.getValue());
+            var session = entities.findSession(sessionCookie);
             if (session == null) {
                 json.error = "Invalid session.";
                 return json;

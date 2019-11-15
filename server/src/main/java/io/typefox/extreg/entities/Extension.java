@@ -16,30 +16,30 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
-
 @Entity
-@Indexed
+//XXX
+// @Indexed
 public class Extension {
 
     @Id
     @GeneratedValue
     long id;
 
-    @Field //XXX (analyzer = "substring")
+    //XXX
+    // @Field (analyzer = "substring")
     String name;
 
     @ManyToOne
-    @IndexedEmbedded
+    //XXX
+    // @IndexedEmbedded
     Publisher publisher;
 
     @OneToMany(mappedBy = "extension")
     List<ExtensionVersion> versions;
 
     @OneToOne
-    @IndexedEmbedded
+    //XXX
+    // @IndexedEmbedded
     ExtensionVersion latest;
 
     Double averageRating;

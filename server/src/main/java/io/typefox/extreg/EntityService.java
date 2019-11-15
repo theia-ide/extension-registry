@@ -10,11 +10,11 @@ package io.typefox.extreg;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import org.hibernate.NonUniqueResultException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.typefox.extreg.entities.Extension;
@@ -31,7 +31,7 @@ import io.typefox.extreg.util.SemanticVersion;
 @Component
 public class EntityService {
 
-    @Inject
+    @Autowired
     EntityManager entityManager;
 
     public Publisher findPublisher(String name) {

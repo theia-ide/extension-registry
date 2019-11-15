@@ -16,8 +16,9 @@ public class RouteConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/**/{spring:\\w+}")
-                .setViewName("forward:/");
+        //XXX
+        // registry.addViewController("/**/{spring:\\w+}")
+        //         .setViewName("forward:/");
     }
 
 }
