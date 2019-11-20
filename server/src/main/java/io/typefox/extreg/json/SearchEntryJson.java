@@ -32,4 +32,7 @@ public class SearchEntryJson {
     @Nullable
     public String displayName;
 
+    @Nullable
+    public String description;
+
 }

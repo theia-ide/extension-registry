@@ -25,6 +25,7 @@ export interface ExtensionRaw {
     readonly version?: string;
     readonly averageRating?: number;
     readonly timestamp?: number;
+    readonly description?: string;
 }
 export namespace ExtensionRaw {
     export function getExtensionApiUrl(root: string, extension: ExtensionRaw) {
@@ -45,7 +46,6 @@ export interface Extension extends ExtensionRaw {
     readonly allVersions: { [key: string]: string };
     readonly preview?: boolean;
 
-    readonly description?: string;
     readonly categories?: string[];
 
     readonly reviewCount: number;

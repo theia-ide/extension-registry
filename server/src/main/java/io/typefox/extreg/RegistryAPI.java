@@ -203,6 +203,7 @@ public class RegistryAPI {
             entry.timestamp = extVer.getTimestamp();
             entry.averageRating = extension.getAverageRating();
             entry.displayName = extVer.getDisplayName();
+            entry.description = extVer.getDescription();
             list.add(entry);
         }
         return list;
