@@ -170,5 +170,13 @@ tasks.register('downloadTestExtensions') {
             src "https://github.com/DotJoshJohnson/vscode-xml/releases/download/v2.5.0/xml-2.5.0.vsix"
             dest "${buildDir}/test-extensions/xml-2.5.0.vsix"
         }
+        download {
+            src "https://github.com/xsburg/vscode-javascript-booster/releases/download/v0.11.0/vscode-javascript-booster-0.11.0.vsix"
+            dest "${buildDir}/test-extensions/vscode-javascript-booster-0.11.0.vsix"
+        }
+        download {
+            src "https://github.com/formulahendry/vscode-auto-close-tag/releases/download/0.5.5/auto-close-tag-0.5.5.vsix"
+            dest "${buildDir}/test-extensions/auto-close-tag-0.5.5.vsix"
+        }
     }
 }
