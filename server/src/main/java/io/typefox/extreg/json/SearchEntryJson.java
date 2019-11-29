@@ -15,6 +15,8 @@ public class SearchEntryJson {
 
     public String url;
 
+    public String downloadUrl;
+
     @Nullable
     public String iconUrl;
 

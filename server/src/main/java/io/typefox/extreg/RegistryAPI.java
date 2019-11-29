@@ -204,6 +204,7 @@ public class RegistryAPI {
             entry.averageRating = extension.getAverageRating();
             entry.displayName = extVer.getDisplayName();
             entry.description = extVer.getDescription();
+            entry.downloadUrl = createApiUrl(extension.getPublisher().getName(), extension.getName(), "file", extVer.getExtensionFileName());
             list.add(entry);
         }
         return list;
