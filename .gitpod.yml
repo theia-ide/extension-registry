@@ -13,6 +13,8 @@ tasks:
     cd /workspace/extension-registry/webui
     yarn
     yarn build:dev
+    cd /workspace/extension-registry/cli
+    yarn
     cd /workspace/extension-registry/server
     ./gradlew build downloadTestExtensions -x buildNative -x testNative
   name: Server
