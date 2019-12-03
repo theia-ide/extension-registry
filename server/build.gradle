@@ -178,5 +178,9 @@ tasks.register('downloadTestExtensions') {
             src "https://github.com/formulahendry/vscode-auto-close-tag/releases/download/0.5.5/auto-close-tag-0.5.5.vsix"
             dest "${buildDir}/test-extensions/auto-close-tag-0.5.5.vsix"
         }
+        download {
+            src "https://github.com/redhat-developer/vscode-java/releases/download/v0.47.0/redhat.java-0.47.0.vsix"
+            dest "${buildDir}/test-extensions/redhat.java-0.47.0.vsix"
+        }
     }
 }
