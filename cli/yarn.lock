@@ -18,11 +18,6 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
-"@types/denodeify@^1.2.31":
-  version "1.2.31"
-  resolved "https://registry.yarnpkg.com/@types/denodeify/-/denodeify-1.2.31.tgz#9a737b063bf1a8e3a63cc006cbbb0de601ce3584"
-  integrity sha512-Jgy3dvCyIxhNb5RstVJkubeHZifw8KJXca13ov8OO4IqhDLPRHiJJ6VArJbZZ4HuEMJEB83yCuABodNMlYylzQ==
-
 "@types/didyoumean@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@types/didyoumean/-/didyoumean-1.2.0.tgz#e597a710fc6b18fe3ed6cdac17772f8fb51a07c1"

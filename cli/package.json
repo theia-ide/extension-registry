@@ -15,7 +15,6 @@
         "vsce": "^1.70.0"
     },
     "devDependencies": {
-        "@types/denodeify": "^1.2.31",
         "@types/didyoumean": "^1.2.0",
         "@types/node": "^10.14.18",
         "@types/tmp": "^0.1.0",

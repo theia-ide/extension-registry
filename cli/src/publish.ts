@@ -7,12 +7,40 @@
  ********************************************************************************/
 
 import * as tmp from 'tmp';
-import * as denodeify from 'denodeify';
+import { promisify } from 'util';
 import { createVSIX } from 'vsce';
+import { Registry } from './registry';
 
-const tmpName = denodeify<string>(tmp.tmpName);
+export async function publish(options: PublishOptions = {}): Promise<any> {
+    if (!options.registryUrl) {
+        options.registryUrl = process.env.OVSX_REGISTRY_URL;
+    }
+    if (!options.pat) {
+        options.pat = process.env.OVSX_PAT;
+    }
+    if (!options.packageFile) {
+        options.packageFile = await promisify<string>(tmp.tmpName)();
+        await createVSIX({
+            cwd: options.packagePath,
+            packagePath: options.packageFile,
+            baseContentUrl: options.baseContentUrl,
+            baseImagesUrl: options.baseImagesUrl,
+            useYarn: options.yarn
+        });
+    }
+    const registry = new Registry({ url: options.registryUrl });
+    const extension = await registry.publish(options.packageFile, options.pat);
+    if (extension.error) {
+        throw new Error(extension.error);
+    }
+    console.log(`Published ${extension.publisher}.${extension.name} v${extension.version}`);
+}
 
 export interface PublishOptions {
+    /**
+     * The base URL of the registry API.
+     */
+    registryUrl?: string;
     /**
      * Personal access token.
      */
@@ -38,18 +66,4 @@ export interface PublishOptions {
 	 * Should use `yarn` instead of `npm`. Only valid with `packagePath`.
 	 */
     yarn?: boolean;
-}
-
-export async function publish(options: PublishOptions = {}): Promise<any> {
-    if (!options.packageFile) {
-        options.packageFile = await tmpName();
-        await createVSIX({
-            cwd: options.packagePath,
-            packagePath: options.packageFile,
-            baseContentUrl: options.baseContentUrl,
-            baseImagesUrl: options.baseImagesUrl,
-            useYarn: options.yarn
-        });
-    }
-    console.log('TODO', options);
 }

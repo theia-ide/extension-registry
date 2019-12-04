@@ -26,6 +26,5 @@ tasks:
     ./gradlew quarkusDev
 - name: Publisher
   command: |
-    cd /workspace/extension-registry/server
     gp await-port 8080
-    find build/test-extensions -name '*.vsix' -exec ./publish.sh '{}' \;
+    find server/build/test-extensions -name '*.vsix' -exec cli/lib/ovsx publish '{}' \;

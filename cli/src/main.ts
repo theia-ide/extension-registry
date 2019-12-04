@@ -12,11 +12,6 @@ import { publish } from './publish';
 
 const pkg = require('../package.json');
 
-function handleError(reason: any): void {
-    console.error(reason);
-    process.exit(1);
-}
-
 module.exports = function (argv: string[]): void {
     const program = new commander.Command();
     program.version(pkg.version);
@@ -25,12 +20,13 @@ module.exports = function (argv: string[]): void {
     program
         .command('publish [packageFile]')
         .description('Publishes an extension')
+        .option('-r, --registryUrl <url>', 'Use the registry API at this base URL.')
         .option('-p, --pat <token>', 'Personal access token')
         .option('--packagePath <path>', 'Package and publish the extension at the specified path.')
-        .option('--baseContentUrl <url>', 'Prepend all relative links in README.md with this url.')
-        .option('--baseImagesUrl <url>', 'Prepend all relative image links in README.md with this url.')
+        .option('--baseContentUrl <url>', 'Prepend all relative links in README.md with this URL.')
+        .option('--baseImagesUrl <url>', 'Prepend all relative image links in README.md with this URL.')
         .option('--yarn', 'Use yarn instead of npm while packing extension files')
-        .action((packageFile: string, { pat, packagePath, baseContentUrl, baseImagesUrl, yarn }) => {
+        .action((packageFile: string, { registryUrl, pat, packagePath, baseContentUrl, baseImagesUrl, yarn }) => {
             if (packageFile !== undefined && packagePath !== undefined) {
                 console.error('Please specify either a package file or a package path, but not both.');
                 program.help();
@@ -41,7 +37,7 @@ module.exports = function (argv: string[]): void {
                 console.warn("Ignoring option 'baseImagesUrl' for prepackaged extension.");
             if (packageFile !== undefined && yarn !== undefined)
                 console.warn("Ignoring option 'yarn' for prepackaged extension.");
-            publish({ packageFile, pat, packagePath, baseContentUrl, baseImagesUrl, yarn })
+            publish({ packageFile, registryUrl, pat, packagePath, baseContentUrl, baseImagesUrl, yarn })
                 .catch(handleError);
         });
 
@@ -62,3 +58,8 @@ module.exports = function (argv: string[]): void {
         program.help();
     }
 };
+
+function handleError(reason: any): void {
+    console.error(reason);
+    process.exit(1);
+}
