@@ -36,6 +36,35 @@ export class Registry {
         });
     }
 
+    getMetadata(publisher: string, extension: string, version?: string): Promise<Extension> {
+        let path = `/api/${encodeURIComponent(publisher)}/${encodeURIComponent(extension)}`;
+        if (version) {
+            path = `${path}/${encodeURIComponent(version)}`;
+        }
+        return this.getJson(path);
+    }
+
+    download(outputFile: string, url: string): Promise<void> {
+        // TODO
+        return null!;
+    }
+
+    protected getJson<T extends Response>(path: string, query?: { [key: string]: string },
+            headers?: http.OutgoingHttpHeaders): Promise<T> {
+        return new Promise((resolve, reject) => {
+            try {
+                const request = http.request(
+                    this.getRequestOptions('GET', path, query, headers),
+                    this.getJsonResponse<T>(resolve, reject)
+                );
+                request.on('error', reject);
+                request.end();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
     protected post<T extends Response>(file: string, path: string, query?: { [key: string]: string },
             headers?: http.OutgoingHttpHeaders): Promise<T> {
         return new Promise((resolve, reject) => {

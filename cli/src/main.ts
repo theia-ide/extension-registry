@@ -9,6 +9,8 @@
 import * as commander from 'commander';
 import * as didYouMean from 'didyoumean';
 import { publish } from './publish';
+import { handleError } from './util';
+import { getExtension } from './get';
 
 const pkg = require('../package.json');
 
@@ -18,26 +20,37 @@ module.exports = function (argv: string[]): void {
     program.usage('<command> [options]');
 
     program
-        .command('publish [packageFile]')
-        .description('Publishes an extension')
+        .command('publish [extension.vsix]')
+        .description('Publishes an extension, packaging it first if necessary.')
         .option('-r, --registryUrl <url>', 'Use the registry API at this base URL.')
-        .option('-p, --pat <token>', 'Personal access token')
+        .option('-p, --pat <token>', 'Personal access token.')
         .option('--packagePath <path>', 'Package and publish the extension at the specified path.')
         .option('--baseContentUrl <url>', 'Prepend all relative links in README.md with this URL.')
         .option('--baseImagesUrl <url>', 'Prepend all relative image links in README.md with this URL.')
-        .option('--yarn', 'Use yarn instead of npm while packing extension files')
-        .action((packageFile: string, { registryUrl, pat, packagePath, baseContentUrl, baseImagesUrl, yarn }) => {
-            if (packageFile !== undefined && packagePath !== undefined) {
+        .option('--yarn', 'Use yarn instead of npm while packing extension files.')
+        .action((extensionFile: string, { registryUrl, pat, packagePath, baseContentUrl, baseImagesUrl, yarn }) => {
+            if (extensionFile !== undefined && packagePath !== undefined) {
                 console.error('Please specify either a package file or a package path, but not both.');
                 program.help();
             }
-            if (packageFile !== undefined && baseContentUrl !== undefined)
+            if (extensionFile !== undefined && baseContentUrl !== undefined)
                 console.warn("Ignoring option 'baseContentUrl' for prepackaged extension.");
-            if (packageFile !== undefined && baseImagesUrl !== undefined)
+            if (extensionFile !== undefined && baseImagesUrl !== undefined)
                 console.warn("Ignoring option 'baseImagesUrl' for prepackaged extension.");
-            if (packageFile !== undefined && yarn !== undefined)
+            if (extensionFile !== undefined && yarn !== undefined)
                 console.warn("Ignoring option 'yarn' for prepackaged extension.");
-            publish({ packageFile, registryUrl, pat, packagePath, baseContentUrl, baseImagesUrl, yarn })
+            publish({ extensionFile, registryUrl, pat, packagePath, baseContentUrl, baseImagesUrl, yarn })
+                .catch(handleError);
+        });
+
+    program
+        .command('get <publisher.extension@version>')
+        .description('Downloads an extension or its metadata.')
+        .option('-r, --registryUrl <url>', 'Use the registry API at this base URL.')
+        .option('-o, --output <path>', 'Save the output in the specified file or directory.')
+        .option('--metadata', 'Print the extension\'s metadata instead of downloading it.')
+        .action((extensionId: string, { registryUrl, output, metadata }) => {
+            getExtension({ extensionId, registryUrl, output, metadata })
                 .catch(handleError);
         });
 
@@ -58,8 +71,3 @@ module.exports = function (argv: string[]): void {
         program.help();
     }
 };
-
-function handleError(reason: any): void {
-    console.error(reason);
-    process.exit(1);
-}

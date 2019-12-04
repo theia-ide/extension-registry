@@ -6,34 +6,37 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import * as tmp from 'tmp';
-import { promisify } from 'util';
 import { createVSIX } from 'vsce';
+import { createTempFile } from './util';
 import { Registry } from './registry';
 
-export async function publish(options: PublishOptions = {}): Promise<any> {
+/**
+ * Publishes an extension.
+ */
+export async function publish(options: PublishOptions = {}): Promise<void> {
     if (!options.registryUrl) {
         options.registryUrl = process.env.OVSX_REGISTRY_URL;
     }
     if (!options.pat) {
         options.pat = process.env.OVSX_PAT;
     }
-    if (!options.packageFile) {
-        options.packageFile = await promisify<string>(tmp.tmpName)();
+    if (!options.extensionFile) {
+        options.extensionFile = await createTempFile({ postfix: '.vsix' });
         await createVSIX({
             cwd: options.packagePath,
-            packagePath: options.packageFile,
+            packagePath: options.extensionFile,
             baseContentUrl: options.baseContentUrl,
             baseImagesUrl: options.baseImagesUrl,
             useYarn: options.yarn
         });
+        console.log(); // new line
     }
     const registry = new Registry({ url: options.registryUrl });
-    const extension = await registry.publish(options.packageFile, options.pat);
+    const extension = await registry.publish(options.extensionFile, options.pat);
     if (extension.error) {
         throw new Error(extension.error);
     }
-    console.log(`Published ${extension.publisher}.${extension.name} v${extension.version}`);
+    console.log(`\ud83d\ude80  Published ${extension.publisher}.${extension.name} v${extension.version}`);
 }
 
 export interface PublishOptions {
@@ -48,10 +51,10 @@ export interface PublishOptions {
     /**
      * Path to the vsix file to be published. Cannot be used together with `packagePath`.
      */
-    packageFile?: string;
+    extensionFile?: string;
     /**
      * Path to the extension to be packaged and published. Cannot be used together
-     * with `packageFile`.
+     * with `extensionFile`.
      */
     packagePath?: string;
     /**
