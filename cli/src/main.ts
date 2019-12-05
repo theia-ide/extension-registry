@@ -16,12 +16,17 @@ const pkg = require('../package.json');
 
 module.exports = function (argv: string[]): void {
     const program = new commander.Command();
-    program.version(pkg.version);
     program.usage('<command> [options]');
+    program.option('--debug', 'include debug information on error')
+
+    program
+        .command('version')
+        .description('Output the version number.')
+        .action(() => console.log(`Eclipse Open VSX CLI version ${pkg.version}`));
 
     program
         .command('publish [extension.vsix]')
-        .description('Publishes an extension, packaging it first if necessary.')
+        .description('Publish an extension, packaging it first if necessary.')
         .option('-r, --registryUrl <url>', 'Use the registry API at this base URL.')
         .option('-p, --pat <token>', 'Personal access token.')
         .option('--packagePath <path>', 'Package and publish the extension at the specified path.')
@@ -40,18 +45,21 @@ module.exports = function (argv: string[]): void {
             if (extensionFile !== undefined && yarn !== undefined)
                 console.warn("Ignoring option 'yarn' for prepackaged extension.");
             publish({ extensionFile, registryUrl, pat, packagePath, baseContentUrl, baseImagesUrl, yarn })
-                .catch(handleError);
+                .catch(handleError(program.debug));
         });
 
     program
-        .command('get <publisher.extension@version>')
-        .description('Downloads an extension or its metadata.')
+        .command('get <publisher.extension>')
+        .description('Download an extension or its metadata.')
+        .option('-v, --version <version>', 'Specify an exact version or a version range.')
         .option('-r, --registryUrl <url>', 'Use the registry API at this base URL.')
         .option('-o, --output <path>', 'Save the output in the specified file or directory.')
         .option('--metadata', 'Print the extension\'s metadata instead of downloading it.')
-        .action((extensionId: string, { registryUrl, output, metadata }) => {
-            getExtension({ extensionId, registryUrl, output, metadata })
-                .catch(handleError);
+        .action((extensionId: string, { version, registryUrl, output, metadata }) => {
+            if (typeof version === 'function') // If not specified, `version` yields a function
+                version = undefined;
+            getExtension({ extensionId, version, registryUrl, output, metadata })
+                .catch(handleError(program.debug));
         });
 
     program

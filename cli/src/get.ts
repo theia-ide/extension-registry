@@ -7,8 +7,10 @@
  ********************************************************************************/
 
 import * as fs from 'fs';
-import { promisify } from 'util';
-import { Registry } from "./registry";
+import * as path from 'path';
+import * as semver from 'semver';
+import { Registry, Extension } from "./registry";
+import { promisify, matchExtensionId, optionalStat, makeDirs } from './util';
 
 /**
  * Downloads an extension or its metadata.
@@ -18,31 +20,90 @@ export async function getExtension(options: GetOptions): Promise<void> {
         options.registryUrl = process.env.OVSX_REGISTRY_URL;
     }
     const registry = new Registry({ url: options.registryUrl });
-    const match = /(\w+)\.(\w+)@?(.+)?/.exec(options.extensionId);
+    const match = matchExtensionId(options.extensionId);
     if (!match) {
-        throw new Error('The extension identifier must have the form `publisher.extension@version` (the version is optional).');
+        throw new Error('The extension identifier must have the form `publisher.extension`.');
     }
-    const extension = await registry.getMetadata(match[1], match[2], match[3]);
+    const extension = await registry.getMetadata(match[1], match[2]);
     if (extension.error) {
         throw new Error(extension.error);
     }
+    const matchingVersion = await findMatchingVersion(registry, extension, options.version);
+    if (matchingVersion.error) {
+        throw new Error(matchingVersion.error);
+    }
     if (options.metadata) {
-        const metadata = JSON.stringify(extension, null, 4);
-        if (options.output) {
-            await promisify(fs.writeFile)(options.output, metadata);
+        await printMetadata(registry, matchingVersion, options.output);
+    } else {
+        await download(registry, matchingVersion, options.output);
+    }
+}
+
+function findMatchingVersion(registry: Registry, extension: Extension, constraint?: string): Promise<Extension> {
+    if (!constraint || semver.satisfies(extension.version, constraint)) {
+        return Promise.resolve(extension);
+    }
+    for (const version of Object.keys(extension.allVersions)) {
+        if (semver.satisfies(version, constraint)) {
+            try {
+                return registry.getJson(new URL(extension.allVersions[version]));
+            } catch (err) {
+                return Promise.reject(err);
+            }
+        }
+    }
+    return Promise.reject(`Extension ${extension.publisher}.${extension.name} has no published version matching '${constraint}'`);
+}
+
+async function printMetadata(registry: Registry, extension: Extension, output?: string): Promise<void> {
+    const metadata = JSON.stringify(extension, null, 4);
+    if (!output) {
+        console.log(metadata);
+        return;
+    }
+    let filePath: string | undefined;
+    const stats = await optionalStat(output);
+    if (stats && stats.isDirectory() || !stats && output.endsWith(path.sep)) {
+        const fileName = `${extension.publisher}.${extension.name}-${extension.version}.json`;
+        filePath = path.resolve(process.cwd(), output, fileName);
+    } else {
+        filePath = path.resolve(process.cwd(), output);
+    }
+    await makeDirs(path.dirname(filePath));
+    await promisify(fs.writeFile)(filePath, metadata);
+}
+
+async function download(registry: Registry, extension: Extension, output?: string): Promise<void> {
+    if (!extension.downloadUrl) {
+        throw new Error(`Extension ${extension.publisher}.${extension.name} does not provide a download URL.`);
+    }
+    const fileNameIndex = extension.downloadUrl.lastIndexOf('/');
+    const fileName = extension.downloadUrl.substring(fileNameIndex + 1);
+    let filePath: string | undefined;
+    if (output) {
+        const stats = await optionalStat(output);
+        if (stats && stats.isDirectory() || !stats && output.endsWith(path.sep)) {
+            filePath = path.resolve(process.cwd(), output, fileName);
         } else {
-            console.log(metadata);
+            filePath = path.resolve(process.cwd(), output);
         }
     } else {
-        // TODO
+        filePath = path.resolve(process.cwd(), fileName);
     }
+    await makeDirs(path.dirname(filePath));
+    console.log(`Downloading ${extension.publisher}.${extension.name} v${extension.version} to ${filePath}`);
+    await registry.download(filePath, new URL(extension.downloadUrl));
 }
 
 export interface GetOptions {
     /**
-     * Identifier in the form `publisher.extension@version`. The suffix `@version` is optional.
+     * Identifier in the form `publisher.extension` or `publisher/extension`.
      */
     extensionId: string;
+    /**
+     * An exact version or version range.
+     */
+    version?: string;
     /**
      * The base URL of the registry API.
      */
