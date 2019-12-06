@@ -7,8 +7,6 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-import java.time.LocalDateTime;
-
 import javax.annotation.Nullable;
 
 public class SearchEntryJson {
@@ -26,7 +24,7 @@ public class SearchEntryJson {
 
     public String version;
 
-    public LocalDateTime timestamp;
+    public String timestamp;
 
     @Nullable
     public Double averageRating;

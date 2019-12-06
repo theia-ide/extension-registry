@@ -1,19 +1,11 @@
 const webpack = require('webpack');
 const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
 
-const outputPath = path.resolve(__dirname, '../../server/src/main/resources/static')
+const outputPath = path.resolve(__dirname, '../dev/static')
 
 module.exports = {
     mode: 'development',
     devtool: 'source-map',
-    devServer: {
-        contentBase: './dev',
-        port: 3000,
-        historyApiFallback: {
-            index: '/'
-        }
-    },
 
     entry: [
         './dev/index.tsx'
@@ -56,9 +48,6 @@ module.exports = {
             /\.js$/,
             /\.d\.ts$/
         ]),
-        new webpack.ProgressPlugin(),
-        new CopyPlugin([
-            { from: 'dev', to: outputPath }
-        ]),
+        new webpack.ProgressPlugin()
     ]
 };

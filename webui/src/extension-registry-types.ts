@@ -24,7 +24,7 @@ export interface ExtensionRaw {
     readonly displayName?: string;
     readonly version?: string;
     readonly averageRating?: number;
-    readonly timestamp?: number;
+    readonly timestamp?: string;
     readonly description?: string;
 }
 export namespace ExtensionRaw {

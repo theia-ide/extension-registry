@@ -7,8 +7,6 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-import java.time.LocalDateTime;
-
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -19,7 +17,7 @@ public class ReviewJson {
 
     public String user;
 
-    public LocalDateTime timestamp;
+    public String timestamp;
 
     @Nullable
     public String title;

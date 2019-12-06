@@ -153,10 +153,10 @@ public class RegistryAPI {
     private MediaType getFileType(String fileName) {
         if (fileName.endsWith(".vsix"))
             return MediaType.APPLICATION_OCTET_STREAM;
-        else if (fileName.contains("."))
-            return MediaType.parseMediaType(URLConnection.guessContentTypeFromName(fileName));
-        else
-            return MediaType.TEXT_PLAIN;
+        var contentType = URLConnection.guessContentTypeFromName(fileName);
+        if (contentType != null)
+            return MediaType.parseMediaType(contentType);
+        return MediaType.TEXT_PLAIN;
     }
 
     @GetMapping(
@@ -179,18 +179,20 @@ public class RegistryAPI {
         value = "/api/-/search",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public SearchResultJson search(@RequestParam("query") String query,
-                                   @RequestParam("category") String category,
-                                   @RequestParam(value = "size", defaultValue = "20") int size,
-                                   @RequestParam(value = "offset", defaultValue = "0") int offset) {
+    public SearchResultJson search(@RequestParam(name = "query", required = false) String query,
+                                   @RequestParam(name = "category", required = false) String category,
+                                   @RequestParam(name = "size", defaultValue = "20") int size,
+                                   @RequestParam(name = "offset", defaultValue = "0") int offset) {
         var result = new SearchResultJson();
         result.extensions = new ArrayList<>(size);
         for (var registry : getRegistries()) {
             try {
                 var subResult = registry.search(query, category, size, offset);
-                result.extensions.addAll(subResult.extensions);
+                var subResultSize = subResult.extensions != null ? subResult.extensions.size() : 0;
+                if (subResultSize > 0) {
+                    result.extensions.addAll(subResult.extensions);
+                }
                 result.offset += subResult.offset;
-                var subResultSize = subResult.extensions.size();
                 if (subResultSize < size) {
                     size -= subResultSize;
                     offset = Math.max(offset - subResult.offset - subResultSize, 0);

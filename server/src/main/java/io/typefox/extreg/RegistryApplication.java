@@ -7,25 +7,39 @@
  ********************************************************************************/
 package io.typefox.extreg;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.base.Strings;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
 public class RegistryApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(RegistryApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(RegistryApplication.class, args);
+    }
+
+    @Value("#{environment.OVSX_WEBUI_URL}")
+    String webuiUrl;
 
     @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        return mapper;
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/**")
+                    .allowedOrigins("*");
+                if (!Strings.isNullOrEmpty(webuiUrl)) {
+                    registry.addMapping("/api/**")
+                        .allowedOrigins(webuiUrl)
+                        .allowCredentials(true);
+                }
+            }
+        };
     }
 
 }

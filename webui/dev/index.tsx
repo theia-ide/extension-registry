@@ -12,14 +12,20 @@ const theme = createMuiTheme({
     }
 });
 
+let serverHost = window.location.hostname;
+if (serverHost.startsWith('3000-')) {
+    // The frontend runs on port 3000, but the server runs on port 8080
+    serverHost = '8080-' + serverHost.substring(5);
+}
+
 const node = document.getElementById('main');
 ReactDOM.render(<BrowserRouter>
-<ThemeProvider theme={theme}>
-<Main
-apiUrl={window.location.protocol + "//" + window.location.hostname + "/api"}
-listHeaderTitle='Extensions for VS Code Compatible Editors'
-logoURL='./open-source.png'
-pageTitle='Open VSX Registry'
-/>
-</ThemeProvider>
+    <ThemeProvider theme={theme}>
+        <Main
+            apiUrl={`${window.location.protocol}//${serverHost}/api`}
+            listHeaderTitle='Extensions for VS Code Compatible Editors'
+            logoURL='/open-source.png'
+            pageTitle='Open VSX Registry'
+        />
+    </ThemeProvider>
 </BrowserRouter>, node);

@@ -7,7 +7,6 @@
  ********************************************************************************/
 package io.typefox.extreg.json;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +52,7 @@ public class ExtensionJson {
 
     public String version;
 
-    public LocalDateTime timestamp;
+    public String timestamp;
 
     @Nullable
     public Boolean preview;

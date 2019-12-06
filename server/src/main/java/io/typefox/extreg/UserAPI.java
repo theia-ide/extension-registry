@@ -39,7 +39,7 @@ public class UserAPI {
     @Autowired
     EntityService entities;
 
-    @Value("#{environment.REGISTRY_SERVER_URL}")
+    @Value("#{environment.OVSX_SERVER_URL}")
     String serverUrl;
 
     //XXX

@@ -48,7 +48,6 @@
     "no-duplicate-variable": {
       "severity": "error"
     },
-    "no-dynamic-delete": true,
     "no-eval": {
       "severity": "error"
     },

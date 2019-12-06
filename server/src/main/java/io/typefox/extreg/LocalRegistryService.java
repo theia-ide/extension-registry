@@ -44,7 +44,7 @@ public class LocalRegistryService implements IExtensionRegistry {
     @Autowired
     EntityService entities;
 
-    @Value("#{environment.REGISTRY_SERVER_URL}")
+    @Value("#{environment.OVSX_SERVER_URL}")
     String serverUrl;
 
     @Override
@@ -133,7 +133,7 @@ public class LocalRegistryService implements IExtensionRegistry {
             for (var extReview : reviews) {
                 var json = new ReviewJson();
                 json.user = extReview.getUsername();
-                json.timestamp = extReview.getTimestamp();
+                json.timestamp = extReview.getTimestamp().toString();
                 json.title = extReview.getTitle();
                 json.comment = extReview.getComment();
                 json.rating = extReview.getRating();
@@ -184,7 +184,7 @@ public class LocalRegistryService implements IExtensionRegistry {
             entry.url = createApiUrl(entry.publisher, entry.name);
             entry.iconUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getIconFileName());
             entry.version = extVer.getVersion();
-            entry.timestamp = extVer.getTimestamp();
+            entry.timestamp = extVer.getTimestamp().toString();
             entry.averageRating = extension.getAverageRating();
             entry.displayName = extVer.getDisplayName();
             entry.description = extVer.getDescription();
@@ -210,7 +210,7 @@ public class LocalRegistryService implements IExtensionRegistry {
         }
         json.version = extVersion.getVersion();
         json.preview = extVersion.isPreview();
-        json.timestamp = extVersion.getTimestamp();
+        json.timestamp = extVersion.getTimestamp().toString();
         if (isLatest) {
             json.downloadUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getExtensionFileName());
             json.iconUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getIconFileName());
