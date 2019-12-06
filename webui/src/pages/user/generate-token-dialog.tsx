@@ -43,7 +43,7 @@ class GenerateTokenDialogComponent extends React.Component<GenerateTokenDialogCo
         this.props.service.generateToken(this.state.tokenComment).then(token => {
             this.setState({ tokenFieldDisabled: false, token });
             this.props.handleTokenGenerated();
-        })
+        });
     }
 
     render() {
@@ -88,7 +88,7 @@ class GenerateTokenDialogComponent extends React.Component<GenerateTokenDialogCo
                     }
                 </DialogActions>
             </Dialog>
-        </React.Fragment>
+        </React.Fragment>;
     }
 }
 

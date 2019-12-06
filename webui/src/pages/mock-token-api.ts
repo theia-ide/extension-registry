@@ -25,7 +25,7 @@ export class MockTokenAPI {
             id: 't' + this.count,
             tokenValue: `Token ${this.count}: Some token which was generated for some app`,
             userId: 'TEST'
-        }
+        };
         tokenStore[token.id] = token;
         this.count++;
         return tokenStore['t' + (this.count - 1)];

@@ -72,7 +72,7 @@ class MainComponent extends React.Component<MainComponent.Props, MainComponent.S
                                 <Box display='flex'>
                                     <Box display='flex' alignItems='center' marginRight={1}>
                                         <img src={this.props.logoURL} style={{
-                                            width: 'auto', 
+                                            width: 'auto',
                                             height: 25,
                                             paddingRight: 10
                                         }}/>

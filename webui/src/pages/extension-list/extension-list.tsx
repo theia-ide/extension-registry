@@ -27,7 +27,7 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
     }
 
     componentDidMount() {
-        this.getExtensions(this.props.filter).then(extensions => this.setState({ extensions })).catch(()=>{});
+        this.getExtensions(this.props.filter).then(extensions => this.setState({ extensions })).catch(() => {});
     }
 
     componentDidUpdate(prevProps: ExtensionList.Props, prevState: ExtensionList.State) {
@@ -43,7 +43,7 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
         return new Promise<ExtensionRaw[]>((resolve, reject) => {
             this.cancellationToken.cancel = () => {
                 reject();
-            }
+            };
             this.props.service.getExtensions(filter).then(ext => resolve(ext));
         });
     }

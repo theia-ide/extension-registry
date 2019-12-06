@@ -45,8 +45,8 @@ class ExtensionRegistryAvatarComponent extends React.Component<ExtensionRegistry
     }
 
     protected handleAvatarClick = () => {
-        this.setState({ open: !this.state.open })
-    };
+        this.setState({ open: !this.state.open });
+    }
     protected handleClose = () => this.setState({ open: false });
 
     componentDidUpdate(prevProps: ExtensionRegistryAvatarComponent.Props, prevState: ExtensionRegistryAvatarComponent.State) {

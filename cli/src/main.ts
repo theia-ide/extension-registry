@@ -17,7 +17,7 @@ const pkg = require('../package.json');
 module.exports = function (argv: string[]): void {
     const program = new commander.Command();
     program.usage('<command> [options]');
-    program.option('--debug', 'include debug information on error')
+    program.option('--debug', 'include debug information on error');
 
     program
         .command('version')

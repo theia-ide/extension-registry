@@ -56,8 +56,8 @@ export function handleError(debug?: boolean): (reason: any) => void {
         } else if (reason !== undefined) {
             console.error(reason);
         } else {
-            console.error('An unknown error occurred.')
+            console.error('An unknown error occurred.');
         }
         process.exit(1);
-    }
+    };
 }
