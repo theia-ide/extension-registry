@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -19,8 +18,17 @@ import javax.transaction.Transactional;
 
 import com.google.common.base.Strings;
 
+import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Component;
 
 import io.typefox.extreg.entities.Extension;
@@ -33,16 +41,23 @@ import io.typefox.extreg.json.ReviewJson;
 import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
+import io.typefox.extreg.search.ExtensionSearch;
+import io.typefox.extreg.util.CollectionUtil;
 import io.typefox.extreg.util.NotFoundException;
 
 @Component
 public class LocalRegistryService implements IExtensionRegistry {
+ 
+    Logger logger = LoggerFactory.getLogger(LocalRegistryService.class);
 
     @Autowired
     EntityManager entityManager;
 
     @Autowired
     EntityService entities;
+
+    @Autowired
+    ElasticsearchOperations searchOperations;
 
     @Value("#{environment.OVSX_SERVER_URL}")
     String serverUrl;
@@ -145,53 +160,83 @@ public class LocalRegistryService implements IExtensionRegistry {
         }
     }
 
-    @Override
+    @EventListener
     @Transactional
-    public SearchResultJson search(String query, String category, int size, int offset) {
-        //XXX
-        // var searchResult = Search.session(entityManager)
-        //     .search(Extension.class)
-        //     .predicate(spf -> {
-        //         if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(category))
-        //             return spf.matchAll();
-        //         var bool = spf.bool();
-        //         if (!Strings.isNullOrEmpty(category))
-        //             bool = bool.must(spf.match()
-        //                     .field("latest.categories")
-        //                     .matching(category));
-        //         if (!Strings.isNullOrEmpty(query))
-        //             bool = bool.must(spf.simpleQueryString()
-        //                 .fields("name", "latest.displayName").boost(5)
-        //                 .fields("publisher.name", "latest.tags").boost(2)
-        //                 .fields("latest.description")
-        //                 .matching(query));
-        //         return bool;
-        //     })
-        //     .fetch(offset, size);
+    public void initSearchIndex(ApplicationStartedEvent event) {
+        if (event.getApplicationContext().getEnvironment().getProperty("OVSX_INIT_SEARCH_INDEX") != null) {
+            logger.info("Initializing search index...");
+            var allExtensions = entities.findAllExtensions();
+            if (allExtensions.size() > 0) {
+                var indexQueries = CollectionUtil.map(allExtensions, extension ->
+                    new IndexQueryBuilder()
+                        .withObject(toSearch(extension))
+                        .build()
+                );
+                searchOperations.bulkIndex(indexQueries);
+            }
+        }
+    }
+
+    public void updateSearchIndex(Extension extension) {
+        var indexQuery = new IndexQueryBuilder()
+                .withObject(toSearch(extension))
+                .build();
+        searchOperations.index(indexQuery);
+    }
+
+    @Override
+    public SearchResultJson search(String queryString, String category, int size, int offset) {
+        var queryBuilder = new NativeSearchQueryBuilder().withIndices("extensions");
+        if (!Strings.isNullOrEmpty(queryString)) {
+            var multiMatchQuery = QueryBuilders.multiMatchQuery(queryString)
+                    .field("name").boost(5)
+                    .field("displayName").boost(5)
+                    .field("tags").boost(3)
+                    .field("publisher").boost(2)
+                    .field("description")
+                    .fuzziness(Fuzziness.AUTO)
+                    .prefixLength(2);
+            queryBuilder.withQuery(multiMatchQuery);
+        }
+        if (!Strings.isNullOrEmpty(category)) {
+            queryBuilder.withFilter(QueryBuilders.matchPhraseQuery("categories", category));
+        }
+        var searchResult = searchOperations.queryForList(queryBuilder.build(), ExtensionSearch.class);
         var json = new SearchResultJson();
-        // json.extensions = toSearchEntries(searchResult.getHits());
+        json.extensions = CollectionUtil.map(searchResult, this::toSearchEntry);
+        // TODO respect size and offset
         // json.offset = (int) Math.min(offset, searchResult.getTotalHitCount());
         return json;
     }
 
-    private List<SearchEntryJson> toSearchEntries(List<Extension> extensions) {
-        var list = new ArrayList<SearchEntryJson>(extensions.size());
-        for (var extension : extensions) {
-            var extVer = extension.getLatest();
-            var entry = new SearchEntryJson();
-            entry.name = extension.getName();
-            entry.publisher = extension.getPublisher().getName();
-            entry.url = createApiUrl(entry.publisher, entry.name);
-            entry.iconUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getIconFileName());
-            entry.version = extVer.getVersion();
-            entry.timestamp = extVer.getTimestamp().toString();
-            entry.averageRating = extension.getAverageRating();
-            entry.displayName = extVer.getDisplayName();
-            entry.description = extVer.getDescription();
-            entry.downloadUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getExtensionFileName());
-            list.add(entry);
-        }
-        return list;
+    private SearchEntryJson toSearchEntry(ExtensionSearch search) {
+        var extension = entityManager.find(Extension.class, search.id);
+        var extVer = extension.getLatest();
+        var entry = new SearchEntryJson();
+        entry.name = extension.getName();
+        entry.publisher = extension.getPublisher().getName();
+        entry.url = createApiUrl(entry.publisher, entry.name);
+        entry.iconUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getIconFileName());
+        entry.version = extVer.getVersion();
+        entry.timestamp = extVer.getTimestamp().toString();
+        entry.averageRating = extension.getAverageRating();
+        entry.displayName = extVer.getDisplayName();
+        entry.description = extVer.getDescription();
+        entry.downloadUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getExtensionFileName());
+        return entry;
+    }
+
+    private ExtensionSearch toSearch(Extension extension) {
+        var search = new ExtensionSearch();
+        var extVer = extension.getLatest();
+        search.id = extension.getId();
+        search.name = extension.getName();
+        search.publisher = extension.getPublisher().getName();
+        search.displayName = extVer.getDisplayName();
+        search.description = extVer.getDescription();
+        search.categories = extVer.getCategories();
+        search.tags = extVer.getTags();
+        return search;
     }
 
     public ExtensionJson toJson(ExtensionVersion extVersion, boolean isLatest) {

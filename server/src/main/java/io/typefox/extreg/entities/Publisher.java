@@ -18,16 +18,12 @@ import javax.persistence.UniqueConstraint;
 
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = "name") })
-//XXX
-// @Indexed
 public class Publisher {
 
     @Id
     @GeneratedValue
     long id;
 
-    //XXX
-    // @Field (analyzer = "substring")
     String name;
 
     @OneToMany(mappedBy = "publisher")

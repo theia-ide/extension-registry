@@ -21,8 +21,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
 @Entity
-//XXX
-// @Indexed
 public class ExtensionVersion {
 
     @Id
@@ -47,23 +45,15 @@ public class ExtensionVersion {
 
     String readmeFileName;
 
-    //XXX
-    // @Field (analyzer = "substring")
     String displayName;
 
     @Column(length=2048)
-    //XXX
-    // @Field (analyzer = "english")
     String description;
 
     @ElementCollection
-    //XXX
-    // @Field (analyzer = "keyword")
     List<String> categories;
 
     @ElementCollection
-    //XXX
-    // @Field (analyzer = "standard")
     List<String> tags;
 
     String license;

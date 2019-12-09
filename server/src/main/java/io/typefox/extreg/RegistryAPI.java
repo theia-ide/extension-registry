@@ -255,6 +255,7 @@ public class RegistryAPI {
             processor.getExtensionDependencies().forEach(dep -> addDependency(dep, extVersion));
             processor.getBundledExtensions().forEach(dep -> addBundledExtension(dep, extVersion));
 
+            local.updateSearchIndex(extension.get());
             return local.toJson(extVersion, false);
         } catch (ErrorResultException | NoResultException exc) {
             return ExtensionJson.error(exc.getMessage());

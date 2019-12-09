@@ -22,6 +22,7 @@ tasks:
   command: |
     export OVSX_SERVER_URL=`gp url 8080`
     export OVSX_WEBUI_URL=`gp url 3000`
+    export OVSX_ELASTICSEARCH_HOST=localhost:9200
     $ES_HOME/bin/elasticsearch -d -p $ES_HOME/pid -Ediscovery.type=single-node -Expack.ml.enabled=false
     gp await-port 9200
     cd /workspace/extension-registry/server

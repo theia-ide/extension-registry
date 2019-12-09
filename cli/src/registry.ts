@@ -10,6 +10,7 @@ import * as http from 'http';
 import * as https from 'https';
 import * as fs from 'fs';
 import * as querystring from 'querystring';
+import { statusError } from './util';
 
 export const DEFAULT_URL = 'http://localhost:8080';
 
@@ -53,7 +54,7 @@ export class Registry {
                                 .request(url, response => {
                 response.on('end', () => {
                     if (response.statusCode !== undefined && (response.statusCode < 200 || response.statusCode > 299)) {
-                        reject(new Error(`The server responded with status ${response.statusCode}: ${response.statusMessage}`));
+                        reject(statusError(response));
                     } else {
                         resolve();
                     }
@@ -121,7 +122,7 @@ export class Registry {
             response.on('data', chunk => json += chunk);
             response.on('end', () => {
                 if (response.statusCode !== undefined && (response.statusCode < 200 || response.statusCode > 299)) {
-                    reject(new Error(`The server responded with status ${response.statusCode}: ${response.statusMessage}`));
+                    reject(statusError(response));
                 } else if (json.startsWith('<!DOCTYPE html>')) {
                     reject(json);
                 } else {

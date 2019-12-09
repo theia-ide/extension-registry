@@ -69,6 +69,12 @@ public class EntityService {
         return getOptionalResult(query);
     }
 
+    public List<Extension> findAllExtensions() {
+        var qs = "SELECT ext FROM Extension ext";
+        var query = entityManager.createQuery(qs, Extension.class);
+        return query.getResultList();
+    }
+
     private <T> Optional<T> getOptionalResult(TypedQuery<T> query) {
         var list = query.getResultList();
         if (list.isEmpty())

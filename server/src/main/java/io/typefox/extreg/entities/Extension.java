@@ -17,29 +17,21 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 @Entity
-//XXX
-// @Indexed
 public class Extension {
 
     @Id
     @GeneratedValue
     long id;
 
-    //XXX
-    // @Field (analyzer = "substring")
     String name;
 
     @ManyToOne
-    //XXX
-    // @IndexedEmbedded
     Publisher publisher;
 
     @OneToMany(mappedBy = "extension")
     List<ExtensionVersion> versions;
 
     @OneToOne
-    //XXX
-    // @IndexedEmbedded
     ExtensionVersion latest;
 
     Double averageRating;

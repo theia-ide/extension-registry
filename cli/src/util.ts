@@ -8,6 +8,7 @@
 
 import * as fs from 'fs';
 import * as tmp from 'tmp';
+import * as http from 'http';
 
 export { promisify } from 'util';
 
@@ -60,4 +61,11 @@ export function handleError(debug?: boolean): (reason: any) => void {
         }
         process.exit(1);
     };
+}
+
+export function statusError(response: http.IncomingMessage): Error {
+    if (response.statusMessage)
+        return new Error(`The server responded with status ${response.statusCode}: ${response.statusMessage}`);
+    else
+        return new Error(`The server responded with status ${response.statusCode}.`);
 }
