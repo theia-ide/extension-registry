@@ -20,9 +20,7 @@ import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
-import org.elasticsearch.common.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.server.Session.Cookie;
 import org.springframework.http.HttpHeaders;
@@ -128,8 +126,7 @@ public class RegistryAPI {
         for (var registry : getRegistries()) {
             try {
                 var content = registry.getFile(publisherName, extensionName, fileName);
-                var headers = new HttpHeaders();
-                headers.setContentType(getFileType(fileName));
+                var headers = getResponseHeaders(fileName);
                 return new ResponseEntity<>(content, headers, HttpStatus.OK);
             } catch (NotFoundException exc) {
                 // Try the next registry
@@ -146,14 +143,20 @@ public class RegistryAPI {
         for (var registry : getRegistries()) {
             try {
                 var content = registry.getFile(publisherName, extensionName, version, fileName);
-                var headers = new HttpHeaders();
-                headers.setContentType(getFileType(fileName));
+                var headers = getResponseHeaders(fileName);
                 return new ResponseEntity<>(content, headers, HttpStatus.OK);
             } catch (NotFoundException exc) {
                 // Try the next registry
             }
         }
         throw new NotFoundException();
+    }
+
+    private HttpHeaders getResponseHeaders(String fileName) {
+        var headers = new HttpHeaders();
+        headers.setContentType(getFileType(fileName));
+        headers.setAccessControlAllowOrigin("*");
+        return headers;
     }
 
     private MediaType getFileType(String fileName) {

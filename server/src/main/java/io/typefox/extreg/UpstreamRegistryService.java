@@ -18,8 +18,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -44,17 +47,32 @@ public class UpstreamRegistryService implements IExtensionRegistry {
 
     @Override
     public PublisherJson getPublisher(String publisherName) {
-        return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName), PublisherJson.class);
+        try {
+            return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName), PublisherJson.class);
+        } catch (RestClientException exc) {
+            handleError(exc);
+            throw exc;
+        }
     }
 
     @Override
     public ExtensionJson getExtension(String publisherName, String extensionName) {
-        return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName, extensionName), ExtensionJson.class);
+        try {
+            return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName, extensionName), ExtensionJson.class);
+        } catch (RestClientException exc) {
+            handleError(exc);
+            throw exc;
+        }
     }
 
     @Override
     public ExtensionJson getExtension(String publisherName, String extensionName, String version) {
-        return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName, extensionName, version), ExtensionJson.class);
+        try {
+            return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName, extensionName, version), ExtensionJson.class);
+        } catch (RestClientException exc) {
+            handleError(exc);
+            throw exc;
+        }
     }
 
     @Override
@@ -84,12 +102,35 @@ public class UpstreamRegistryService implements IExtensionRegistry {
 
     @Override
     public ReviewListJson getReviews(String publisherName, String extensionName) {
-        return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName, extensionName, "reviews"), ReviewListJson.class);
+        try {
+            return restTemplate.getForObject(createApiUrl(upstreamUrl, publisherName, extensionName, "reviews"), ReviewListJson.class);
+        } catch (RestClientException exc) {
+            handleError(exc);
+            throw exc;
+        }
     }
 
 	@Override
 	public SearchResultJson search(String query, String category, int size, int offset) {
-		return restTemplate.getForObject(createApiUrl(upstreamUrl, "-", "search"), SearchResultJson.class);
-	}
+		try {
+            return restTemplate.getForObject(createApiUrl(upstreamUrl, "-", "search"), SearchResultJson.class);
+        } catch (RestClientException exc) {
+            handleError(exc);
+            throw exc;
+        }
+    }
+    
+    private void handleError(Throwable exc) throws RuntimeException {
+        if (exc instanceof HttpStatusCodeException) {
+            var status = ((HttpStatusCodeException) exc).getStatusCode();
+            if (status == HttpStatus.NOT_FOUND)
+                throw new NotFoundException();
+            else
+                throw new ResponseStatusException(status,
+                        "Upstream registry responded with status \"" + status.getReasonPhrase() + "\".", exc);
+        } else if (exc.getCause() != null && exc.getCause() != exc) {
+            handleError(exc.getCause());
+        }
+    }
 
 }

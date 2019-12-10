@@ -169,6 +169,7 @@ public class LocalRegistryService implements IExtensionRegistry {
     @EventListener
     @Transactional
     public void initSearchIndex(ApplicationStartedEvent event) {
+        searchOperations.createIndex(ExtensionSearch.class);
         if (event.getApplicationContext().getEnvironment().getProperty("OVSX_INIT_SEARCH_INDEX") != null) {
             logger.info("Initializing search index...");
             var allExtensions = entities.findAllExtensions();
