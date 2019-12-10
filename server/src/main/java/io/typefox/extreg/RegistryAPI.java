@@ -12,14 +12,17 @@ import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import org.elasticsearch.common.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.server.Session.Cookie;
 import org.springframework.http.HttpHeaders;
@@ -42,6 +45,7 @@ import io.typefox.extreg.json.PublisherJson;
 import io.typefox.extreg.json.ReviewJson;
 import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.ReviewResultJson;
+import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
 import io.typefox.extreg.util.ErrorResultException;
 import io.typefox.extreg.util.NotFoundException;
@@ -58,13 +62,15 @@ public class RegistryAPI {
     @Autowired
     LocalRegistryService local;
 
-    //XXX
-    // @Inject
-    // @RestClient
-    // IUpstreamRegistry upstream;
+    @Autowired
+    UpstreamRegistryService upstream;
 
     protected Iterable<IExtensionRegistry> getRegistries() {
-        return Lists.newArrayList(local);
+        var registries = new ArrayList<IExtensionRegistry>();
+        registries.add(local);
+        if (upstream.isValid())
+            registries.add(upstream);
+        return registries;
     }
 
     @GetMapping(
@@ -181,29 +187,50 @@ public class RegistryAPI {
     )
     public SearchResultJson search(@RequestParam(name = "query", required = false) String query,
                                    @RequestParam(name = "category", required = false) String category,
-                                   @RequestParam(name = "size", defaultValue = "20") int size,
+                                   @RequestParam(name = "size", defaultValue = "18") int size,
                                    @RequestParam(name = "offset", defaultValue = "0") int offset) {
         var result = new SearchResultJson();
+        if (size < 0) {
+            result.error = "The parameter 'size' must not be negative.";
+            return result;
+        }
+        if (offset < 0) {
+            result.error = "The parameter 'offset' must not be negative.";
+            return result;
+        }
+
         result.extensions = new ArrayList<>(size);
         for (var registry : getRegistries()) {
+            if (result.extensions.size() >= size) {
+                return result;
+            }
             try {
                 var subResult = registry.search(query, category, size, offset);
-                var subResultSize = subResult.extensions != null ? subResult.extensions.size() : 0;
-                if (subResultSize > 0) {
-                    result.extensions.addAll(subResult.extensions);
-                }
-                result.offset += subResult.offset;
-                if (subResultSize < size) {
-                    size -= subResultSize;
+                if (subResult.extensions != null && subResult.extensions.size() > 0) {
+                    int limit = size - result.extensions.size();
+                    var subResultSize = mergeSearchResults(result, subResult.extensions, limit);
+                    result.offset += subResult.offset;
                     offset = Math.max(offset - subResult.offset - subResultSize, 0);
-                } else {
-                    return result;
                 }
             } catch (NotFoundException exc) {
                 // Try the next registry
             }
         }
         return result;
+    }
+
+    private int mergeSearchResults(SearchResultJson result, List<SearchEntryJson> entries, int limit) {
+        var previousResult = Iterables.limit(result.extensions, result.extensions.size());
+        var entriesIter = entries.iterator();
+        int mergedEntries = 0;
+        while (entriesIter.hasNext() && result.extensions.size() < limit) {
+            var next = entriesIter.next();
+            if (!Iterables.any(previousResult, ext -> ext.publisher.equals(next.publisher) && ext.name.equals(next.name))) {
+                result.extensions.add(next);
+                mergedEntries++;
+            }
+        }
+        return mergedEntries;
     }
 
     @PostMapping(
@@ -323,6 +350,7 @@ public class RegistryAPI {
                 json.error = "The rating must be an integer number between 0 and 5.";
                 return json;
             }
+
             var extension = entities.findExtension(publisherName, extensionName);
             var extReview = new ExtensionReview();
             extReview.setExtension(extension);

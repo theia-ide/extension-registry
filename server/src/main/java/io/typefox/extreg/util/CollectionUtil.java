@@ -25,4 +25,14 @@ public final class CollectionUtil {
         return result;
     }
 
+    public static <S, T> List<T> map(Iterable<S> source, Function<? super S, ? extends T> function) {
+        var result = new ArrayList<T>();
+        for (var s : source) {
+            var t = function.apply(s);
+            if (t != null)
+                result.add(t);
+        }
+        return result;
+    }
+
 }

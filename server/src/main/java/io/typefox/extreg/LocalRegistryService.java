@@ -7,16 +7,19 @@
  ********************************************************************************/
 package io.typefox.extreg;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import static io.typefox.extreg.util.UrlUtil.createApiUrl;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -26,6 +29,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
@@ -70,7 +76,7 @@ public class LocalRegistryService implements IExtensionRegistry {
             json.name = publisher.getName();
             json.extensions = new HashMap<>();
             for (var extName : entities.getAllExtensionNames(publisher)) {
-                json.extensions.put(extName, createApiUrl(publisher.getName(), extName));
+                json.extensions.put(extName, createApiUrl(serverUrl, publisher.getName(), extName));
             }
             return json;
         } catch (NoResultException exc) {
@@ -143,7 +149,7 @@ public class LocalRegistryService implements IExtensionRegistry {
             var extension = entities.findExtension(publisherName, extensionName);
             var reviews = entities.findAllReviews(extension);
             var list = new ReviewListJson();
-            list.postUrl = createApiUrl(extension.getPublisher().getName(), extension.getName(), "review");
+            list.postUrl = createApiUrl(serverUrl, extension.getPublisher().getName(), extension.getName(), "review");
             list.reviews = new ArrayList<>(reviews.size());
             for (var extReview : reviews) {
                 var json = new ReviewJson();
@@ -186,7 +192,28 @@ public class LocalRegistryService implements IExtensionRegistry {
 
     @Override
     public SearchResultJson search(String queryString, String category, int size, int offset) {
-        var queryBuilder = new NativeSearchQueryBuilder().withIndices("extensions");
+        var json = new SearchResultJson();
+        if (size <= 0) {
+            json.extensions = Collections.emptyList();
+            return json;
+        }
+
+        var pageRequest = PageRequest.of(offset / size, size);
+        var searchResult = search(queryString, category, pageRequest);
+        json.extensions = toSearchEntries(searchResult, size, offset % size);
+        json.offset = offset;
+        if (json.extensions.size() < size && searchResult.hasNext()) {
+            // This is necessary when offset % size > 0
+            var remainder = search(queryString, category, pageRequest.next());
+            json.extensions.addAll(toSearchEntries(remainder, size - json.extensions.size(), 0));
+        }
+        return json;
+    }
+
+    private Page<ExtensionSearch> search(String queryString, String category, Pageable pageRequest) {
+        var queryBuilder = new NativeSearchQueryBuilder()
+                .withIndices("extensions")
+                .withPageable(pageRequest);
         if (!Strings.isNullOrEmpty(queryString)) {
             var multiMatchQuery = QueryBuilders.multiMatchQuery(queryString)
                     .field("name").boost(5)
@@ -201,12 +228,16 @@ public class LocalRegistryService implements IExtensionRegistry {
         if (!Strings.isNullOrEmpty(category)) {
             queryBuilder.withFilter(QueryBuilders.matchPhraseQuery("categories", category));
         }
-        var searchResult = searchOperations.queryForList(queryBuilder.build(), ExtensionSearch.class);
-        var json = new SearchResultJson();
-        json.extensions = CollectionUtil.map(searchResult, this::toSearchEntry);
-        // TODO respect size and offset
-        // json.offset = (int) Math.min(offset, searchResult.getTotalHitCount());
-        return json;
+        return searchOperations.queryForPage(queryBuilder.build(), ExtensionSearch.class);
+    }
+
+    private List<SearchEntryJson> toSearchEntries(Page<ExtensionSearch> page, int size, int offset) {
+        if (offset > 0 || size < page.getNumberOfElements())
+            return CollectionUtil.map(
+                    Iterables.limit(Iterables.skip(page.getContent(), offset), size),
+                    this::toSearchEntry);
+        else
+            return CollectionUtil.map(page.getContent(), this::toSearchEntry);
     }
 
     private SearchEntryJson toSearchEntry(ExtensionSearch search) {
@@ -215,14 +246,14 @@ public class LocalRegistryService implements IExtensionRegistry {
         var entry = new SearchEntryJson();
         entry.name = extension.getName();
         entry.publisher = extension.getPublisher().getName();
-        entry.url = createApiUrl(entry.publisher, entry.name);
-        entry.iconUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getIconFileName());
+        entry.url = createApiUrl(serverUrl, entry.publisher, entry.name);
+        entry.iconUrl = createApiUrl(serverUrl, entry.publisher, entry.name, "file", extVer.getIconFileName());
         entry.version = extVer.getVersion();
         entry.timestamp = extVer.getTimestamp().toString();
         entry.averageRating = extension.getAverageRating();
         entry.displayName = extVer.getDisplayName();
         entry.description = extVer.getDescription();
-        entry.downloadUrl = createApiUrl(entry.publisher, entry.name, "file", extVer.getExtensionFileName());
+        entry.downloadUrl = createApiUrl(serverUrl, entry.publisher, entry.name, "file", extVer.getExtensionFileName());
         return entry;
     }
 
@@ -246,24 +277,24 @@ public class LocalRegistryService implements IExtensionRegistry {
         json.name = extension.getName();
         json.averageRating = extension.getAverageRating();
         json.reviewCount = entities.countReviews(extension);
-        json.publisherUrl = createApiUrl(json.publisher);
-        json.reviewsUrl = createApiUrl(json.publisher, json.name, "reviews");
+        json.publisherUrl = createApiUrl(serverUrl, json.publisher);
+        json.reviewsUrl = createApiUrl(serverUrl, json.publisher, json.name, "reviews");
         json.allVersions = new HashMap<>();
         for (var versionStr : entities.getAllVersionStrings(extension)) {
-            String url = createApiUrl(json.publisher, json.name, versionStr);
+            String url = createApiUrl(serverUrl, json.publisher, json.name, versionStr);
             json.allVersions.put(versionStr, url);
         }
         json.version = extVersion.getVersion();
         json.preview = extVersion.isPreview();
         json.timestamp = extVersion.getTimestamp().toString();
         if (isLatest) {
-            json.downloadUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getExtensionFileName());
-            json.iconUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getIconFileName());
-            json.readmeUrl = createApiUrl(json.publisher, json.name, "file", extVersion.getReadmeFileName());
+            json.downloadUrl = createApiUrl(serverUrl, json.publisher, json.name, "file", extVersion.getExtensionFileName());
+            json.iconUrl = createApiUrl(serverUrl, json.publisher, json.name, "file", extVersion.getIconFileName());
+            json.readmeUrl = createApiUrl(serverUrl, json.publisher, json.name, "file", extVersion.getReadmeFileName());
         } else {
-            json.downloadUrl = createApiUrl(json.publisher, json.name, json.version, "file", extVersion.getExtensionFileName());
-            json.iconUrl = createApiUrl(json.publisher, json.name, json.version, "file", extVersion.getIconFileName());
-            json.readmeUrl = createApiUrl(json.publisher, json.name, json.version, "file", extVersion.getReadmeFileName());
+            json.downloadUrl = createApiUrl(serverUrl, json.publisher, json.name, json.version, "file", extVersion.getExtensionFileName());
+            json.iconUrl = createApiUrl(serverUrl, json.publisher, json.name, json.version, "file", extVersion.getIconFileName());
+            json.readmeUrl = createApiUrl(serverUrl, json.publisher, json.name, json.version, "file", extVersion.getReadmeFileName());
         }
         json.displayName = extVersion.getDisplayName();
         json.description = extVersion.getDescription();
@@ -283,7 +314,7 @@ public class LocalRegistryService implements IExtensionRegistry {
                 var ref = new ExtensionReferenceJson();
                 ref.publisher = depExtension.getPublisher().getName();
                 ref.extension = depExtension.getName();
-                ref.url = createApiUrl(ref.publisher, ref.extension);
+                ref.url = createApiUrl(serverUrl, ref.publisher, ref.extension);
                 json.dependencies.add(ref);
             }
         }
@@ -293,29 +324,11 @@ public class LocalRegistryService implements IExtensionRegistry {
                 var ref = new ExtensionReferenceJson();
                 ref.publisher = bndExtension.getPublisher().getName();
                 ref.extension = bndExtension.getName();
-                ref.url = createApiUrl(ref.publisher, ref.extension);
+                ref.url = createApiUrl(serverUrl, ref.publisher, ref.extension);
                 json.bundledExtensions.add(ref);
             }
         }
         return json;
-    }
-
-    /**
-     * Create a URL pointing to an API path.
-     */
-    private String createApiUrl(String... segments) {
-        try {
-            var result = new StringBuilder(serverUrl);
-            result.append("/api");
-            for (var segment : segments) {
-                if (segment == null)
-                    return null;
-				result.append('/').append(URLEncoder.encode(segment, "UTF-8"));
-            }
-            return result.toString();
-        } catch (UnsupportedEncodingException exc) {
-            throw new RuntimeException(exc);
-        }
     }
 
 }
