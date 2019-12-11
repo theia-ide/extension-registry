@@ -9,18 +9,19 @@
 import { Extension, ExtensionRegistryUser, ExtensionReview, ExtensionRaw, ExtensionReviewList, ErrorResponse } from "./extension-registry-types";
 
 export interface ExtensionRegistryAPIRequest<T> {
-    endpoint: string,
-    operation: (response: Response) => Promise<T>
+    endpoint: string;
+    operation: (response: Response) => Promise<T>;
+    credentials?: boolean;
 }
 
 export interface ExtensionRegistryAPIRequestWithoutPayload<T> extends ExtensionRegistryAPIRequest<T> {
-    method: 'GET' | 'DELETE'
+    method: 'GET' | 'DELETE';
 }
 
 export interface ExtensionRegistryAPIRequestWithPayload<T> extends ExtensionRegistryAPIRequest<T> {
-    method: 'POST' | 'PUT',
-    payload: any,
-    contentType: string
+    method: 'POST' | 'PUT';
+    payload: any;
+    contentType: string;
 }
 
 export class ExtensionRegistryAPI {
@@ -29,13 +30,16 @@ export class ExtensionRegistryAPI {
         const headers: { [key: string]: any } = { 'Content-Type': 'application/json' };
         const param: { [key: string]: any } = {
             method: req.method,
-            credentials: 'include',
             headers
         };
 
         if (req.method === 'POST' || req.method === 'PUT') {
             param.body = JSON.stringify(req.payload);
             param.headers['Accept'] = req.contentType;
+        }
+
+        if (req.credentials) {
+            param.credentials = 'include';
         }
 
         const response = await fetch(req.endpoint, param);
@@ -87,6 +91,7 @@ export class ExtensionRegistryAPI {
             method: 'POST',
             payload,
             contentType: 'application/json;charset=UTF-8',
+            credentials: true,
             endpoint,
             operation: async response => await response.json()
         });
@@ -95,6 +100,7 @@ export class ExtensionRegistryAPI {
     async getUser(endpoint: string): Promise<ExtensionRegistryUser | ErrorResponse> {
         return await this.run({
             method: 'GET',
+            credentials: true,
             endpoint,
             operation: async response => await response.json()
         });

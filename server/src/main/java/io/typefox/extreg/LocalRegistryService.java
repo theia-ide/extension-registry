@@ -9,10 +9,14 @@ package io.typefox.extreg;
 
 import static io.typefox.extreg.util.UrlUtil.createApiUrl;
 
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -38,17 +42,21 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.stereotype.Component;
 
 import io.typefox.extreg.entities.Extension;
+import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.entities.FileResource;
+import io.typefox.extreg.entities.Publisher;
 import io.typefox.extreg.json.ExtensionJson;
 import io.typefox.extreg.json.ExtensionReferenceJson;
 import io.typefox.extreg.json.PublisherJson;
 import io.typefox.extreg.json.ReviewJson;
 import io.typefox.extreg.json.ReviewListJson;
+import io.typefox.extreg.json.ReviewResultJson;
 import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
 import io.typefox.extreg.search.ExtensionSearch;
 import io.typefox.extreg.util.CollectionUtil;
+import io.typefox.extreg.util.ErrorResultException;
 import io.typefox.extreg.util.NotFoundException;
 
 @Component
@@ -239,6 +247,125 @@ public class LocalRegistryService implements IExtensionRegistry {
                     this::toSearchEntry);
         else
             return CollectionUtil.map(page.getContent(), this::toSearchEntry);
+    }
+
+    @Transactional
+    public ExtensionJson publish(InputStream content) {
+        try (var processor = new ExtensionProcessor(content)) {
+            var publisher = entities.findPublisherOptional(processor.getPublisherName());
+            if (publisher.isEmpty()) {
+                var pub = new Publisher();
+                pub.setName(processor.getPublisherName());
+                entityManager.persist(pub);
+                publisher = Optional.of(pub);
+            }
+            var extension = entities.findExtensionOptional(processor.getExtensionName(), publisher.get());
+            var extVersion = processor.getMetadata();
+            extVersion.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
+            if (extension.isEmpty()) {
+                var ext = new Extension();
+                ext.setName(processor.getExtensionName());
+                ext.setPublisher(publisher.get());
+                ext.setLatest(extVersion);
+                entityManager.persist(ext);
+                extension = Optional.of(ext);
+            } else {
+                entities.checkUniqueVersion(extVersion.getVersion(), extension.get());
+                if (entities.isLatestVersion(extVersion.getVersion(), extension.get()))
+                    extension.get().setLatest(extVersion);
+            }
+            extVersion.setExtension(extension.get());
+            extVersion.setExtensionFileName(
+                    publisher.get().getName()
+                    + "." + extension.get().getName()
+                    + "-" + extVersion.getVersion()
+                    + ".vsix");
+
+            entityManager.persist(extVersion);
+            var binary = processor.getBinary(extVersion);
+            entityManager.persist(binary);
+            var readme = processor.getReadme(extVersion);
+            if (readme != null)
+                entityManager.persist(readme);
+            var icon = processor.getIcon(extVersion);
+            if (icon != null)
+                entityManager.persist(icon);
+            processor.getExtensionDependencies().forEach(dep -> addDependency(dep, extVersion));
+            processor.getBundledExtensions().forEach(dep -> addBundledExtension(dep, extVersion));
+
+            updateSearchIndex(extension.get());
+            return toJson(extVersion, false);
+        } catch (ErrorResultException | NoResultException exc) {
+            return ExtensionJson.error(exc.getMessage());
+        }
+    }
+
+    private void addDependency(String dependency, ExtensionVersion extVersion) {
+        var split = dependency.split("\\.");
+        if (split.length != 2)
+            return;
+        try {
+            var publisher = entities.findPublisher(split[0]);
+            var extension = entities.findExtension(split[1], publisher);
+            var depList = extVersion.getDependencies();
+            if (depList == null) {
+                depList = new ArrayList<Extension>();
+                extVersion.setDependencies(depList);
+            }
+            depList.add(extension);
+        } catch (NoResultException exc) {
+            // Ignore the entry
+        }
+    }
+
+    private void addBundledExtension(String bundled, ExtensionVersion extVersion) {
+        var split = bundled.split("\\.");
+        if (split.length != 2)
+            return;
+        try {
+            var publisher = entities.findPublisher(split[0]);
+            var extension = entities.findExtension(split[1], publisher);
+            var depList = extVersion.getBundledExtensions();
+            if (depList == null) {
+                depList = new ArrayList<Extension>();
+                extVersion.setBundledExtensions(depList);
+            }
+            depList.add(extension);
+        } catch (NoResultException exc) {
+            // Ignore the entry
+        }
+    }
+
+    @Transactional
+    public ReviewResultJson review(ReviewJson review, String publisherName, String extensionName, String sessionId) {
+        try {
+            var session = entities.findSession(sessionId);
+            if (session == null) {
+                return ReviewResultJson.error("Invalid session.");
+            }
+            var extension = entities.findExtension(publisherName, extensionName);
+            var extReview = new ExtensionReview();
+            extReview.setExtension(extension);
+            extReview.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
+            extReview.setUsername(session.getUser().getName());
+            extReview.setTitle(review.title);
+            extReview.setComment(review.comment);
+            extReview.setRating(review.rating);
+            entityManager.persist(extReview);
+            extension.setAverageRating(computeAverageRating(extension));
+            return new ReviewResultJson();
+        } catch (NoResultException exc) {
+            throw new NotFoundException(exc);
+        }
+    }
+
+    private double computeAverageRating(Extension extension) {
+        var reviews = entities.findAllReviews(extension);
+        long sum = 0;
+        for (var review : reviews) {
+            sum += review.getRating();
+        }
+        return (double) sum / reviews.size();
     }
 
     private SearchEntryJson toSearchEntry(ExtensionSearch search) {

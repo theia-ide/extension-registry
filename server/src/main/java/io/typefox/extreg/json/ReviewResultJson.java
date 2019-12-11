@@ -15,6 +15,12 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;;
 @JsonInclude(Include.NON_NULL)
 public class ReviewResultJson {
 
+    public static ReviewResultJson error(String message) {
+        var result = new ReviewResultJson();
+        result.error = message;
+        return result;
+    }
+
     @Nullable
     public String error;
 

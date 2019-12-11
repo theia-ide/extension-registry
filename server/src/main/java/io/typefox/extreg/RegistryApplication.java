@@ -7,9 +7,6 @@
  ********************************************************************************/
 package io.typefox.extreg;
 
-import com.google.common.base.Strings;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -18,33 +15,12 @@ import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
 public class RegistryApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(RegistryApplication.class, args);
-    }
-
-    @Value("#{environment.OVSX_WEBUI_URL}")
-    String webuiUrl;
-
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                    .allowedOrigins("*");
-                if (!Strings.isNullOrEmpty(webuiUrl)) {
-                    registry.addMapping("/api/**")
-                        .allowedOrigins(webuiUrl)
-                        .allowCredentials(true);
-                }
-            }
-        };
     }
 
 	@Bean

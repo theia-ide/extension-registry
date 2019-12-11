@@ -9,35 +9,29 @@ package io.typefox.extreg;
 
 import java.io.InputStream;
 import java.net.URLConnection;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.transaction.Transactional;
 
 import com.google.common.collect.Iterables;
 
+import org.elasticsearch.common.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.server.Session.Cookie;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.typefox.extreg.entities.Extension;
-import io.typefox.extreg.entities.ExtensionReview;
-import io.typefox.extreg.entities.ExtensionVersion;
-import io.typefox.extreg.entities.Publisher;
 import io.typefox.extreg.json.ExtensionJson;
 import io.typefox.extreg.json.PublisherJson;
 import io.typefox.extreg.json.ReviewJson;
@@ -45,7 +39,6 @@ import io.typefox.extreg.json.ReviewListJson;
 import io.typefox.extreg.json.ReviewResultJson;
 import io.typefox.extreg.json.SearchEntryJson;
 import io.typefox.extreg.json.SearchResultJson;
-import io.typefox.extreg.util.ErrorResultException;
 import io.typefox.extreg.util.NotFoundException;
 
 @RestController
@@ -63,6 +56,9 @@ public class RegistryAPI {
     @Autowired
     UpstreamRegistryService upstream;
 
+    @Value("#{environment.OVSX_WEBUI_URL}")
+    String webuiUrl;
+
     protected Iterable<IExtensionRegistry> getRegistries() {
         var registries = new ArrayList<IExtensionRegistry>();
         registries.add(local);
@@ -75,6 +71,7 @@ public class RegistryAPI {
         value = "/api/{publisher}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @CrossOrigin
     public PublisherJson getPublisher(@PathVariable("publisher") String publisherName) {
         for (var registry : getRegistries()) {
             try {
@@ -90,6 +87,7 @@ public class RegistryAPI {
         value = "/api/{publisher}/{extension}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @CrossOrigin
     public ExtensionJson getExtension(@PathVariable("publisher") String publisherName,
                                       @PathVariable("extension") String extensionName) {
         for (var registry : getRegistries()) {
@@ -106,6 +104,7 @@ public class RegistryAPI {
         value = "/api/{publisher}/{extension}/{version}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @CrossOrigin
     public ExtensionJson getExtension(@PathVariable("publisher") String publisherName,
                                       @PathVariable("extension") String extensionName,
                                       @PathVariable("version") String version) {
@@ -120,13 +119,14 @@ public class RegistryAPI {
     }
 
     @GetMapping("/api/{publisher}/{extension}/file/{fileName}")
+    @CrossOrigin
     public ResponseEntity<byte[]> getFile(@PathVariable("publisher") String publisherName,
                                           @PathVariable("extension") String extensionName,
                                           @PathVariable("fileName") String fileName) {
         for (var registry : getRegistries()) {
             try {
                 var content = registry.getFile(publisherName, extensionName, fileName);
-                var headers = getResponseHeaders(fileName);
+                var headers = getFileResponseHeaders(fileName);
                 return new ResponseEntity<>(content, headers, HttpStatus.OK);
             } catch (NotFoundException exc) {
                 // Try the next registry
@@ -136,6 +136,7 @@ public class RegistryAPI {
     }
 
     @GetMapping("/api/{publisher}/{extension}/{version}/file/{fileName}")
+    @CrossOrigin
     public ResponseEntity<byte[]> getFile(@PathVariable("publisher") String publisherName,
                                           @PathVariable("extension") String extensionName,
                                           @PathVariable("version") String version,
@@ -143,7 +144,7 @@ public class RegistryAPI {
         for (var registry : getRegistries()) {
             try {
                 var content = registry.getFile(publisherName, extensionName, version, fileName);
-                var headers = getResponseHeaders(fileName);
+                var headers = getFileResponseHeaders(fileName);
                 return new ResponseEntity<>(content, headers, HttpStatus.OK);
             } catch (NotFoundException exc) {
                 // Try the next registry
@@ -152,10 +153,9 @@ public class RegistryAPI {
         throw new NotFoundException();
     }
 
-    private HttpHeaders getResponseHeaders(String fileName) {
+    private HttpHeaders getFileResponseHeaders(String fileName) {
         var headers = new HttpHeaders();
         headers.setContentType(getFileType(fileName));
-        headers.setAccessControlAllowOrigin("*");
         return headers;
     }
 
@@ -172,6 +172,7 @@ public class RegistryAPI {
         value = "/api/{publisher}/{extension}/reviews",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @CrossOrigin
     public ReviewListJson getReviews(@PathVariable("publisher") String publisherName,
                                      @PathVariable("extension") String extensionName) {
         for (var registry : getRegistries()) {
@@ -188,20 +189,19 @@ public class RegistryAPI {
         value = "/api/-/search",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @CrossOrigin
     public SearchResultJson search(@RequestParam(name = "query", required = false) String query,
                                    @RequestParam(name = "category", required = false) String category,
                                    @RequestParam(name = "size", defaultValue = "18") int size,
                                    @RequestParam(name = "offset", defaultValue = "0") int offset) {
-        var result = new SearchResultJson();
         if (size < 0) {
-            result.error = "The parameter 'size' must not be negative.";
-            return result;
+            return SearchResultJson.error("The parameter 'size' must not be negative.");
         }
         if (offset < 0) {
-            result.error = "The parameter 'offset' must not be negative.";
-            return result;
+            return SearchResultJson.error("The parameter 'offset' must not be negative.");
         }
 
+        var result = new SearchResultJson();
         result.extensions = new ArrayList<>(size);
         for (var registry : getRegistries()) {
             if (result.extensions.size() >= size) {
@@ -241,142 +241,41 @@ public class RegistryAPI {
         consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @Transactional
     public ExtensionJson publish(InputStream content) {
-        try (var processor = new ExtensionProcessor(content)) {
-            var publisher = entities.findPublisherOptional(processor.getPublisherName());
-            if (publisher.isEmpty()) {
-                var pub = new Publisher();
-                pub.setName(processor.getPublisherName());
-                entityManager.persist(pub);
-                publisher = Optional.of(pub);
-            }
-            var extension = entities.findExtensionOptional(processor.getExtensionName(), publisher.get());
-            var extVersion = processor.getMetadata();
-            extVersion.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
-            if (extension.isEmpty()) {
-                var ext = new Extension();
-                ext.setName(processor.getExtensionName());
-                ext.setPublisher(publisher.get());
-                ext.setLatest(extVersion);
-                entityManager.persist(ext);
-                extension = Optional.of(ext);
-            } else {
-                entities.checkUniqueVersion(extVersion.getVersion(), extension.get());
-                if (entities.isLatestVersion(extVersion.getVersion(), extension.get()))
-                    extension.get().setLatest(extVersion);
-            }
-            extVersion.setExtension(extension.get());
-            extVersion.setExtensionFileName(
-                    publisher.get().getName()
-                    + "." + extension.get().getName()
-                    + "-" + extVersion.getVersion()
-                    + ".vsix");
-
-            entityManager.persist(extVersion);
-            var binary = processor.getBinary(extVersion);
-            entityManager.persist(binary);
-            var readme = processor.getReadme(extVersion);
-            if (readme != null)
-                entityManager.persist(readme);
-            var icon = processor.getIcon(extVersion);
-            if (icon != null)
-                entityManager.persist(icon);
-            processor.getExtensionDependencies().forEach(dep -> addDependency(dep, extVersion));
-            processor.getBundledExtensions().forEach(dep -> addBundledExtension(dep, extVersion));
-
-            local.updateSearchIndex(extension.get());
-            return local.toJson(extVersion, false);
-        } catch (ErrorResultException | NoResultException exc) {
-            return ExtensionJson.error(exc.getMessage());
-        }
-    }
-
-    private void addDependency(String dependency, ExtensionVersion extVersion) {
-        var split = dependency.split("\\.");
-        if (split.length != 2)
-            return;
-        try {
-            var publisher = entities.findPublisher(split[0]);
-            var extension = entities.findExtension(split[1], publisher);
-            var depList = extVersion.getDependencies();
-            if (depList == null) {
-                depList = new ArrayList<Extension>();
-                extVersion.setDependencies(depList);
-            }
-            depList.add(extension);
-        } catch (NoResultException exc) {
-            // Ignore the entry
-        }
-    }
-
-    private void addBundledExtension(String bundled, ExtensionVersion extVersion) {
-        var split = bundled.split("\\.");
-        if (split.length != 2)
-            return;
-        try {
-            var publisher = entities.findPublisher(split[0]);
-            var extension = entities.findExtension(split[1], publisher);
-            var depList = extVersion.getBundledExtensions();
-            if (depList == null) {
-                depList = new ArrayList<Extension>();
-                extVersion.setBundledExtensions(depList);
-            }
-            depList.add(extension);
-        } catch (NoResultException exc) {
-            // Ignore the entry
-        }
+        return local.publish(content);
     }
 
     @PostMapping(
-        value = "/{publisher}/{extension}/review",
+        value = "/api/{publisher}/{extension}/review",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @Transactional
-    public ReviewResultJson review(ReviewJson review,
-                                   @PathVariable("publisher") String publisherName,
-                                   @PathVariable("extension") String extensionName,
-                                   @CookieValue("sessionid") String sessionCookie) {
-        try {
-            var json = new ReviewResultJson();
-            if (sessionCookie == null) {
-                json.error = "Not logged in.";
-                return json;
-            }
-            var session = entities.findSession(sessionCookie);
-            if (session == null) {
-                json.error = "Invalid session.";
-                return json;
-            }
-            if (review.rating < 0 || review.rating > 5) {
-                json.error = "The rating must be an integer number between 0 and 5.";
-                return json;
-            }
-
-            var extension = entities.findExtension(publisherName, extensionName);
-            var extReview = new ExtensionReview();
-            extReview.setExtension(extension);
-            extReview.setTimestamp(LocalDateTime.now(ZoneId.of("UTC")));
-            extReview.setUsername(session.getUser().getName());
-            extReview.setTitle(review.title);
-            extReview.setComment(review.comment);
-            extReview.setRating(review.rating);
-            entityManager.persist(extReview);
-            extension.setAverageRating(computeAverageRating(extension));
-            return json;
-        } catch (NoResultException exc) {
-            throw new NotFoundException(exc);
+    public ResponseEntity<ReviewResultJson> review(ReviewJson review,
+                                                   @PathVariable("publisher") String publisherName,
+                                                   @PathVariable("extension") String extensionName,
+                                                   @CookieValue("sessionid") String sessionId) {
+        ReviewResultJson json;
+        if (sessionId == null) {
+            json = ReviewResultJson.error("Not logged in.");
+            return new ResponseEntity<>(json, getReviewHeaders(), HttpStatus.OK);
         }
+        if (review.rating < 0 || review.rating > 5) {
+            json = ReviewResultJson.error("The rating must be an integer number between 0 and 5.");
+        } else {
+            json = local.review(review, publisherName, extensionName, sessionId);
+        }
+        return new ResponseEntity<>(json, getReviewHeaders(), HttpStatus.OK);
     }
 
-    private double computeAverageRating(Extension extension) {
-        var reviews = entities.findAllReviews(extension);
-        long sum = 0;
-        for (var review : reviews) {
-            sum += review.getRating();
+    private HttpHeaders getReviewHeaders() {
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (!Strings.isNullOrEmpty(webuiUrl)) {
+            headers.setAccessControlAllowOrigin(webuiUrl);
+            headers.setAccessControlAllowCredentials(true);
+            headers.setAccessControlAllowHeaders(Arrays.asList("content-type"));
         }
-        return (double) sum / reviews.size();
+        return headers;
     }
 
 }

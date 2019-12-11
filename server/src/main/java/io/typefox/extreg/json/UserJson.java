@@ -15,6 +15,12 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;;
 @JsonInclude(Include.NON_NULL)
 public class UserJson {
 
+    public static UserJson error(String message) {
+        var user = new UserJson();
+        user.error = message;
+        return user;
+    }
+
     @Nullable
     public String error;
 

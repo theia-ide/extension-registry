@@ -17,6 +17,12 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;;
 @JsonInclude(Include.NON_NULL)
 public class SearchResultJson {
 
+    public static SearchResultJson error(String message) {
+        var result = new SearchResultJson();
+        result.error = message;
+        return result;
+    }
+
     @Nullable
     public String error;
 

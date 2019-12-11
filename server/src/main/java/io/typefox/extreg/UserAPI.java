@@ -11,14 +11,22 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
+
+import com.google.common.base.Strings;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,30 +50,44 @@ public class UserAPI {
     @Value("#{environment.OVSX_SERVER_URL}")
     String serverUrl;
 
-    //XXX
-    // @GetMapping(
-    //     value = "/api/-/user",
-    //     produces = MediaType.APPLICATION_JSON_VALUE
-    // )
-    // @Transactional
-    // public Response userInfo(@CookieParam("sessionid") Cookie sessionCookie) {
-    //     var json = new UserJson();
-    //     if (sessionCookie == null) {
-    //         json.error = "Not logged in.";
-    //         return Response.ok(json).build();
-    //     }
-    //     var session = entities.findSession(sessionCookie.getValue());
-    //     if (session == null) {
-    //         json.error = "Invalid session.";
-    //         return Response.ok(json).build();
-    //     }
-    //     updateLastUsed(session);
-    //     json.name = session.getUser().getName();
-    //     json.avatarUrl = "https://s.gravatar.com/avatar/9a638e5879d268e59d158a2091723c3c?s=80";
-    //     return Response.ok(json)
-    //             .cookie(new NewCookie(sessionCookie, COOKIE_COMMENT, COOKIE_MAX_AGE, false))
-    //             .build();
-    // }
+    @Value("#{environment.OVSX_WEBUI_URL}")
+    String webuiUrl;
+
+    @GetMapping(
+        value = "/api/-/user",
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @Transactional
+    public ResponseEntity<UserJson> userInfo(@CookieValue(name = "sessionid", required = false) String sessionId) {
+        if (sessionId == null) {
+            var json = UserJson.error("Not logged in.");
+            return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);
+        }
+        var session = entities.findSession(sessionId);
+        if (session == null) {
+            var json = UserJson.error("Invalid session.");
+            return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);
+        }
+        //XXX
+        // updateLastUsed(session);
+        var json = new UserJson();
+        json.name = session.getUser().getName();
+        json.avatarUrl = "https://s.gravatar.com/avatar/9a638e5879d268e59d158a2091723c3c?s=80";
+        return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);
+                //XXX
+                // .cookie(new NewCookie(sessionCookie, COOKIE_COMMENT, COOKIE_MAX_AGE, false))
+    }
+
+    private HttpHeaders getHeaders() {
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (!Strings.isNullOrEmpty(webuiUrl)) {
+            headers.setAccessControlAllowOrigin(webuiUrl);
+            headers.setAccessControlAllowCredentials(true);
+            headers.setAccessControlAllowHeaders(Arrays.asList("content-type"));
+        }
+        return headers;
+    }
 
     // @GetMapping("/api/-/user/login")
     // @Transactional
