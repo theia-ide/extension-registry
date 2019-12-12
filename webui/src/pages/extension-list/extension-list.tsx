@@ -11,12 +11,13 @@ import { Grid } from "@material-ui/core";
 import { ExtensionListItem } from "./extension-list-item";
 import { ExtensionFilter, ExtensionRaw } from "../../extension-registry-types";
 import { ExtensionRegistryService } from "../../extension-registry-service";
+import { debounce } from "../../utils";
 
 export class ExtensionList extends React.Component<ExtensionList.Props, ExtensionList.State> {
 
     protected extensions: ExtensionRaw[];
 
-    protected cancellationToken = { cancel: () => { } };
+    protected cancellationToken: { cancel?: () => void, timeout?: number } = {};
 
     constructor(props: ExtensionList.Props) {
         super(props);
@@ -34,16 +35,19 @@ export class ExtensionList extends React.Component<ExtensionList.Props, Extensio
         const prevFilter = prevProps.filter;
         const newFilter = this.props.filter;
         if (prevFilter.category !== newFilter.category || prevFilter.query !== newFilter.query) {
-            this.cancellationToken.cancel();
-            this.props.service.getExtensions(newFilter).then(extensions => this.setState({ extensions }));
+            if (this.cancellationToken.cancel) {
+                this.cancellationToken.cancel();
+                this.cancellationToken.cancel = undefined;
+            }
+            debounce(() => {
+                this.props.service.getExtensions(newFilter).then(extensions => this.setState({ extensions }));
+            }, this.cancellationToken);
         }
     }
 
     protected getExtensions(filter: ExtensionFilter) {
         return new Promise<ExtensionRaw[]>((resolve, reject) => {
-            this.cancellationToken.cancel = () => {
-                reject();
-            };
+            this.cancellationToken.cancel = reject;
             this.props.service.getExtensions(filter).then(ext => resolve(ext));
         });
     }

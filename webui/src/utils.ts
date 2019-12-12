@@ -16,3 +16,8 @@ export function createURL(arr: string[], queries?: {key: string, value: string |
     const url = createAbsoluteURL(arr, queries);
     return url.startsWith('/') ? url : '/' + url;
 }
+
+export function debounce(task: () => void, token: { timeout?: number }, delay: number = 150) {
+    clearTimeout(token.timeout);
+    token.timeout = setTimeout(task, delay);
+}

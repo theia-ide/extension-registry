@@ -41,10 +41,10 @@ export class ExtensionListContainer extends React.Component<ExtensionListContain
         });
     }
 
-    protected onSearchChanged = async (searchTerm: string) => {
+    protected onSearchChanged = (searchTerm: string) => {
         this.setState({ searchTerm });
     }
-    protected onCategoryChanged = async (category: ExtensionCategory) => {
+    protected onCategoryChanged = (category: ExtensionCategory) => {
         this.setState({ category });
     }
 
