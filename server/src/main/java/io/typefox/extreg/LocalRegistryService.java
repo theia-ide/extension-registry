@@ -147,19 +147,11 @@ public class LocalRegistryService implements IExtensionRegistry {
         var extension = repositories.findExtension(extensionName, publisherName);
         if (extension == null)
             throw new NotFoundException();
-        var reviews = repositories.findReviews(extension);
         var list = new ReviewListJson();
         list.postUrl = createApiUrl(serverUrl, extension.getPublisher().getName(), extension.getName(), "review");
-        list.reviews = new ArrayList<>(reviews.size());
-        for (var extReview : reviews) {
-            var json = new ReviewJson();
-            json.user = extReview.getUsername();
-            json.timestamp = extReview.getTimestamp().toString();
-            json.title = extReview.getTitle();
-            json.comment = extReview.getComment();
-            json.rating = extReview.getRating();
-            list.reviews.add(json);
-        }
+        list.reviews = repositories.findReviews(extension)
+                .map(extReview -> extReview.toReviewJson())
+                .toList();
         return list;
     }
 
@@ -171,11 +163,11 @@ public class LocalRegistryService implements IExtensionRegistry {
             logger.info("Initializing search index...");
             var allExtensions = repositories.findAllExtensions();
             if (!allExtensions.isEmpty()) {
-                var indexQueries = CollectionUtil.map(allExtensions, extension ->
+                var indexQueries = allExtensions.map(extension ->
                     new IndexQueryBuilder()
                         .withObject(extension.toSearch())
                         .build()
-                );
+                ).toList();
                 searchOperations.bulkIndex(indexQueries);
             }
         }
@@ -342,10 +334,9 @@ public class LocalRegistryService implements IExtensionRegistry {
     @Transactional
     public ReviewResultJson review(ReviewJson review, String publisherName, String extensionName, String sessionId) {
         var session = repositories.findUserSession(sessionId);
-        if (session == null) {
+        if (session == null)
             return ReviewResultJson.error("Invalid session.");
-        }
-        var extension = repositories.findExtension(publisherName, extensionName);
+        var extension = repositories.findExtension(extensionName, publisherName);
         if (extension == null)
             throw new NotFoundException();
         var extReview = new ExtensionReview();
@@ -363,14 +354,18 @@ public class LocalRegistryService implements IExtensionRegistry {
     private double computeAverageRating(Extension extension) {
         var reviews = repositories.findReviews(extension);
         long sum = 0;
+        long count = 0;
         for (var review : reviews) {
             sum += review.getRating();
+            count++;
         }
-        return (double) sum / reviews.size();
+        return (double) sum / count;
     }
 
     private SearchEntryJson toSearchEntry(ExtensionSearch search) {
         var extension = entityManager.find(Extension.class, search.id);
+        if (extension == null)
+            return null;
         var extVer = extension.getLatest();
         var entry = extVer.toSearchEntryJson();
         entry.url = createApiUrl(serverUrl, entry.publisher, entry.name);
@@ -385,7 +380,8 @@ public class LocalRegistryService implements IExtensionRegistry {
         json.reviewCount = repositories.countReviews(extension);
         json.publisherUrl = createApiUrl(serverUrl, json.publisher);
         json.reviewsUrl = createApiUrl(serverUrl, json.publisher, json.name, "reviews");
-        var allVersions = CollectionUtil.map(repositories.findVersions(extension), extVer -> new SemanticVersion(extVer.getVersion()));
+        var allVersions = CollectionUtil.map(repositories.findVersions(extension),
+                extVer -> new SemanticVersion(extVer.getVersion()));
         Collections.sort(allVersions, Comparator.reverseOrder());
         json.allVersions = new LinkedHashMap<>();
         for (var semVer : allVersions) {

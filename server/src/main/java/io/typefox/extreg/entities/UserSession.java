@@ -24,6 +24,7 @@ public class UserSession {
 
     LocalDateTime lastUsed;
 
+
     public String getId() {
         return id;
     }

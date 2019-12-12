@@ -11,7 +11,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
@@ -23,13 +22,13 @@ import com.google.common.base.Strings;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import io.typefox.extreg.entities.UserData;
 import io.typefox.extreg.entities.UserSession;
@@ -39,8 +38,7 @@ import io.typefox.extreg.repositories.RepositoryService;
 @RestController
 public class UserAPI {
 
-    private static final String COOKIE_COMMENT = "User session id";
-    private static final int COOKIE_MAX_AGE = 604_800; // one week in seconds
+    private static final int COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // one week in seconds
 
     @Autowired
     EntityManager entityManager;
@@ -59,94 +57,117 @@ public class UserAPI {
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     @Transactional
-    public ResponseEntity<UserJson> userInfo(@CookieValue(name = "sessionid", required = false) String sessionId) {
+    public ResponseEntity<UserJson> userInfo(@CookieValue(name = "sessionid", required = false) String sessionId,
+                                             HttpServletResponse response) {
+        response.addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        addAccessControlHeaders(response);
         if (sessionId == null) {
             var json = UserJson.error("Not logged in.");
-            return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);
+            return new ResponseEntity<>(json, HttpStatus.OK);
         }
         var session = repositories.findUserSession(sessionId);
         if (session == null) {
             var json = UserJson.error("Invalid session.");
-            return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);
+            return new ResponseEntity<>(json, HttpStatus.OK);
         }
-        //XXX
-        // updateLastUsed(session);
+
+        updateLastUsed(session);
         var json = new UserJson();
-        json.name = session.getUser().getName();
+        json.name = "test_user";
         json.avatarUrl = "https://s.gravatar.com/avatar/9a638e5879d268e59d158a2091723c3c?s=80";
-        return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);
-                //XXX
-                // .cookie(new NewCookie(sessionCookie, COOKIE_COMMENT, COOKIE_MAX_AGE, false))
+        response.addCookie(createSessionCookie(session.getId(), COOKIE_MAX_AGE));
+        return new ResponseEntity<>(json, HttpStatus.OK);
     }
 
-    private HttpHeaders getHeaders() {
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        if (!Strings.isNullOrEmpty(webuiUrl)) {
-            headers.setAccessControlAllowOrigin(webuiUrl);
-            headers.setAccessControlAllowCredentials(true);
-            headers.setAccessControlAllowHeaders(Arrays.asList("content-type"));
+    @GetMapping("/api/-/user/login")
+    @Transactional
+    public RedirectView login(@CookieValue(name = "sessionid", required = false) String sessionId,
+                              HttpServletResponse response) {
+        var session = sessionId != null ? repositories.findUserSession(sessionId) : null;
+        if (session == null) {
+            session = new UserSession();
+            session.setId(UUID.randomUUID().toString());
+            session.setUser(getDummyUser());
+            entityManager.persist(session);
         }
-        return headers;
+
+        updateLastUsed(session);
+        addAccessControlHeaders(response);
+        response.addCookie(createSessionCookie(session.getId(), COOKIE_MAX_AGE));
+        return new RedirectView(getRedirectUrl());
     }
 
-    // @GetMapping("/api/-/user/login")
-    // @Transactional
-    // public Response login(@CookieValue("sessionid") String sessionCookie) {
-    //     if (sessionCookie != null) {
-    //         var session = entities.findSession(sessionCookie);
-    //         if (session != null) {
-    //             return Response.temporaryRedirect(getRedirectURI())
-    //                 .cookie(new NewCookie(sessionCookie, COOKIE_COMMENT, COOKIE_MAX_AGE, false))
-    //                 .build();
-    //         }
-    //     }
-    //     var user = entityManager.find(UserData.class, 1l);
-    //     var session = new UserSession();
-    //     session.setId(UUID.randomUUID().toString());
-    //     session.setUser(user);
-    //     updateLastUsed(session);
-    //     entityManager.persist(session);
-    //     return Response.temporaryRedirect(getRedirectURI())
-    //             .cookie(new NewCookie("sessionid", session.getId(),
-    //                                   "/", getDomain(), COOKIE_COMMENT, COOKIE_MAX_AGE, false))
-    //             .build();
-    // }
+    private UserData getDummyUser() {
+        var allUsers = repositories.findAllUsers();
+        if (allUsers.isEmpty()) {
+            var user = new UserData();
+            user.setName("test_user");
+            entityManager.persist(user);
+            return user;
+        }
+        return allUsers.iterator().next();
+    }
 
-    // @GetMapping("/api/-/user/logout")
-    // @Transactional
-    // public Response logout(@CookieValue("sessionid") String sessionCookie) {
-    //     if (sessionCookie == null) {
-    //         return Response.temporaryRedirect(getRedirectURI()).build();
-    //     }
-    //     var session = entities.findSession(sessionCookie);
-    //     if (session != null) {
-    //         entityManager.remove(session);
-    //     }
-    //     return Response.temporaryRedirect(getRedirectURI())
-    //         .cookie(new NewCookie(sessionCookie, null, 0, false))
-    //         .build();
-    // }
+    @GetMapping("/api/-/user/logout")
+    @Transactional
+    public RedirectView logout(@CookieValue(name = "sessionid", required = false) String sessionId,
+                              HttpServletResponse response) {
+        if (sessionId != null) {
+            var session = repositories.findUserSession(sessionId);
+            if (session != null) {
+                entityManager.remove(session);
+            }
+            response.addCookie(createSessionCookie(sessionId, 0));
+        }
+        addAccessControlHeaders(response);
+        return new RedirectView(getRedirectUrl());
+    }
 
-    // private URI getRedirectURI() {
-    //     try {
-    //         return new URI("/");
-    //     } catch (URISyntaxException exc) {
-    //         throw new WebApplicationException(exc);
-	// 	}
-    // }
+    private void addAccessControlHeaders(HttpServletResponse response) {
+        if (!Strings.isNullOrEmpty(webuiUrl)) {
+            response.addHeader("Access-Control-Allow-Origin", webuiUrl);
+            response.addHeader("Access-Control-Allow-Credentials", "true");
+            response.addHeader("Access-Control-Allow-Headers", "Content-Type");
+        }
+    }
 
-    // private String getDomain() {
-    //     try {
-    //         var uri = new URI(serverUrl);
-    //         return uri.getHost();
-    //     } catch (URISyntaxException exc) {
-    //         throw new WebApplicationException(exc);
-    //     }
-    // }
+    private Cookie createSessionCookie(String sessionId, int maxAge) {
+        var cookie = new Cookie("sessionid", sessionId);
+        cookie.setDomain(getDomain());
+        cookie.setPath(getPath());
+        cookie.setMaxAge(maxAge);
+        return cookie;
+    }
 
-    // private void updateLastUsed(UserSession session) {
-    //     session.setLastUsed(LocalDateTime.now(ZoneId.of("UTC")));
-    // }
+    private String getDomain() {
+        try {
+            var uri = new URI(serverUrl);
+            return uri.getHost();
+        } catch (URISyntaxException exc) {
+            throw new RuntimeException(exc);
+        }
+    }
+
+    private String getPath() {
+        try {
+            var uri = new URI(serverUrl);
+            var path = uri.getRawPath();
+            if (Strings.isNullOrEmpty(path))
+                return "/";
+            return path;
+        } catch (URISyntaxException exc) {
+            throw new RuntimeException(exc);
+        }
+    }
+
+    private String getRedirectUrl() {
+        if (webuiUrl != null)
+            return webuiUrl;
+        return "/";
+    }
+
+    private void updateLastUsed(UserSession session) {
+        session.setLastUsed(LocalDateTime.now(ZoneId.of("UTC")));
+    }
 
 }

@@ -10,13 +10,10 @@ package io.typefox.extreg.repositories;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.util.Streamable;
 
-import io.typefox.extreg.entities.Extension;
-import io.typefox.extreg.entities.ExtensionReview;
+import io.typefox.extreg.entities.UserData;
 
-public interface ExtensionReviewRepository extends Repository<ExtensionReview, Long> {
+public interface UserDataRepository extends Repository<UserData, Long> {
 
-    Streamable<ExtensionReview> findByExtension(Extension extension);
-
-    long countByExtension(Extension extension);
+    Streamable<UserData> findAll();
 
 }

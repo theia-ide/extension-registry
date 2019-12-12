@@ -7,8 +7,6 @@
  ********************************************************************************/
 package io.typefox.extreg.repositories;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Component;
@@ -20,6 +18,7 @@ import io.typefox.extreg.entities.ExtensionReadme;
 import io.typefox.extreg.entities.ExtensionReview;
 import io.typefox.extreg.entities.ExtensionVersion;
 import io.typefox.extreg.entities.Publisher;
+import io.typefox.extreg.entities.UserData;
 import io.typefox.extreg.entities.UserSession;
 
 @Component
@@ -32,6 +31,7 @@ public class RepositoryService {
     @Autowired ExtensionIconRepository extensionIconRepo;
     @Autowired ExtensionReadmeRepository extensionReadmeRepo;
     @Autowired ExtensionReviewRepository extensionReviewRepo;
+    @Autowired UserDataRepository userDataRepo;
     @Autowired UserSessionRepository userSessionRepo;
 
     public Publisher findPublisher(String name) {
@@ -46,7 +46,7 @@ public class RepositoryService {
         return extensionRepo.findByNameAndPublisherName(name, publisherName);
     }
 
-    public List<Extension> findExtensions(Publisher publisher) {
+    public Streamable<Extension> findExtensions(Publisher publisher) {
         return extensionRepo.findByPublisherOrderByNameAsc(publisher);
     }
 
@@ -62,7 +62,7 @@ public class RepositoryService {
         return extensionVersionRepo.findByVersionAndExtensionNameAndExtensionPublisherName(version, extensionName, publisherName);
     }
 
-    public List<ExtensionVersion> findVersions(Extension extension) {
+    public Streamable<ExtensionVersion> findVersions(Extension extension) {
         return extensionVersionRepo.findByExtension(extension);
     }
 
@@ -78,12 +78,16 @@ public class RepositoryService {
         return extensionReadmeRepo.findByExtension(extVersion);
     }
 
-    public List<ExtensionReview> findReviews(Extension extension) {
+    public Streamable<ExtensionReview> findReviews(Extension extension) {
         return extensionReviewRepo.findByExtension(extension);
     }
 
     public long countReviews(Extension extension) {
         return extensionReviewRepo.countByExtension(extension);
+    }
+
+    public Streamable<UserData> findAllUsers() {
+        return userDataRepo.findAll();
     }
 
     public UserSession findUserSession(String id) {

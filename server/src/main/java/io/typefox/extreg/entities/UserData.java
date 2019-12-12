@@ -7,9 +7,12 @@
  ********************************************************************************/
 package io.typefox.extreg.entities;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -22,6 +25,9 @@ public class UserData {
     long id;
 
     String name;
+
+    @OneToMany(mappedBy = "user")
+    List<UserSession> sessions;
 
 
     public long getId() {

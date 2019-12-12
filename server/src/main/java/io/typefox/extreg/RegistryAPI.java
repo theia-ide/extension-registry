@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -242,16 +243,16 @@ public class RegistryAPI {
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ReviewResultJson> review(ReviewJson review,
+    public ResponseEntity<ReviewResultJson> review(@RequestBody(required = false) ReviewJson review,
                                                    @PathVariable("publisher") String publisherName,
                                                    @PathVariable("extension") String extensionName,
-                                                   @CookieValue("sessionid") String sessionId) {
+                                                   @CookieValue(name = "sessionid", required = false) String sessionId) {
         ReviewResultJson json;
         if (sessionId == null) {
             json = ReviewResultJson.error("Not logged in.");
-            return new ResponseEntity<>(json, getReviewHeaders(), HttpStatus.OK);
-        }
-        if (review.rating < 0 || review.rating > 5) {
+        } else if (review == null) {
+            json = ReviewResultJson.error("No JSON input.");
+        } else if (review.rating < 0 || review.rating > 5) {
             json = ReviewResultJson.error("The rating must be an integer number between 0 and 5.");
         } else {
             json = local.review(review, publisherName, extensionName, sessionId);
@@ -265,7 +266,7 @@ public class RegistryAPI {
         if (!Strings.isNullOrEmpty(webuiUrl)) {
             headers.setAccessControlAllowOrigin(webuiUrl);
             headers.setAccessControlAllowCredentials(true);
-            headers.setAccessControlAllowHeaders(Arrays.asList("content-type"));
+            headers.setAccessControlAllowHeaders(Arrays.asList("Content-Type"));
         }
         return headers;
     }

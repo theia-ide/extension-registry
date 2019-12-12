@@ -7,16 +7,15 @@
  ********************************************************************************/
 package io.typefox.extreg.repositories;
 
-import java.util.List;
-
 import org.springframework.data.repository.Repository;
+import org.springframework.data.util.Streamable;
 
 import io.typefox.extreg.entities.Extension;
 import io.typefox.extreg.entities.ExtensionVersion;
 
 public interface ExtensionVersionRepository extends Repository<ExtensionVersion, Long> {
 
-    List<ExtensionVersion> findByExtension(Extension extension);
+    Streamable<ExtensionVersion> findByExtension(Extension extension);
 
     ExtensionVersion findByVersionAndExtension(String version, Extension extension);
 

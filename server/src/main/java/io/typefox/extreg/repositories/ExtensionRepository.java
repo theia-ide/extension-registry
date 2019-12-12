@@ -7,8 +7,6 @@
  ********************************************************************************/
 package io.typefox.extreg.repositories;
 
-import java.util.List;
-
 import org.springframework.data.repository.Repository;
 import org.springframework.data.util.Streamable;
 
@@ -17,9 +15,9 @@ import io.typefox.extreg.entities.Publisher;
 
 public interface ExtensionRepository extends Repository<Extension, Long> {
 
-    List<Extension> findByPublisher(Publisher publisher);
+    Streamable<Extension> findByPublisher(Publisher publisher);
 
-    List<Extension> findByPublisherOrderByNameAsc(Publisher publisher);
+    Streamable<Extension> findByPublisherOrderByNameAsc(Publisher publisher);
 
     Extension findByNameAndPublisher(String name, Publisher publisher);
 

@@ -14,6 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
+import io.typefox.extreg.json.ReviewJson;
+
 @Entity
 public class ExtensionReview {
 
@@ -34,6 +36,19 @@ public class ExtensionReview {
 
     int rating;
 
+
+    /**
+     * Convert to a JSON object.
+     */
+    public ReviewJson toReviewJson() {
+        var json = new ReviewJson();
+        json.user = this.getUsername();
+        json.timestamp = this.getTimestamp().toString();
+        json.title = this.getTitle();
+        json.comment = this.getComment();
+        json.rating = this.getRating();
+        return json;
+    }
 
 	public long getId() {
 		return id;
