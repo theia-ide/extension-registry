@@ -12,9 +12,11 @@ import java.util.List;
 
 public class SemanticVersion implements Comparable<SemanticVersion> {
 
+    private final String original;
     private final List<String> parts = new ArrayList<>();
 
     public SemanticVersion(String s) {
+        this.original = s;
         int suffixIndex = s.length();
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
@@ -67,5 +69,10 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         }
 		return -Integer.compare(this.parts.size(), other.parts.size());
 	}
+
+    @Override
+    public String toString() {
+        return original;
+    }
 
 }

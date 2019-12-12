@@ -16,6 +16,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import io.typefox.extreg.search.ExtensionSearch;
+
 @Entity
 public class Extension {
 
@@ -36,6 +38,22 @@ public class Extension {
 
     Double averageRating;
 
+
+    /**
+     * Convert to a search entity for Elasticsearch.
+     */
+    public ExtensionSearch toSearch() {
+        var search = new ExtensionSearch();
+        search.id = this.getId();
+        search.name = this.getName();
+        search.publisher = this.getPublisher().getName();
+        var extVer = this.getLatest();
+        search.displayName = extVer.getDisplayName();
+        search.description = extVer.getDescription();
+        search.categories = extVer.getCategories();
+        search.tags = extVer.getTags();
+        return search;
+    }
 
 	public long getId() {
 		return id;
@@ -76,4 +94,5 @@ public class Extension {
 	public void setAverageRating(Double averageRating) {
 		this.averageRating = averageRating;
     }
+
 }

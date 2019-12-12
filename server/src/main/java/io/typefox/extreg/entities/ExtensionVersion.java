@@ -20,6 +20,11 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
+import io.typefox.extreg.json.ExtensionJson;
+import io.typefox.extreg.json.ExtensionReferenceJson;
+import io.typefox.extreg.json.SearchEntryJson;
+import io.typefox.extreg.util.CollectionUtil;
+
 @Entity
 public class ExtensionVersion {
 
@@ -78,6 +83,67 @@ public class ExtensionVersion {
     @ManyToMany
     List<Extension> bundledExtensions;
 
+
+    /**
+     * Convert to a JSON object without URLs.
+     */
+    public ExtensionJson toExtensionJson() {
+        var json = new ExtensionJson();
+        var extension = this.getExtension();
+        json.publisher = extension.getPublisher().getName();
+        json.name = extension.getName();
+        json.averageRating = extension.getAverageRating();
+        json.version = this.getVersion();
+        json.preview = this.isPreview();
+        json.timestamp = this.getTimestamp().toString();
+        json.displayName = this.getDisplayName();
+        json.description = this.getDescription();
+        json.categories = this.getCategories();
+        json.tags = this.getTags();
+        json.license = this.getLicense();
+        json.homepage = this.getHomepage();
+        json.repository = this.getRepository();
+        json.bugs = this.getBugs();
+        json.markdown = this.getMarkdown();
+        json.galleryColor = this.getGalleryColor();
+        json.galleryTheme = this.getGalleryTheme();
+        json.qna = this.getQna();
+        if (this.getDependencies() != null) {
+            json.dependencies = CollectionUtil.map(this.getDependencies(), depExtension -> {
+                var ref = new ExtensionReferenceJson();
+                ref.publisher = depExtension.getPublisher().getName();
+                ref.extension = depExtension.getName();
+                json.dependencies.add(ref);
+                return ref;
+            });
+        }
+        if (this.getBundledExtensions() != null) {
+            json.bundledExtensions = CollectionUtil.map(this.getBundledExtensions(), bndExtension -> {
+                var ref = new ExtensionReferenceJson();
+                ref.publisher = bndExtension.getPublisher().getName();
+                ref.extension = bndExtension.getName();
+                json.bundledExtensions.add(ref);
+                return ref;
+            });
+        }
+        return json;
+    }
+
+    /**
+     * Convert to a search entry JSON object without URLs.
+     */
+    public SearchEntryJson toSearchEntryJson() {
+        var entry = new SearchEntryJson();
+        var extension = this.getExtension();
+        entry.name = extension.getName();
+        entry.publisher = extension.getPublisher().getName();
+        entry.averageRating = extension.getAverageRating();
+        entry.version = this.getVersion();
+        entry.timestamp = this.getTimestamp().toString();
+        entry.displayName = this.getDisplayName();
+        entry.description = this.getDescription();
+        return entry;
+    }
 
 	public long getId() {
 		return id;

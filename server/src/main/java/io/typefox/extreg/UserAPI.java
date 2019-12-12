@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.typefox.extreg.entities.UserData;
 import io.typefox.extreg.entities.UserSession;
 import io.typefox.extreg.json.UserJson;
+import io.typefox.extreg.repositories.RepositoryService;
 
 @RestController
 public class UserAPI {
@@ -45,7 +46,7 @@ public class UserAPI {
     EntityManager entityManager;
 
     @Autowired
-    EntityService entities;
+    RepositoryService repositories;
 
     @Value("#{environment.OVSX_SERVER_URL}")
     String serverUrl;
@@ -63,7 +64,7 @@ public class UserAPI {
             var json = UserJson.error("Not logged in.");
             return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);
         }
-        var session = entities.findSession(sessionId);
+        var session = repositories.findUserSession(sessionId);
         if (session == null) {
             var json = UserJson.error("Invalid session.");
             return new ResponseEntity<>(json, getHeaders(), HttpStatus.OK);

@@ -48,7 +48,7 @@ public class ExtensionJson {
     @Nullable
     public Double averageRating;
 
-    public int reviewCount;
+    public long reviewCount;
 
     public String version;
 
