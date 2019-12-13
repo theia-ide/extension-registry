@@ -37,7 +37,7 @@ dependencies {
 
 task runServer(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'io.typefox.extreg.RegistryApplication'
+    main = 'org.eclipse.openvsx.RegistryApplication'
 }
 
 
