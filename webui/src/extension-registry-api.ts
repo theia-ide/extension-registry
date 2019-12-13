@@ -6,103 +6,110 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
-import { Extension, ExtensionRegistryUser, ExtensionReview, ExtensionRaw, ExtensionReviewList, ErrorResponse } from "./extension-registry-types";
+import {
+    Extension, UserData, ExtensionReview, ExtensionReviewList, SearchResult
+} from "./extension-registry-types";
 
-export interface ExtensionRegistryAPIRequest<T> {
+export interface ServerAPIRequest<Res> {
     endpoint: string;
-    operation: (response: Response) => Promise<T>;
+    operation: (response: Response) => Promise<Res>;
     credentials?: boolean;
 }
 
-export interface ExtensionRegistryAPIRequestWithoutPayload<T> extends ExtensionRegistryAPIRequest<T> {
+export interface ServerAPIRequestWithoutPayload<Res> extends ServerAPIRequest<Res> {
     method: 'GET' | 'DELETE';
 }
 
-export interface ExtensionRegistryAPIRequestWithPayload<T> extends ExtensionRegistryAPIRequest<T> {
+export interface ServerAPIRequestWithPayload<Res, Req> extends ServerAPIRequest<Res> {
     method: 'POST' | 'PUT';
-    payload: any;
+    payload: Req;
     contentType: string;
+}
+
+export interface ErrorResponse {
+    error: string;
+    message: string;
+    path: string;
+    status: number;
+    timestamp: string;
+    trace: string;
 }
 
 export class ExtensionRegistryAPI {
 
-    async run<T>(req: ExtensionRegistryAPIRequestWithPayload<T> | ExtensionRegistryAPIRequestWithoutPayload<T>): Promise<T> {
-        const headers: { [key: string]: any } = { 'Content-Type': 'application/json' };
-        const param: { [key: string]: any } = {
-            method: req.method,
-            headers
+    protected async run<Res>(req: ServerAPIRequestWithPayload<Res, any> | ServerAPIRequestWithoutPayload<Res>): Promise<Res> {
+        const param: RequestInit = {
+            method: req.method
         };
-
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json'
+        };
         if (req.method === 'POST' || req.method === 'PUT') {
             param.body = JSON.stringify(req.payload);
-            param.headers['Accept'] = req.contentType;
+            headers['Accept'] = req.contentType;
         }
-
         if (req.credentials) {
             param.credentials = 'include';
         }
+        param.headers = headers;
 
         const response = await fetch(req.endpoint, param);
-
-        return await req.operation(response);
+        if (response.status === 200) {
+            return req.operation(response);
+        } else {
+            throw await response.json() as ErrorResponse;
+        }
     }
 
-    async getExtensions(endpoint: string): Promise<ExtensionRaw[]> {
-        const extensions = await this.run<ExtensionRaw[]>({
+    getExtensions(endpoint: string): Promise<SearchResult> {
+        return this.run<SearchResult>({
             method: 'GET',
             endpoint,
-            operation: async response => {
-                const resp = await response.json() as { offset: number; extensions: ExtensionRaw[] };
-                return resp.extensions;
-            }
+            operation: response => response.json()
         });
-        return extensions;
     }
 
-    async getExtension(endpoint: string): Promise<Extension> {
-        const ext = await this.run<Extension>({
+    getExtension(endpoint: string): Promise<Extension> {
+        return this.run<Extension>({
             method: 'GET',
             endpoint,
-            operation: async response => await response.json()
+            operation: response => response.json()
         });
-        return ext;
     }
 
-    async getExtensionReadMe(endpoint: string): Promise<string> {
-        const readme = await this.run<string>({
+    getExtensionReadme(endpoint: string): Promise<string> {
+        return this.run<string>({
             method: 'GET',
             endpoint,
-            operation: async response => await response.text()
+            operation: response => response.text()
         });
-        return readme;
     }
 
-    async getExtensionReviews(endpoint: string): Promise<ExtensionReviewList> {
-        const reviews = await this.run<ExtensionReviewList>({
+    getExtensionReviews(endpoint: string): Promise<ExtensionReviewList> {
+        return this.run<ExtensionReviewList>({
             method: 'GET',
             endpoint,
-            operation: async response => await response.json()
+            operation: response => response.json()
         });
-        return reviews;
     }
 
-    async postReview(payload: ExtensionReview, endpoint: string) {
-        await this.run({
+    postReview(payload: ExtensionReview, endpoint: string): Promise<void> {
+        return this.run({
             method: 'POST',
             payload,
             contentType: 'application/json;charset=UTF-8',
             credentials: true,
             endpoint,
-            operation: async response => await response.json()
+            operation: response => response.json()
         });
     }
 
-    async getUser(endpoint: string): Promise<ExtensionRegistryUser | ErrorResponse> {
-        return await this.run({
+    getUser(endpoint: string): Promise<UserData | ErrorResponse> {
+        return this.run({
             method: 'GET',
             credentials: true,
             endpoint,
-            operation: async response => await response.json()
+            operation: response => response.json()
         });
     }
 }

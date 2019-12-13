@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import { Button, Theme, createStyles, WithStyles, withStyles, Dialog, DialogTitle, DialogContent, DialogContentText, Box, TextField, DialogActions, Typography } from "@material-ui/core";
-import { ExtensionRegistryUser, ExtensionRegistryToken } from "../../extension-registry-types";
+import { UserData, PersonalAccessToken } from "../../extension-registry-types";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 
 const tokensDialogStyle = (theme: Theme) => createStyles({
@@ -94,7 +94,7 @@ class GenerateTokenDialogComponent extends React.Component<GenerateTokenDialogCo
 
 export namespace GenerateTokenDialogComponent {
     export interface Props extends WithStyles<typeof tokensDialogStyle> {
-        user: ExtensionRegistryUser
+        user: UserData
         service: ExtensionRegistryService
         handleTokenGenerated: () => void
     }
@@ -103,7 +103,7 @@ export namespace GenerateTokenDialogComponent {
         open: boolean
         tokenComment: string
         tokenFieldDisabled: boolean
-        token?: ExtensionRegistryToken
+        token?: PersonalAccessToken
     }
 }
 

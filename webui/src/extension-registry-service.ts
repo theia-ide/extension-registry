@@ -7,7 +7,10 @@
  ********************************************************************************/
 
 import { ExtensionRegistryAPI } from "./extension-registry-api";
-import { ExtensionFilter, Extension, ExtensionReview, ExtensionRegistryUser, ExtensionCategory, ExtensionRaw, ExtensionReviewList, ExtensionRegistryToken } from "./extension-registry-types";
+import {
+    ExtensionFilter, Extension, ExtensionReview, UserData, ExtensionCategory,
+    ExtensionReviewList, PersonalAccessToken, SearchResult
+} from "./extension-registry-types";
 import { createAbsoluteURL } from "./utils";
 import { MockTokenAPI } from "./pages/mock-token-api";
 
@@ -39,7 +42,7 @@ export class ExtensionRegistryService {
         return this._apiUrl;
     }
 
-    async getExtensions(filter?: ExtensionFilter): Promise<ExtensionRaw[]> {
+    getExtensions(filter?: ExtensionFilter): Promise<SearchResult> {
         let query: { key: string, value: string | number }[] | undefined;
         if (filter) {
             query = [];
@@ -56,26 +59,30 @@ export class ExtensionRegistryService {
         return this.api.getExtensions(endpoint);
     }
 
-    async getExtensionDetail(extensionURL: string): Promise<Extension> {
+    getExtensionDetail(extensionURL: string): Promise<Extension> {
         return this.api.getExtension(extensionURL);
     }
 
-    async getExtensionReadMe(readMeUrl: string): Promise<string> {
-        return this.api.getExtensionReadMe(readMeUrl);
+    getExtensionReadme(readMeUrl: string): Promise<string> {
+        return this.api.getExtensionReadme(readMeUrl);
     }
 
-    async getExtensionReviews(reviewsUrl: string): Promise<ExtensionReviewList> {
+    getExtensionReviews(reviewsUrl: string): Promise<ExtensionReviewList> {
         return this.api.getExtensionReviews(reviewsUrl);
     }
 
-    async postReview(rating: ExtensionReview, postUrl: string): Promise<void> {
-        await this.api.postReview(rating, postUrl);
+    postReview(rating: ExtensionReview, postUrl: string): Promise<void> {
+        return this.api.postReview(rating, postUrl);
     }
 
-    async getUser(): Promise<ExtensionRegistryUser | undefined> {
-        const user = await this.api.getUser(createAbsoluteURL([this._apiUrl, '-', 'user']));
-        if (ExtensionRegistryUser.is(user)) {
-            return user;
+    async getUser(): Promise<UserData | undefined> {
+        try {
+            const user = await this.api.getUser(createAbsoluteURL([this._apiUrl, '-', 'user']));
+            if (UserData.is(user)) {
+                return user;
+            }
+        } catch (err) {
+            console.warn(err);
         }
         return;
     }
@@ -98,9 +105,9 @@ export class ExtensionRegistryService {
 
     // TOKENS
 
-    async getTokens(): Promise<ExtensionRegistryToken[]> {
+    async getTokens(): Promise<PersonalAccessToken[]> {
         const tokens = await this.tokenApiMock.getTokens();
-        const tArr: ExtensionRegistryToken[] = [];
+        const tArr: PersonalAccessToken[] = [];
         for (const id in tokens) {
             if (tokens[id]) {
                 tArr.push(tokens[id]);
@@ -109,15 +116,15 @@ export class ExtensionRegistryService {
         return tArr;
     }
 
-    async generateToken(description: string): Promise<ExtensionRegistryToken> {
-        return await this.tokenApiMock.generateToken(description);
+    generateToken(description: string): Promise<PersonalAccessToken> {
+        return this.tokenApiMock.generateToken(description);
     }
 
-    async deleteToken(tokenId: string): Promise<void> {
-        await this.tokenApiMock.deleteToken(tokenId);
+    deleteToken(tokenId: string): Promise<void> {
+        return this.tokenApiMock.deleteToken(tokenId);
     }
 
-    async deleteTokens(): Promise<void> {
-        await this.tokenApiMock.deleteTokens();
+    deleteTokens(): Promise<void> {
+        return this.tokenApiMock.deleteTokens();
     }
 }

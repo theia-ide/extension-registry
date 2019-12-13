@@ -8,12 +8,13 @@
 
 import * as React from "react";
 import { Theme, createStyles, WithStyles, withStyles, Box, Typography, Divider } from "@material-ui/core";
-import { ExtensionReview, ExtensionRegistryUser, Extension, ExtensionReviewList } from "../../extension-registry-types";
+import { ExtensionReview, UserData, Extension, ExtensionReviewList } from "../../extension-registry-types";
 import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExportRatingStars } from "./extension-rating-stars";
 import { ExtensionReviewDialog } from "./extension-review-dialog";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 import { utcToZonedTime } from "date-fns-tz";
+import { handleError } from "../../utils";
 
 const reviewStyles = (theme: Theme) => createStyles({
     boldText: {
@@ -34,8 +35,12 @@ class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailRev
     }
 
     protected async init() {
-        const reviewList = await this.props.service.getExtensionReviews(this.props.extension.reviewsUrl);
-        this.setState({ reviewList });
+        try {
+            const reviewList = await this.props.service.getExtensionReviews(this.props.extension.reviewsUrl);
+            this.setState({ reviewList });
+        } catch (err) {
+            handleError(err);
+        }
     }
 
     protected readonly saveCompleted = () => {
@@ -55,7 +60,7 @@ class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailRev
                     </Typography>
                 </Box>
                 {
-                    this.props.user && ExtensionRegistryUser.is(this.props.user) ? <Box>
+                    this.props.user && UserData.is(this.props.user) ? <Box>
                         <ExtensionReviewDialog
                             saveCompleted={this.saveCompleted}
                             extension={this.props.extension}
@@ -101,7 +106,7 @@ class ExtensionDetailReviewsComponent extends React.Component<ExtensionDetailRev
 export namespace ExtensionDetailReviewsComponent {
     export interface Props extends WithStyles<typeof reviewStyles> {
         extension: Extension
-        user?: ExtensionRegistryUser
+        user?: UserData
         service: ExtensionRegistryService
         reviewsDidUpdate: () => void
     }

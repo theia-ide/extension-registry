@@ -14,7 +14,7 @@ import { UserSettingTabs } from "./user-setting-tabs";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 import { UserSettingsTokens } from "./user-settings-tokens";
 import { UserSettingsProfile } from "./user-settings-profile";
-import { ExtensionRegistryUser } from "../../extension-registry-types";
+import { UserData } from "../../extension-registry-types";
 
 export namespace UserSettingsRoutes {
     export const MAIN = createURL(['user-settings']);
@@ -37,7 +37,7 @@ class UserSettingsComponent extends React.Component<UserSettingsComponent.Props,
 
     componentDidMount() {
         this.props.service.getUser().then(user => {
-            if (ExtensionRegistryUser.is(user)) {
+            if (UserData.is(user)) {
                 this.setState({ user });
             }
         });
@@ -81,7 +81,7 @@ export namespace UserSettingsComponent {
         service: ExtensionRegistryService
     }
     export interface State {
-        user?: ExtensionRegistryUser
+        user?: UserData
     }
 }
 

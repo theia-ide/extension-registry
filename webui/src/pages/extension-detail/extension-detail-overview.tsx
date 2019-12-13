@@ -13,7 +13,7 @@ import { Extension } from "../../extension-registry-types";
 import * as MarkdownIt from 'markdown-it';
 import { utcToZonedTime } from "date-fns-tz";
 import { ExtensionListRoutes } from "../extension-list/extension-list-container";
-import { createURL } from "../../utils";
+import { createURL, handleError } from "../../utils";
 import { RouteComponentProps } from "react-router-dom";
 
 const overviewStyles = (theme: Theme) => createStyles({
@@ -47,15 +47,19 @@ class ExtensionDetailOverviewComponent extends React.Component<ExtensionDetailOv
 
     protected async init() {
         if (this.props.extension.readmeUrl) {
-            const readMe = await this.props.service.getExtensionReadMe(this.props.extension.readmeUrl);
-            this.setState({ readMe });
+            try {
+                const readme = await this.props.service.getExtensionReadme(this.props.extension.readmeUrl);
+                this.setState({ readme });
+            } catch (err) {
+                handleError(err);
+            }
         } else {
-            this.setState({ readMe: '## No README available' });
+            this.setState({ readme: '## No README available' });
         }
     }
 
     render() {
-        if (!this.state.readMe) {
+        if (!this.state.readme) {
             return '';
         }
         const { classes, extension } = this.props;
@@ -68,7 +72,7 @@ class ExtensionDetailOverviewComponent extends React.Component<ExtensionDetailOv
         return <React.Fragment>
             <Box display='flex' >
                 <Box className={classes.markdown} flex={5}>
-                    {this.renderMarkdown(this.state.readMe)}
+                    {this.renderMarkdown(this.state.readme)}
                 </Box>
                 <Box flex={3} display='flex' justifyContent='flex-end'>
                     <Box width='80%'>
@@ -146,7 +150,7 @@ export namespace ExtensionDetailOverview {
         service: ExtensionRegistryService
     }
     export interface State {
-        readMe?: string
+        readme?: string
     }
 }
 

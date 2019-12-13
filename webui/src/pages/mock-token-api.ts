@@ -6,9 +6,9 @@
  * http://www.eclipse.org/legal/epl-2.0.
  ********************************************************************************/
 
- import { ExtensionRegistryToken } from "../extension-registry-types";
+ import { PersonalAccessToken } from "../extension-registry-types";
 
-export type ExtensionRegistryTokenStore = { [key: string]: ExtensionRegistryToken };
+export type ExtensionRegistryTokenStore = { [key: string]: PersonalAccessToken };
 export let tokenStore: ExtensionRegistryTokenStore = {};
 
 export class MockTokenAPI {
@@ -19,8 +19,8 @@ export class MockTokenAPI {
         return tokenStore;
     }
 
-    async generateToken(description: string): Promise<ExtensionRegistryToken> {
-        const token: ExtensionRegistryToken = {
+    async generateToken(description: string): Promise<PersonalAccessToken> {
+        const token: PersonalAccessToken = {
             description,
             id: 't' + this.count,
             tokenValue: `Token ${this.count}: Some token which was generated for some app`,

@@ -16,6 +16,12 @@ export interface ExtensionFilter {
     [key: string]: string | number | undefined;
 }
 
+export interface SearchResult {
+    readonly error?: string;
+    readonly offset: number;
+    readonly extensions: ExtensionRaw[];
+}
+
 export interface ExtensionRaw {
     readonly name: string;
     readonly publisher: string;
@@ -63,11 +69,6 @@ export interface Extension extends ExtensionRaw {
     readonly dependencies?: ExtensionReference[];
     readonly bundledExtensions?: ExtensionReference[];
 }
-export namespace Extension {
-    export function is(extension: any): extension is Extension {
-        return 'allVersions' in extension && 'extensionFileName' in extension;
-    }
-}
 
 export interface Badge {
     url: string;
@@ -79,7 +80,6 @@ export interface ExtensionReference {
     publisher: string;
     extension: string;
     version?: string;
-
 }
 
 export type StarNumber = 1 | 2 | 3 | 4 | 5;
@@ -96,24 +96,15 @@ export interface ExtensionReviewList {
     reviews: ExtensionReview[];
 }
 
-export interface ExtensionRegistryUser {
+export interface UserData {
     name: string;
     avatarUrl: string;
 }
-export namespace ExtensionRegistryUser {
-    export function is(resp: any): resp is ExtensionRegistryUser {
+export namespace UserData {
+    export function is(resp: any): resp is UserData {
         return resp && 'name' in resp && 'avatarUrl' in resp;
     }
 }
-
-export interface ErrorResponse {
-    error: string;
-}
-export namespace ErrorResponse {
-    export function is(resp: any): resp is ErrorResponse {
-        return 'error' in resp;
-    }
- }
 
 export type ExtensionCategory =
     '' |
@@ -129,7 +120,7 @@ export type ExtensionCategory =
     'Extension Packs' |
     'Language Packs';
 
-export interface ExtensionRegistryToken {
+export interface PersonalAccessToken {
     id: string;
     tokenValue: string;
     userId: string;

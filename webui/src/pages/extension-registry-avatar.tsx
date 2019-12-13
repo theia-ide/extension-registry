@@ -11,7 +11,7 @@ import { withStyles, createStyles } from '@material-ui/styles';
 import { Theme, WithStyles, Avatar, Popper, Paper, ClickAwayListener, Typography, Box, Grow } from '@material-ui/core';
 import ExitToAppIcon from '@material-ui/icons/ExitToAppOutlined';
 import { Link } from 'react-router-dom';
-import { ExtensionRegistryUser } from '../extension-registry-types';
+import { UserData } from '../extension-registry-types';
 import { ExtensionRegistryService } from '../extension-registry-service';
 import { createAbsoluteURL } from '../utils';
 import { UserSettingsRoutes } from './user/user-settings';
@@ -101,7 +101,7 @@ class ExtensionRegistryAvatarComponent extends React.Component<ExtensionRegistry
 
 export namespace ExtensionRegistryAvatarComponent {
     export interface Props extends WithStyles<typeof avatarStyle> {
-        user: ExtensionRegistryUser
+        user: UserData
         service: ExtensionRegistryService
     }
 

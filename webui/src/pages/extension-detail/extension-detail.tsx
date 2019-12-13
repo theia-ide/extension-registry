@@ -12,11 +12,11 @@ import { RouteComponentProps, Switch, Route } from "react-router-dom";
 import { ExtensionDetailOverview } from "../extension-detail/extension-detail-overview";
 import { ExtensionDetailReviews } from "./extension-detail-reviews";
 import { ExtensionRegistryService } from "../../extension-registry-service";
-import { Extension, ExtensionRegistryUser, ExtensionRaw } from "../../extension-registry-types";
+import { Extension, UserData, ExtensionRaw } from "../../extension-registry-types";
 import { TextDivider } from "../../custom-mui-components/text-divider";
 import { ExtensionDetailTabs } from "./extension-detail-tabs";
 import { ExportRatingStars } from "./extension-rating-stars";
-import { createURL } from "../../utils";
+import { createURL, handleError } from "../../utils";
 
 export namespace ExtensionDetailRoutes {
     export const ROOT = 'extension-detail';
@@ -61,10 +61,17 @@ export class ExtensionDetailComponent extends React.Component<ExtensionDetailCom
     }
 
     protected async init() {
-        const extensionUrl = ExtensionRaw.getExtensionApiUrl(this.service.apiUrl, this.params);
-        const extension = await this.service.getExtensionDetail(extensionUrl);
-        const user = await this.service.getUser();
-        this.setState({ extension, user });
+        try {
+            const extensionUrl = ExtensionRaw.getExtensionApiUrl(this.service.apiUrl, this.params);
+            const extension = await this.service.getExtensionDetail(extensionUrl);
+            const user = await this.service.getUser();
+            this.setState({ extension, user });
+            if (extension.error) {
+                handleError(extension);
+            }
+        } catch (err) {
+            handleError(err);
+        }
     }
 
     protected onReviewUpdate = () => this.init();
@@ -139,7 +146,7 @@ export namespace ExtensionDetailComponent {
     }
     export interface State {
         extension?: Extension,
-        user?: ExtensionRegistryUser
+        user?: UserData
     }
 }
 

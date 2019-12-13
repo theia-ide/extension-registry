@@ -16,7 +16,7 @@ import { ExtensionDetailRoutes, ExtensionDetail } from './pages/extension-detail
 import { WithStyles, createStyles, withStyles } from '@material-ui/styles';
 import { ExtensionRegistryService } from './extension-registry-service';
 import { createAbsoluteURL } from './utils';
-import { ExtensionRegistryUser } from './extension-registry-types';
+import { UserData } from './extension-registry-types';
 import { ExtensionRegistryAvatar } from './pages/extension-registry-avatar';
 
 export namespace ExtensionRegistryPages {
@@ -56,7 +56,7 @@ class MainComponent extends React.Component<MainComponent.Props, MainComponent.S
 
     protected async init() {
         const user = await this.service.getUser();
-        if (user && ExtensionRegistryUser.is(user)) {
+        if (user && UserData.is(user)) {
             this.setState({ user });
         }
     }
@@ -123,7 +123,7 @@ export namespace MainComponent {
     }
 
     export interface State {
-        user?: ExtensionRegistryUser;
+        user?: UserData;
     }
 }
 

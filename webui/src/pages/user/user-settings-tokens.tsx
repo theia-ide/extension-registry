@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import { Theme, createStyles, WithStyles, withStyles, Typography, Box, Paper, Button } from "@material-ui/core";
-import { ExtensionRegistryUser, ExtensionRegistryToken } from "../../extension-registry-types";
+import { UserData, PersonalAccessToken } from "../../extension-registry-types";
 import { ExtensionRegistryService } from "../../extension-registry-service";
 import { GenerateTokenDialog } from "./generate-token-dialog";
 
@@ -101,12 +101,12 @@ class UserSettingsTokensComponent extends React.Component<UserSettingsTokensComp
 
 export namespace UserSettingsTokensComponent {
     export interface Props extends WithStyles<typeof tokensStyle> {
-        user: ExtensionRegistryUser
+        user: UserData
         service: ExtensionRegistryService
     }
 
     export interface State {
-        tokens: ExtensionRegistryToken[]
+        tokens: PersonalAccessToken[]
     }
 }
 
